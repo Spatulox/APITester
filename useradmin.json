@@ -1,0 +1,70 @@
+{
+  "basicUrl": "http://localhost:8081/index.php",
+  "authentication": {
+    "type": "apikey",
+    "apikey": "ed5cad100484123202fe7dc7e73b9bf6cbb5523712a658186185c24346896f04",
+    "oauth2": {
+      "clientId": "",
+      "clientSecret": "",
+      "tokenUrl": ""
+    },
+    "basicAuth": {
+      "username": "",
+      "password": ""
+    }
+  },
+  "endpoints": [
+    {
+      "path": "/user/4",
+      "tests": [
+        {
+          "method": "GET",
+          "expectedOutput": {
+              "id_user": "4",
+              "nom": "Johnson",
+              "prenom": "Michael",
+              "email": "michael.johnson@gmail.com",
+              "telephone": "0635752203",
+              "date_inscription": "2024-04-04",
+              "id_role": "3",
+              "apikey": "652ce63313967c088f627662838607ddfb8e3f0a3cc700af3a6c9d16bc7ac295",
+              "id_index": "2",
+              "id_entrepot": "1",
+              "address": "5 Place Aubry, 02000 Laon",
+              "premiumDate": null,
+              "premiumTime": null,
+              "premium_stripe_id": null,
+              "validate_file": "1"
+          },
+          "expectedHttpState": "200"
+        }
+      ]
+    },
+    {
+      "path": "/user",
+      "tests": [
+        {
+          "method": "GET",
+          "expectedOutput": {
+              "id_user": "2",
+              "nom": "Doe",
+              "prenom": "John",
+              "email": "john.doe@gmail.com",
+              "telephone": "0635742201",
+              "date_inscription": "2024-04-04",
+              "id_role": "1",
+              "apikey": "ed5cad100484123202fe7dc7e73b9bf6cbb5523712a658186185c24346896f04",
+              "id_index": "2",
+              "id_entrepot": null,
+              "address": "1 Rue Devisme, 02000 Laon",
+              "premiumDate": null,
+              "premiumTime": null,
+              "premium_stripe_id": null,
+              "validate_file": "1"
+          },
+          "expectedHttpState": "403"
+        }
+      ]
+    }
+  ]
+}
