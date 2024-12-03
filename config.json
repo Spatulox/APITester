@@ -1,0 +1,67 @@
+{
+  "basicUrl": "https://localhost:8085/index.php",
+  "authentication": {
+    "type": "apikey",
+    "apikey": "",
+    "oauth2": {
+      "clientId": "",
+      "clientSecret": "",
+      "tokenUrl": ""
+    },
+    "basicAuth": {
+      "username": "",
+      "password": ""
+    }
+  },
+  "endpoints": [
+    {
+      "path": "/user",
+      "tests": [
+        {
+          "method": "GET",
+          "expectedOutput": {"some": "data"},
+          "expectedHttpState": "200"
+        },
+        {
+          "method": "POST",
+          "input": {"some": "data"},
+          "expectedOutput": {"some": "data"},
+          "expectedHttpState": "200"
+        },
+        {
+          "method": "PUT",
+          "input": {"some": "data"},
+          "expectedOutput": {"some": "data"},
+          "expectedHttpState": "200"
+        },
+        {
+          "method": "PATCH",
+          "input": {"some": "data"},
+          "expectedOutput": {"some": "data"},
+          "expectedHttpState": "200"
+        },
+        {
+          "method": "DELETE",
+          "expectedOutput": {"some": "data"},
+          "expectedHttpState": "200"
+        }
+      ]
+    },
+    {
+      "path": "/admin",
+      "tests": [
+        {
+          "method": "GET",
+          "expectedOutput": {"some": "data"},
+          "expectedHttpState": "403"
+        },
+        {
+          "method": "POST",
+          "input": {"some": "data"},
+          "expectedOutput": {"some": "data"},
+          "expectedHttpState": "403"
+        }
+      ]
+    }
+  ]
+}
