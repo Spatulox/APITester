@@ -62,7 +62,7 @@ func (api *Api) addAuth(req *http.Request) {
 // ------------------------------------------------------------------------- //
 
 // GET function to request an API
-func (api *Api) GET(endpoint string, data *interface{}) (string, error) {
+func (api *Api) GET(endpoint string, data *interface{}) (int, string, error) {
 	if data == nil {
 		return api.genericRequest("GET", endpoint, nil)
 	}
@@ -70,40 +70,40 @@ func (api *Api) GET(endpoint string, data *interface{}) (string, error) {
 }
 
 // POST function to request an API
-func (api *Api) POST(endpoint string, data interface{}) (string, error) {
+func (api *Api) POST(endpoint string, data interface{}) (int, string, error) {
 	return api.genericRequest("POST", endpoint, data)
 }
 
 // PUT function to request an API
-func (api *Api) PUT(endpoint string, data interface{}) (string, error) {
+func (api *Api) PUT(endpoint string, data interface{}) (int, string, error) {
 	return api.genericRequest("PUT", endpoint, data)
 }
 
 // PATCH function to request an API
-func (api *Api) PATCH(endpoint string, data interface{}) (string, error) {
+func (api *Api) PATCH(endpoint string, data interface{}) (int, string, error) {
 	return api.genericRequest("PATCH", endpoint, data)
 }
 
 // DELETE function to request an API
-func (api *Api) DELETE(endpoint string) (string, error) {
+func (api *Api) DELETE(endpoint string) (int, string, error) {
 	return api.genericRequest("DELETE", endpoint, nil)
 }
 
 // ------------------------------------------------------------------------- //
 
-func (api *Api) genericRequest(method, endpoint string, data interface{}) (string, error) {
+func (api *Api) genericRequest(method, endpoint string, data interface{}) (int, string, error) {
 	var body *bytes.Buffer
 	if data != nil {
 		jsonData, err := json.Marshal(data)
 		if err != nil {
-			return "", err
+			return 0, "", err
 		}
 		body = bytes.NewBuffer(jsonData)
 	}
 
 	req, err := http.NewRequest(method, api.baseApi+endpoint, body)
 	if err != nil {
-		return "", err
+		return 0, "", err
 	}
 
 	if data != nil {
@@ -117,22 +117,22 @@ func (api *Api) genericRequest(method, endpoint string, data interface{}) (strin
 
 // ------------------------------------------------------------------------- //
 
-func (api *Api) request(req *http.Request) (string, error) {
+func (api *Api) request(req *http.Request) (int, string, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", err
+		return 0, "", err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return resp.StatusCode, "", err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return string(body), fmt.Errorf("status code error: %d %s", resp.StatusCode, resp.Status)
+		return resp.StatusCode, string(body), fmt.Errorf("status code error: %d %s", resp.StatusCode, resp.Status)
 	}
 
-	return string(body), nil
+	return resp.StatusCode, string(body), nil
 }
