@@ -35,3 +35,11 @@ type Test struct {
 	ExpectedOutput    map[string]interface{} `json:"expectedOutput"`
 	ExpectedHttpState string                 `json:"expectedHttpState"`
 }
+
+// --------------------------------------------------------- //
+
+type RequestResult struct {
+	Error   ResultError
+	Warning []ResultWarning
+	Request Config
+}
