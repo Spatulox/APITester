@@ -1,4 +1,4 @@
-package main
+package _struct
 
 type Config struct {
 	BasicURL       string         `json:"basicUrl"`
