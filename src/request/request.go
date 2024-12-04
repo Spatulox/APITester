@@ -15,6 +15,7 @@ type Api struct {
 	bearerToken string
 	username    string
 	password    string
+	apikeyKEY   string
 }
 
 // ------------------------------------------------------------------------- //
@@ -28,8 +29,9 @@ func NewApi(baseApi string) *Api {
 /* AUTHENTIFICATION */
 // ------------------------------------------------------------------------- //
 
-func (api *Api) AddApiKey(apiKey string) {
+func (api *Api) AddApiKey(apikeyKEY string, apiKey string) {
 	api.apiKey = apiKey
+	api.apikeyKEY = apikeyKEY
 }
 
 // ------------------------------------------------------------------------- //
@@ -49,7 +51,7 @@ func (api *Api) AddBasicAuth(username, password string) {
 
 func (api *Api) addAuth(req *http.Request) {
 	if api.apiKey != "" {
-		req.Header.Add("Authorization", "ApiKey "+api.apiKey)
+		req.Header[api.apikeyKEY] = []string{api.apiKey}
 	} else if api.bearerToken != "" {
 		req.Header.Add("Authorization", "Bearer "+api.bearerToken)
 	} else if api.username != "" && api.password != "" {
@@ -111,6 +113,19 @@ func (api *Api) genericRequest(method, endpoint string, data interface{}) (int, 
 	}
 
 	api.addAuth(req)
+
+	// Débogage : Afficher les détails de la requête
+	fmt.Printf("Méthode: %s\n", req.Method)
+	fmt.Printf("URL: %s\n", req.URL)
+	fmt.Printf("Headers:\n")
+	for key, values := range req.Header {
+		for _, value := range values {
+			fmt.Printf("  %s: %s\n", key, value)
+		}
+	}
+	if body != nil {
+		fmt.Printf("Body: %s\n", body.String())
+	}
 
 	return api.request(req)
 }
