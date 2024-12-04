@@ -39,7 +39,9 @@ type Test struct {
 // --------------------------------------------------------- //
 
 type RequestResult struct {
-	Error   ResultError
-	Warning []ResultWarning
-	Request Config
+	Path         string
+	Error        ResultError
+	Warning      []ResultWarning
+	OriginalData Test
+	ActualOutput map[string]interface{}
 }
