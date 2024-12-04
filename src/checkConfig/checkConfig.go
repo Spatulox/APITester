@@ -75,6 +75,7 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 
 	if err != nil {
 		Log.Error(fmt.Sprintf("Impossible to retrieve the %s! %v", endpoint.Path, err))
+		returnResult.Error = ErrorTimeout
 		return returnResult, fmt.Errorf("Impossible to retrieve the %s! %v", endpoint.Path, err)
 	}
 
@@ -151,7 +152,13 @@ func compareResults(expectedOutput interface{}, actualResult string) (ResultErro
 	}
 	expectedOutputString := string(expectedOutputBytes)
 
-	if actualResult == expectedOutputString {
+	if actualResult == "" {
+		expectedLower := strings.ToLower(expectedOutputString)
+		if strings.Contains(expectedLower, "_@empty") || strings.Contains(expectedLower, "_@nothing") {
+			return 0, 0
+		}
+		return 0, WarningNoResponse
+	} else if actualResult == expectedOutputString {
 		return 0, 0
 	} else {
 		var expectedMap, actualMap map[string]interface{}
