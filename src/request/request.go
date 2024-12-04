@@ -114,7 +114,7 @@ func (api *Api) genericRequest(method, endpoint string, data interface{}) (int, 
 
 	api.addAuth(req)
 
-	// Débogage : Afficher les détails de la requête
+	/*// Débogage : Afficher les détails de la requête
 	fmt.Printf("Méthode: %s\n", req.Method)
 	fmt.Printf("URL: %s\n", req.URL)
 	fmt.Printf("Headers:\n")
@@ -125,7 +125,7 @@ func (api *Api) genericRequest(method, endpoint string, data interface{}) (int, 
 	}
 	if body != nil {
 		fmt.Printf("Body: %s\n", body.String())
-	}
+	}*/
 
 	return api.request(req)
 }
