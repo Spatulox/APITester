@@ -18,6 +18,7 @@ const (
 	WarningNoWarning ResultWarning = iota
 	WarningHttpStatusNotSame
 	WarningExtraKeyValue
+	WarningNoResponse
 	WarningDeprecatedField
 	WarningPerformanceIssue
 	WarningInconsistentDataTypes
