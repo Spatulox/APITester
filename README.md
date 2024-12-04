@@ -2,7 +2,7 @@
 
 > Software to easily test an API with predefined configurations 
 
-APITester is a powerful tool designed to simplify and automate API testing. With a user-friendly interface and flexible configuration options, it allows developers and QA teams to efficiently test API endpoints and validate responses.
+APITester is a powerful tool designed to simplify and automate WEB API testing. With a user-friendly interface and flexible configuration options, it allows developers and QA teams to efficiently test API endpoints and validate responses.
 Build with GO and Wails
 
 # Presentation (when finished)
