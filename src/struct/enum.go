@@ -3,7 +3,8 @@ package _struct
 type ResultError int
 
 const (
-	ErrorWrongHttpStatusRange ResultError = iota
+	ErrorNoError ResultError = iota
+	ErrorWrongHttpStatusRange
 	ErrorMissingKeyValue
 	ErrorIncorrectKeyValue
 	ErrorUnexpectedResponse
@@ -14,7 +15,8 @@ const (
 type ResultWarning int
 
 const (
-	WarningHttpStatusNotSame ResultWarning = iota
+	WarningNoWarning ResultWarning = iota
+	WarningHttpStatusNotSame
 	WarningExtraKeyValue
 	WarningDeprecatedField
 	WarningPerformanceIssue
