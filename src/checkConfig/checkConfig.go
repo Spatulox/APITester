@@ -112,7 +112,7 @@ func saveResult(resultError ResultError, resultWarning ResultWarning, returnResu
 		return false
 	}
 	if resultWarning != 0 {
-		returnResult.Warning = append(returnResult.Warning)
+		returnResult.Warning = append(returnResult.Warning, resultWarning)
 	}
 	return true
 }
@@ -127,14 +127,11 @@ func compareHttpStatus(expectedStatus string, actualStatus int) (ResultError, Re
 
 	// Check if the status codes are in the same range (first digit)
 	if expectedStatusInt/100 != actualStatus/100 {
-		Log.Debug(fmt.Sprintf("%d / %d", expectedStatusInt, actualStatus))
-		Log.Infos("Wrong Status Range")
 		return ErrorWrongHttpStatusRange, 0
 	}
 
 	// Check if the status codes are exactly the same
 	if expectedStatusInt != actualStatus {
-		Log.Infos("Status Not Same")
 		return 0, WarningHttpStatusNotSame
 	}
 
