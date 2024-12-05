@@ -7,14 +7,34 @@ import (
 	. "ApiTester/src/struct"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 )
 
+const maxConcurrentChecks = 2
+
+// ----------------------------------------------------------- //
+
+// CheckConfig reads a JSON configuration file from the specified filepath (based on the UserConfigFolder),
+// validates the configuration by checking each endpoint defined in it,
+// and returns the results of these checks.
+//
+// Parameters:
+//   - @filepath: A string representing the path to the JSON configuration file
+//     that contains API endpoint definitions and authentication details.
+//
+// Returns:
+//   - @A slice of RequestResult containing the results of checking each endpoint.
+//   - @An error if there is an issue reading the JSON file or if any other error occurs
+//     during the validation process.
 func CheckConfig(filepath string) ([]RequestResult, error) {
+	Log.Debug("--------CheckConfig------")
 	var config Config
 	err := ReadJsonFile(filepath, &config)
+	Log.Debug(fmt.Sprintf("Reading %s", filepath))
 	if err != nil {
 		Log.Error(fmt.Sprintf("Impossible to read the json file : %v", err))
 		return []RequestResult{}, fmt.Errorf("Impossible to read the json file")
@@ -40,6 +60,80 @@ func CheckConfig(filepath string) ([]RequestResult, error) {
 
 // ----------------------------------------------------------- //
 
+// CheckFolderConfig scans a specified folder (based on the UserConfigFolder) for JSON configuration files,
+// and checks each configuration by calling CheckConfig. It handles multiple
+// configurations concurrently while ensuring thread safety.
+//
+// Parameters:
+//   - @folderPath: A string representing the path to the folder containing
+//     JSON configuration files to be checked.
+//
+// Returns:
+//   - @A slice of RequestResult containing the aggregated results of checking
+//     all configurations found in the folder.
+//   - @An error if there is an issue listing the JSON files or if any other error occurs
+//     during the validation process.
+func CheckFolderConfig(folderPath string) ([]RequestResult, error) {
+
+	Log.Debug("--------CheckFolder------")
+
+	folderFiles, err := ListJsonFile(&folderPath)
+	if err != nil {
+		return nil, fmt.Errorf("error listing JSON files: %v", err)
+	}
+
+	var configTestResults []RequestResult
+	var mu sync.Mutex // Pour protéger l'accès à configTestResults
+	var wg sync.WaitGroup
+
+	// Semaphore pour contrôler le nombre de goroutines actives
+	semaphore := make(chan struct{}, maxConcurrentChecks)
+
+	for _, files := range folderFiles {
+		if fileList, ok := files.([]string); ok {
+			for _, fileName := range fileList {
+				filePath := filepath.Join(folderPath, fileName)
+
+				wg.Add(1)               // Incrémenter le compteur de goroutines
+				semaphore <- struct{}{} // Acquérir un slot dans le sémaphore
+
+				go func(filePath string, fileName string) {
+					defer wg.Done()                // Décrémenter le compteur de goroutines
+					defer func() { <-semaphore }() // Libérer un slot dans le sémaphore
+
+					results, err := CheckConfig(filePath)
+					if err != nil {
+						Log.Error(fmt.Sprintf("Error checking config for file %s: %v", fileName, err))
+						return
+					}
+
+					mu.Lock()
+					configTestResults = append(configTestResults, results...)
+					mu.Unlock()
+				}(filePath, fileName)
+			}
+		}
+	}
+	wg.Wait()
+	return configTestResults, nil
+}
+
+// ----------------------------------------------------------- //
+
+// checkEndpoint sends an HTTP request to a specified API endpoint using the given method
+// and input data. It processes the response, compares it against expected results,
+// and returns the result of the check.
+//
+// Parameters:
+// - @endpoint: An Endpoint struct containing the path and details of the API endpoint to check.
+// - @inputData: A Test struct containing input data and expected results for the test.
+// - @apiApiKey: An Api instance used to send requests to the API with authentication.
+// - @i: An integer representing the index of the endpoint in a list (for logging purposes).
+// - @i2: An integer representing the index of the test in a list (for logging purposes).
+//
+// Returns:
+// - @A RequestResult containing the outcome of the endpoint check, including any errors or warnings.
+// - @An error if there is an issue during the request or processing of results.
 func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 int) (RequestResult, error) {
 	var status int
 	var result string
