@@ -2,8 +2,8 @@ package main
 
 import (
 	. "ApiTester/src/checkConfig"
-	//. "ApiTester/src/import"
-	//. "ApiTester/src/json"
+	. "ApiTester/src/import"
+	. "ApiTester/src/json"
 	"embed"
 )
 
@@ -16,10 +16,23 @@ func main() {
 		return
 	}
 
+	// INSOMNIA
 	// var json map[string]interface{}
 	// ReadJsonFile("./Insomnia.json", &json)
 
 	// config, err := ParseInsomniaExport(json)
+	// if err != nil {
+	// 	fmt.Printf("%v", err)
+	// 	return
+	// }
+
+	// fmt.Printf("+v\n", config)
+
+	// POSTMAN
+	// var json map[string]interface{}
+	// ReadJsonFile("./Postman.json", &json)
+
+	// config, err := ParsePostmanExport(json)
 	// if err != nil {
 	// 	fmt.Printf("%v", err)
 	// 	return
