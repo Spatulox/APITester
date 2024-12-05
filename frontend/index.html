@@ -1,12 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>ApiTester</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APITester</title>
+    <link rel="stylesheet" href="./src/style.css">
 </head>
 <body>
-<div id="app"></div>
-<script src="./src/main.js" type="module"></script>
+    <header>
+        <h1>APITester</h1>
+        <nav>
+            <ul>
+                <li><a href="#test-execution" id="section1" onclick="showSection(event, 'test-execution')">Dashboard des Tests</a></li>
+                <li><a href="#configuration-management" id="section2" onclick="showSection(event, 'configuration-management')">Gestion des Configurations</a></li>
+                <li><a href="#results-dashboard" id="section3" onclick="showSection(event, 'results-dashboard')">Tableau de Bord des Résultats</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section id="test-execution">
+            <h2>Dashbord des Tests</h2>
+            <div id="file-list"></div>
+        </section>
+
+        <section id="configuration-management" style="display:none;">
+            <h2>Gestion des Configurations</h2>
+            <button id="add-configuration">Ajouter Configuration</button>
+        </section>
+
+        <section id="results-dashboard" style="display:none;">
+            <h2>Tableau de Bord des Résultats</h2>
+            <div class="tabs">
+                <button class="tablink" id="ok-tab">OK
+                    <span class="notification" id="ok-count">0</span></button>
+                <button class="tablink" id="warning-tab">WARNING
+                    <span class="notification" id="warning-count">0</span></button>
+                <button class="tablink" id="error-tab">ERROR
+                    <span class="notification" id="error-count">0</span></button>
+            </div>
+
+            <div id="ok" class="tabcontent" style="display: block;">
+                <p>Aucun test réussi pour le moment.</p>
+            </div>
+
+            <div id="warning" class="tabcontent">
+                <p>Aucun avertissement pour le moment.</p>
+            </div>
+
+            <div id="error" class="tabcontent">
+                <p>Aucune erreur pour le moment.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>
+            Copyright &copy; 2024 APITester. 
+            GNU General Public License v3. 
+            All Rights Reserved.
+        </p>
+    </footer>
+
+    <script src="./src/main.js" type="module"></script>
 </body>
+
 </html>
