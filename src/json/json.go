@@ -9,8 +9,30 @@ import (
 	"path/filepath"
 )
 
+// -------------------------------------------- //
+
+// ReadJsonFile lit un fichier JSON situé dans le répertoire de configuration de l'utilisateur
+// (généralement accessible via os.UserConfigDir) et le décode dans la structure fournie.
+//
+// Paramètres :
+//   - @filePath : Le chemin relatif du fichier JSON à lire, situé dans le sous-répertoire "ApiTester"
+//     du répertoire de configuration de l'utilisateur.
+//   - @structure : Un pointeur vers la structure dans laquelle les données JSON seront décodées.
+//
+// Retourne :
+//   - Une erreur si un problème survient lors de l'accès au répertoire,
+//     de l'ouverture du fichier ou du décodage des données. Sinon, retourne nil.
 func ReadJsonFile[T any](filePath string, structure *T) error {
-	file, err := os.Open(filePath)
+
+	appDataPath, err := os.UserConfigDir()
+	if err != nil {
+		return fmt.Errorf("error obtaining AppData/conf folder: %v", err)
+	}
+
+	pathDir := filepath.Join(appDataPath, "ApiTester")
+	pathFile := filepath.Join(pathDir, filePath)
+
+	file, err := os.Open(pathFile)
 	if err != nil {
 		return err
 	}
