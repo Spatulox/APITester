@@ -1,7 +1,12 @@
 package main
 
 import (
+	. "ApiTester/src/checkConfig"
+	. "ApiTester/src/import"
+	. "ApiTester/src/json"
+	. "ApiTester/src/struct"
 	"embed"
+	"fmt"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -10,57 +15,52 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
-/*func main() {
-	_, err := CheckConfig("./test/test1.json")
+func initJsonFiles() {
+	var conf Config
+	OldReadJsonFile("./useradmin.json", &conf)
+
+	SaveConfigToJson(conf, "test", "test.json")
+	SaveConfigToJson(conf, "test", "test1.json")
+
+	_, err := CheckFolderConfig("test")
 	if err != nil {
 		return
 	}
 
-	//var conf Config
-	//ReadJsonFile("./useradmin.json", &conf)
+	//INSOMNIA
+	var json map[string]interface{}
+	OldReadJsonFile("./Insomnia.json", &json)
 
-	//SaveConfigToJson(conf, "test", "test.json")
-	//SaveConfigToJson(conf, "test", "test1.json")
-
-	_, err = CheckFolderConfig("test")
+	config, err := ParseInsomniaExport(json)
 	if err != nil {
+		fmt.Printf("%v", err)
 		return
 	}
 
-	// INSOMNIA
-	// var json map[string]interface{}
-	// ReadJsonFile("./Insomnia.json", &json)
+	fmt.Printf("+v\n", config)
 
-	// config, err := ParseInsomniaExport(json)
-	// if err != nil {
-	// 	fmt.Printf("%v", err)
-	// 	return
-	// }
+	//POSTMAN
+	OldReadJsonFile("./Postman.json", &json)
 
-	// fmt.Printf("+v\n", config)
+	config, err = ParsePostmanExport(json)
+	if err != nil {
+		fmt.Printf("%v", err)
+		return
+	}
 
-	// POSTMAN
-	// var json map[string]interface{}
-	// ReadJsonFile("./Postman.json", &json)
-
-	// config, err := ParsePostmanExport(json)
-	// if err != nil {
-	// 	fmt.Printf("%v", err)
-	// 	return
-	// }
-
-	// fmt.Printf("+v\n", config)
-}*/
+	fmt.Printf("+v\n", config)
+}
 
 func main() {
+
 	// Create an instance of the app structure
 	app := NewApp()
 
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:  "ApiTester",
-		Width:  1024,
-		Height: 768,
+		Width:  1400,
+		Height: 800,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
