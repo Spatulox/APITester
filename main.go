@@ -3,11 +3,9 @@ package main
 import (
 	. "ApiTester/src/checkConfig"
 	"embed"
-	"fmt"
-
 	//. "ApiTester/src/import"
-	. "ApiTester/src/json"
-	. "ApiTester/src/struct"
+	//. "ApiTester/src/json"
+	//. "ApiTester/src/struct"
 )
 
 func main() {
@@ -15,13 +13,15 @@ func main() {
 	if err != nil {
 		return
 	}
-	var conf Config
+
+	/*var conf Config
 	ReadJsonFile("./useradmin.json", &conf)
 
 	SaveConfigToJson(conf, "test", "test.json")
 	SaveConfigToJson(conf, "", "test.json")
 	res, _ := ListJsonFile()
 	fmt.Printf("%+v", res)
+	*/
 
 	// INSOMNIA
 	// var json map[string]interface{}
