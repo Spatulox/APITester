@@ -9,19 +9,21 @@ import (
 )
 
 func main() {
-	_, err := CheckConfig("./useradmin.json")
+	_, err := CheckConfig("./test/test1.json")
 	if err != nil {
 		return
 	}
 
-	/*var conf Config
-	ReadJsonFile("./useradmin.json", &conf)
+	//var conf Config
+	//ReadJsonFile("./useradmin.json", &conf)
 
-	SaveConfigToJson(conf, "test", "test.json")
-	SaveConfigToJson(conf, "", "test.json")
-	res, _ := ListJsonFile()
-	fmt.Printf("%+v", res)
-	*/
+	//SaveConfigToJson(conf, "test", "test.json")
+	//SaveConfigToJson(conf, "test", "test1.json")
+
+	_, err = CheckFolderConfig("test")
+	if err != nil {
+		return
+	}
 
 	// INSOMNIA
 	// var json map[string]interface{}
