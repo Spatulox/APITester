@@ -69,8 +69,8 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 	case "DELETE":
 		status, result, err = apiApiKey.DELETE(endpoint.Path)
 	default:
-		Log.Infos(fmt.Sprintf("Méthode non reconnue pour l'endpoint %d, test %d : %s", i, i2, inputData.Method))
-		break
+		Log.Infos(fmt.Sprintf("Unknown method for endpoint %d, test %d : %s", i, i2, inputData.Method))
+		return returnResult, fmt.Errorf("Unknown method for endpoint %d, test %d : %s", i, i2, inputData.Method)
 	}
 
 	if err != nil {
@@ -82,7 +82,7 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 	var jsonRes map[string]interface{}
 	errJson := json.Unmarshal([]byte(result), &jsonRes)
 	if errJson != nil {
-		Log.Error(fmt.Sprintf("Impossible to cast the answer into a json : %v", errJson))
+		Log.Error(fmt.Sprintf("Impossible to cast the answer into a json (%s) : %v", endpoint.Path, errJson))
 		return returnResult, errJson
 	}
 
