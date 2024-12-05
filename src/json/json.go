@@ -47,6 +47,23 @@ func ReadJsonFile[T any](filePath string, structure *T) error {
 	return nil
 }
 
+func OldReadJsonFile[T any](filePath string, structure *T) error {
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(structure)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // -------------------------------------------- //
 
 // ListJsonFile parcourt un répertoire spécifié dans le dossier de configuration de l'utilisateur
