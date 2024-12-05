@@ -71,6 +71,7 @@ The results are presented in a clear, tabbed interface for easy analysis:
 > - Import Insomnia / Postman extraction
 > - Save/Read a config
 > - Execute a config
+> - Execute a folder of config (multithread)
 
 
 # README
