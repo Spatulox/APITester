@@ -1,14 +1,16 @@
 package main
 
 import (
-	. "ApiTester/src/checkConfig"
 	"embed"
-	//. "ApiTester/src/import"
-	//. "ApiTester/src/json"
-	//. "ApiTester/src/struct"
+	"github.com/wailsapp/wails/v2"
+	"github.com/wailsapp/wails/v2/pkg/options"
+	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 )
 
-func main() {
+//go:embed all:frontend/dist
+var assets embed.FS
+
+/*func main() {
 	_, err := CheckConfig("./test/test1.json")
 	if err != nil {
 		return
@@ -48,12 +50,9 @@ func main() {
 	// }
 
 	// fmt.Printf("+v\n", config)
-}
+}*/
 
-//go:embed all:frontend/dist
-var assets embed.FS
-
-/*func main() {
+func main() {
 	// Create an instance of the app structure
 	app := NewApp()
 
@@ -75,4 +74,4 @@ var assets embed.FS
 	if err != nil {
 		println("Error:", err.Error())
 	}
-}*/
+}
