@@ -5,3 +5,5 @@ frontend/package*
 frontend/wailsjs/
 
 .idea/
+
+main
