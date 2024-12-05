@@ -2,19 +2,26 @@ package main
 
 import (
 	. "ApiTester/src/checkConfig"
-	. "ApiTester/src/import"
-	. "ApiTester/src/json"
 	"embed"
-)
+	"fmt"
 
-//go:embed all:frontend/dist
-var assets embed.FS
+	//. "ApiTester/src/import"
+	. "ApiTester/src/json"
+	. "ApiTester/src/struct"
+)
 
 func main() {
 	_, err := CheckConfig("./useradmin.json")
 	if err != nil {
 		return
 	}
+	var conf Config
+	ReadJsonFile("./useradmin.json", &conf)
+
+	SaveConfigToJson(conf, "test", "test.json")
+	SaveConfigToJson(conf, "", "test.json")
+	res, _ := ListJsonFile()
+	fmt.Printf("%+v", res)
 
 	// INSOMNIA
 	// var json map[string]interface{}
@@ -40,6 +47,9 @@ func main() {
 
 	// fmt.Printf("+v\n", config)
 }
+
+//go:embed all:frontend/dist
+var assets embed.FS
 
 /*func main() {
 	// Create an instance of the app structure
