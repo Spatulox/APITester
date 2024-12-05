@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APITester</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>APITester</h1>
+        <nav>
+            <ul>
+                <li><a href="#test-execution" onclick="showSection(event, 'test-execution')">Exécution des Tests</a></li>
+                <li><a href="#configuration-management" onclick="showSection(event, 'configuration-management')">Gestion des Configurations</a></li>
+                <li><a href="#results-dashboard" onclick="showSection(event, 'results-dashboard')">Tableau de Bord des Résultats</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section id="test-execution">
+            <h2>Exécution des Tests</h2>
+            <button id="run-tests">Lancer les Tests</button>
+            <div id="file-list"></div>
+        </section>
+
+        <section id="configuration-management" style="display:none;">
+            <h2>Gestion des Configurations</h2>
+            <button id="add-configuration">Ajouter Configuration</button>
+        </section>
+
+        <section id="results-dashboard" style="display:none;">
+            <h2>Tableau de Bord des Résultats</h2>
+            <div class="tabs">
+                <button class="tablink" onclick="openTab(event, 'ok')">OK 
+                    <span class="notification" id="ok-count">0</span></button>
+                <button class="tablink" onclick="openTab(event, 'warning')">WARNING 
+                    <span class="notification" id="warning-count">0</span></button>
+                <button class="tablink" onclick="openTab(event, 'error')">ERROR 
+                    <span class="notification" id="error-count">0</span></button>
+            </div>
+
+            <div id="ok" class="tabcontent" style="display: block;"">
+                <p>Aucun test réussi pour le moment.</p>
+            </div>
+
+            <div id="warning" class="tabcontent">
+                <p>Aucun avertissement pour le moment.</p>
+            </div>
+
+            <div id="error" class="tabcontent">
+                <p>Aucune erreur pour le moment.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>
+            Copyright &copy; 2024 APITester. 
+            GNU General Public License v3. 
+            All Rights Reserved.
+        </p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,172 @@
+html, body {
+    height: 100%; /* Assurez-vous que le corps et l'élément HTML occupent 100% de la hauteur */
+    margin: 0;
+}
+
+body {
+    display: grid;
+    grid-template-rows: auto 1fr auto; /* En-tête, contenu principal, pied de page */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Utilisation d'une police moderne */
+    background-color: #2c2f33; /* Couleur de fond sombre */
+    color: #ffffff; /* Couleur du texte par défaut */
+}
+
+header {
+    background: #7289da; /* Couleur d'en-tête inspirée de Discord */
+    color: white;
+    text-align: center;
+    padding: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Ombre pour un effet de profondeur */
+}
+
+header h1{
+    margin: 0;
+}
+
+nav {
+    margin-top: 10px; /* Espace entre le texte et la navigation */
+    background-color: #40444b; /* Couleur de fond pour la navigation */
+    border-radius: 10px;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 16px; /* Réduction du padding pour un look plus compact */
+    margin: 0;
+}
+
+nav ul li {
+    display: inline; /* Afficher les éléments de la liste en ligne */
+}
+
+nav ul li a {
+    color: #ffffff; /* Couleur du texte des liens */
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px; /* Coins arrondis pour les liens */
+    transition: background-color 0.3s ease; /* Transition douce pour le changement de couleur */
+}
+
+nav ul li a:hover {
+    background-color: #5e6e82; /* Couleur d'arrière-plan au survol */
+}
+
+main {
+    padding: 20px;
+}
+
+section {
+    margin-bottom: 30px;
+}
+
+.tabs {
+    display: flex;
+    justify-content: space-between; /* Espace entre les onglets */
+}
+
+.tablink {
+    flex: 1;
+    padding: 15px; /* Augmenter le padding pour un meilleur confort */
+    cursor: pointer;
+    background-color: #40444b; /* Couleur de fond des onglets */
+    border-radius: 5px; /* Coins arrondis pour les onglets */
+    border-width: 0;
+    transition: background-color 0.3s ease; /* Transition douce pour le changement de couleur */
+    margin: 0 5px; /* Ajout d'une marge à gauche et à droite */
+}
+
+.tablink:first-child {
+    margin-left: 0; /* Pas de marge à gauche pour le premier onglet */
+}
+
+.tablink:last-child {
+    margin-right: 0; /* Pas de marge à droite pour le dernier onglet */
+}
+
+.tablink:hover {
+    background-color: #5e6e82; /* Couleur d'arrière-plan au survol des onglets */
+}
+
+.tabcontent {
+    display: none; /* Hidden by default */
+}
+
+.notification {
+    color: white;
+    border-radius: 12px;
+    padding: 2px 6px;
+    font-size: 0.8em; /* Taille de police plus petite */
+    margin-left: 8px; /* Espace entre le texte et la notification */
+}
+
+#ok-count{
+    background-color: green;
+}
+
+#warning-count{
+    background-color: yellow;
+    color: black;
+}
+
+#error-count{
+    background-color: #f04747;
+}
+
+.tablink {
+    position: relative; /* Position relative pour positionner les notifications */
+}
+
+
+footer {
+    text-align: center;
+    background-color: #40444b; /* Couleur de fond du pied de page */
+    padding: 10px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.folder {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    margin: 5px 0;
+    background-color: #868484;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    color: black;
+}
+
+.file {
+    display: flex;
+    align-items: center;
+    /*justify-content: space-between;*/
+    padding: 10px;
+    background-color: #868484;
+    color: black;
+}
+
+.folder:hover, .file:hover {
+    background-color: #a7a9ac; /* Couleur au survol */
+}
+
+.icon {
+    margin-right: 10px; /* Espace entre le texte et l'icône */
+}
+
+.arrow {
+    cursor: pointer;
+}
