@@ -68,7 +68,9 @@ The results are presented in a clear, tabbed interface for easy analysis:
 
 
 # <a id="current-implementation"></a>Current implementation
-> - Nothing at all, only the README.md file...
+> - Import Insomnia / Postman extraction
+> - Save/Read a config
+> - Execute a config
 
 
 # README
