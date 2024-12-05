@@ -200,6 +200,16 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 
 // ----------------------------------------------------------- //
 
+// saveResult updates a RequestResult based on the provided error and warning results.
+// It sets the error field if there is an error and appends any warnings to the warning field.
+//
+// Parameters:
+// - @resultError: A ResultError indicating any error that occurred during validation.
+// - @resultWarning: A ResultWarning indicating any warnings that occurred during validation.
+// - @returnResult: A pointer to a RequestResult that will be updated with the error or warning.
+//
+// Returns:
+// - @A boolean indicating whether the result was saved successfully (true if no error occurred).
 func saveResult(resultError ResultError, resultWarning ResultWarning, returnResult *RequestResult) bool {
 	if resultError != 0 {
 		returnResult.Error = resultError
@@ -213,6 +223,17 @@ func saveResult(resultError ResultError, resultWarning ResultWarning, returnResu
 
 // ----------------------------------------------------------- //
 
+// compareHttpStatus compares an expected HTTP status code with an actual status code
+// returned from an API response. It checks if they are in the same range and whether
+// they match exactly.
+//
+// Parameters:
+// - @expectedStatus: A string representing the expected HTTP status code.
+// - @actualStatus: An integer representing the actual HTTP status code returned by the API.
+//
+// Returns:
+// - @A ResultError indicating any errors related to HTTP status comparison.
+// - @A ResultWarning indicating any warnings related to HTTP status comparison.
 func compareHttpStatus(expectedStatus string, actualStatus int) (ResultError, ResultWarning) {
 	expectedStatusInt, err := strconv.Atoi(expectedStatus)
 	if err != nil {
@@ -235,6 +256,19 @@ func compareHttpStatus(expectedStatus string, actualStatus int) (ResultError, Re
 
 // ----------------------------------------------------------- //
 
+// compareResults compares the expected output with the actual result returned from an API response.
+// It checks for equality, missing keys, and inconsistent data types in the JSON structures.
+//
+// Parameters:
+//   - @expectedOutput: An interface{} representing the expected output structure, which will be
+//     marshalled to JSON for comparison.
+//   - @actualResult: A string containing the actual result returned from the API response.
+//
+// Returns:
+//   - @A ResultError indicating any errors related to the comparison process, such as invalid JSON or
+//     missing keys.
+//   - @A ResultWarning indicating any warnings related to the comparison, such as inconsistent data types
+//     or extra key-value pairs present in the actual result.
 func compareResults(expectedOutput interface{}, actualResult string) (ResultError, ResultWarning) {
 	expectedOutputBytes, err := json.Marshal(expectedOutput)
 	if err != nil {

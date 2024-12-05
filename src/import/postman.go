@@ -7,6 +7,21 @@ import (
 	"strings"
 )
 
+// ----------------------------------------------------------- //
+
+// ParsePostmanExport parses a Postman collection export represented as a map
+// and extracts configuration details such as the base URL and endpoints.
+// It constructs a Config object containing the base URL and the list of endpoints.
+//
+// Parameters:
+//   - @export: A map representing the Postman export data, which should contain
+//     an "item" key with an array of request items.
+//
+// Returns:
+//   - @A Config object populated with the base URL and endpoints extracted from
+//     the Postman collection.
+//   - @An error if the "item" key is missing or not an array, or if any other
+//     error occurs during parsing.
 func ParsePostmanExport(export map[string]interface{}) (Config, error) {
 	config := Config{}
 
@@ -21,6 +36,19 @@ func ParsePostmanExport(export map[string]interface{}) (Config, error) {
 	return config, nil
 }
 
+// ----------------------------------------------------------- //
+
+// extractEndpoints extracts the base URL and endpoints from a slice of items
+// in a Postman collection. It recursively processes each item to gather all
+// requests and their associated details.
+//
+// Parameters:
+//   - @items: A slice of interface{} representing the request items in the Postman
+//     collection.
+//
+// Returns:
+// - @A string representing the detected base URL extracted from the first request.
+// - @A slice of Endpoint containing all extracted endpoints with their associated tests.
 func extractEndpoints(items []interface{}) (string, []Endpoint) {
 	var baseURL string
 	var endpoints []Endpoint

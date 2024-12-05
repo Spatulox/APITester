@@ -6,6 +6,21 @@ import (
 	"strings"
 )
 
+// ----------------------------------------------------------- //
+
+// ParseInsomniaExport parses an Insomnia export file represented as a map and
+// extracts configuration details such as endpoints and their associated tests.
+// It collects all request URLs to determine the base URL and constructs a
+// Config object containing the endpoints and their test cases.
+//
+// Parameters:
+//   - @export: A map representing the Insomnia export data, which should contain
+//     a "resources" key with an array of request resources.
+//
+// Returns:
+//   - @A Config object populated with endpoints and tests extracted from the export.
+//   - @An error if the "resources" key is missing or not an array, or if any other
+//     error occurs during parsing.
 func ParseInsomniaExport(export map[string]interface{}) (Config, error) {
 	config := Config{}
 	var urls []string
@@ -80,6 +95,15 @@ func ParseInsomniaExport(export map[string]interface{}) (Config, error) {
 
 // ----------------------------------------------------------- //
 
+// parseAuthentication extracts authentication details from a given authentication
+// map and returns an Authentication object populated with the relevant credentials.
+//
+// Parameters:
+//   - @auth: A map containing authentication details, including type and associated
+//     credentials (API key, OAuth2 details, or basic authentication).
+//
+// Returns:
+// - @An Authentication object containing the parsed authentication information.
 func parseAuthentication(auth map[string]interface{}) Authentication {
 	authType, _ := auth["type"].(string)
 	authentication := Authentication{
@@ -107,6 +131,15 @@ func parseAuthentication(auth map[string]interface{}) Authentication {
 
 // ----------------------------------------------------------- //
 
+// detectBaseURL determines the common base URL from a slice of URLs. It compares
+// each URL to find the longest common path prefix that serves as the base URL.
+//
+// Parameters:
+// - @urls: A slice of strings representing URLs from which to extract the base URL.
+//
+// Returns:
+//   - @A string representing the detected base URL. If no URLs are provided, an empty
+//     string is returned.
 func detectBaseURL(urls []string) string {
 	if len(urls) == 0 {
 		return ""
@@ -141,6 +174,16 @@ func detectBaseURL(urls []string) string {
 
 // ----------------------------------------------------------- //
 
+// extractBaseURL extracts the base URL from a given URL string by removing
+// the last segment (path) of the URL. This is useful for obtaining the base
+// endpoint for API requests.
+//
+// Parameters:
+// - @url: A string representing a full URL from which to extract the base URL.
+//
+// Returns:
+//   - @A string representing the base URL. If the URL has three or fewer parts,
+//     it returns the original URL.
 func extractBaseURL(url string) string {
 	parts := strings.Split(url, "/")
 	if len(parts) > 3 {
