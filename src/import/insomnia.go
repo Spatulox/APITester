@@ -45,8 +45,8 @@ func ParseInsomniaExport(export map[string]interface{}) (Config, error) {
 			// Utiliser la baseUrl détectée pour extraire le chemin
 			path := strings.TrimPrefix(url, config.BasicURL)
 
-			auth, _ := res["authentication"].(map[string]interface{})
-			config.Authentication = parseAuthentication(auth)
+			// auth, _ := res["authentication"].(map[string]interface{})
+			// config.Authentication = parseAuthentication(auth)
 
 			body, _ := res["body"].(map[string]interface{})
 			params, _ := body["params"].([]interface{})
