@@ -1,43 +1,12 @@
-import './style.css';
-import './app.css';
+import { createFileList } from "./JS/create-DOM-element"
 
-import logo from './assets/images/logo-universal.png';
-import {Greet} from '../wailsjs/go/main/App';
-
-document.querySelector('#app').innerHTML = `
-    <img id="logo" class="logo">
-      <div class="result" id="result">Please enter your name below 👇</div>
-      <div class="input-box" id="input">
-        <input class="input" id="name" type="text" autocomplete="off" />
-        <button class="btn" onclick="greet()">Greet</button>
-      </div>
-    </div>
-`;
-document.getElementById('logo').src = logo;
-
-let nameElement = document.getElementById("name");
-nameElement.focus();
-let resultElement = document.getElementById("result");
-
-// Setup the greet function
-window.greet = function () {
-    // Get name
-    let name = nameElement.value;
-
-    // Check if the input is empty
-    if (name === "") return;
-
-    // Call App.Greet(name)
-    try {
-        Greet(name)
-            .then((result) => {
-                // Update result with data back from App.Greet()
-                resultElement.innerText = result;
-            })
-            .catch((err) => {
-                console.error(err);
-            });
-    } catch (err) {
-        console.error(err);
-    }
+// Exemple de données simulées (remplacez ceci par vos données réelles)
+window.folderFiles = {
+    "Folder1": ["file1.json", "file2.json"],
+    "Folder2": ["file3.json", "file4.json"],
+    "root": ["File.json"]
 };
+
+// Appel de la fonction pour créer la liste
+createFileList(window.folderFiles);
+
