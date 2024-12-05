@@ -47,23 +47,40 @@ func ReadJsonFile[T any](filePath string, structure *T) error {
 	return nil
 }
 
-func ListJsonFile() (map[string]interface{}, error) {
+// -------------------------------------------- //
+
+// ListJsonFile parcourt un répertoire spécifié dans le dossier de configuration de l'utilisateur
+// (généralement accessible via os.UserConfigDir) et renvoie une carte contenant les fichiers JSON
+// organisés par dossier. Les fichiers sont récupérés depuis le sous-répertoire "ApiTester"
+// et éventuellement d'un sous-dossier spécifié par folderPath.
+//
+// Paramètres :
+//   - @folderPath : Un pointeur vers une chaîne de caractères représentant le chemin relatif d'un
+//     sous-dossier à l'intérieur du répertoire "ApiTester". Si nil, la fonction liste les fichiers
+//     à la racine de "ApiTester".
+//
+// Retourne :
+//   - Une carte (map) où les clés sont les noms des dossiers et les valeurs sont des tranches de
+//     chaînes contenant les noms des fichiers JSON. En cas d'erreur, retourne nil et l'erreur correspondante.
+func ListJsonFile(folderPath *string) (map[string]interface{}, error) {
 	appDataPath, err := os.UserConfigDir()
 	if err != nil {
 		return nil, fmt.Errorf("error obtaining AppData/conf folder: %v", err)
 	}
 
-	// Create a map to store files by folder
 	folderFiles := make(map[string]interface{})
 
 	pathDir := filepath.Join(appDataPath, "ApiTester")
+	if folderPath != nil {
+		pathDir = filepath.Join(pathDir, *folderPath)
+	}
 
 	err = filepath.Walk(pathDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if info.IsDir() {
-			return nil // Ignore directories
+			return nil
 		}
 
 		// Extract the name of the parent directory
@@ -76,10 +93,9 @@ func ListJsonFile() (map[string]interface{}, error) {
 
 		// Check if the folder already exists in the map
 		if _, exists := folderFiles[folderName]; !exists {
-			folderFiles[folderName] = []string{} // Initialize as a slice of strings
+			folderFiles[folderName] = []string{}
 		}
 
-		// Add the file to the folder's list
 		folderFiles[folderName] = append(folderFiles[folderName].([]string), info.Name())
 		return nil
 	})
@@ -91,6 +107,22 @@ func ListJsonFile() (map[string]interface{}, error) {
 	return folderFiles, nil
 }
 
+// -------------------------------------------- //
+
+// SaveConfigToJson enregistre une configuration au format JSON dans un fichier spécifié dans le
+// répertoire de configuration de l'utilisateur (généralement accessible via os.UserConfigDir).
+// Les fichiers sont enregistrés dans le sous-répertoire "ApiTester" et dans un chemin relatif
+// spécifié par le paramètre path.
+//
+// Paramètres :
+//   - @config : La configuration à enregistrer, de type Config, qui sera encodée en JSON.
+//   - @path : Le chemin relatif vers le sous-dossier où le fichier sera enregistré, à l'intérieur
+//     du répertoire "ApiTester".
+//   - @filename : Le nom du fichier dans lequel la configuration sera enregistrée. Doit être non vide.
+//
+// Retourne :
+//   - Une erreur si un problème survient lors de l'accès au répertoire, de la création du fichier,
+//     ou de l'encodage des données en JSON. Sinon, retourne nil après un enregistrement réussi.
 func SaveConfigToJson(config Config, path string, filename string) error {
 	appDataPath, err := os.UserConfigDir()
 	if err != nil {
