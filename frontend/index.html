@@ -11,15 +11,21 @@
         <h1>APITester</h1>
         <nav>
             <ul>
-                <li><a href="#test-execution" id="section1">Dashboard des Tests</a></li>
-                <li><a href="#configuration-management" id="section2">Gestion des Configurations</a></li>
-                <li><a href="#results-dashboard" id="section3">Tableau de Bord des Résultats</a></li>
+                <li><a href="#test-execution" id="section1">Tests Dashboard</a></li>
+                <li><a href="#configuration-management" id="section2">Edit Configurations</a></li>
+                <li><a href="#results-dashboard" id="section3">Result Dashboard</a></li>
             </ul>
         </nav>
     </header>
     <main>
+        <!-- Modal for Group Selection -->
+        <div id="groupSelectionModal" style="display: none;">
+            <h3>Select a Group/Folder</h3>
+            <ul id="groupList"></ul>
+            <button id="closeModal">Close</button>
+        </div>
         <section id="test-execution">
-            <h2>Dashbord des Tests</h2>
+            <h2>Tests Dashbord</h2>
             <div id="file-list"></div>
             <div>
                 <input type="button" id="viewTestFilesButton" value="View test files" class="custom-file-upload">
@@ -28,23 +34,16 @@
                     Import Insomnia/Postman extract
                     <input type="file" id="fileInput" style="display: none;" />
                 </label>
-                <!-- Modal for Group Selection -->
-                <div id="groupSelectionModal" style="display: none;">
-                    <h3>Select a Group/Folder</h3>
-                    <ul id="groupList"></ul>
-                    <button id="closeModal">Close</button>
-                </div>
-
             </div>
         </section>
 
         <section id="configuration-management" style="display:none;">
-            <h2>Gestion des Configurations</h2>
+            <h2>Edit Configurations</h2>
             <button id="add-configuration">Ajouter Configuration</button>
         </section>
 
         <section id="results-dashboard" style="display:none;">
-            <h2>Tableau de Bord des Résultats</h2>
+            <h2>Result Dashboard</h2>
             <div class="tabs">
                 <button class="tablink" id="ok-tab">OK
                     <span class="notification" id="ok-count">0</span></button>

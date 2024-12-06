@@ -63,6 +63,10 @@ section {
     margin-bottom: 30px;
 }
 
+section > h2 {
+    margin-top: 0;
+}
+
 .file:last-child{
     margin-bottom: 5px;
 }
