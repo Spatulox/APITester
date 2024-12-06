@@ -68,9 +68,17 @@ section {
 }
 
 .folder-controls{
-    width: 50px;
+    width: 131px;
     display: flex;
     justify-content: space-between;
+    height: 24px;
+}
+
+.file-controls{
+    width: 108px;
+    display: flex;
+    justify-content: space-between;
+    height: 24px;
 }
 
 .tabs {
@@ -144,6 +152,27 @@ footer {
 
 
 
+.custom-file-upload {
+    font-family: Arial, Helvetica, sans-serif;
+    display: inline-block;
+    padding: 10px 20px;
+    cursor: pointer;
+    background-color: #7289da; /* Bootstrap primary color */
+    color: white;
+    border-radius: 5px;
+    border: none;
+    box-sizing: border-box;
+}
+
+.custom-file-upload:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+}
+
+#fileNameDisplay {
+    margin-top: 10px;
+    padding: 8.5px 19px;
+}
+
 
 
 
@@ -175,7 +204,7 @@ footer {
     padding: 10px;
     background-color: #868484;
     color: black;
-    padding-right: 31px;
+    padding-right: 34px;
 }
 
 .folder:hover, .file:hover {
@@ -186,9 +215,85 @@ footer {
     margin-right: 10px; /* Espace entre le texte et l'icône */
 }
 
-.play-button{
-    background-color: green;
+.play-button, .edit-button, .delete-button{
     border-width: 0;
     border-radius: 5px;
     width: 30px;
+}
+
+.play-button{
+    background-color: green;
+}
+
+.delete-button{
+    background-color: darkred;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Modal Background */
+#groupSelectionModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
+    z-index: 1000; /* High z-index to overlay above other content */
+    
+    display: block;
+    padding: 20%;
+}
+
+/* Modal Content */
+#groupSelectionModal > h3 {
+    color: #ffffff; /* White text for header */
+    margin-bottom: 20px; /* Space below header */
+}
+
+#groupList {
+    list-style-type: none; /* Remove bullet points from list */
+    padding: 0; /* Remove default padding */
+}
+
+#groupList li {
+    background-color: #2c2f33; /* Dark background for list items */
+    color: #ffffff; /* White text for list items */
+    padding: 10px 15px; /* Padding for list items */
+    margin-bottom: 10px; /* Space between items */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+
+#groupList li:hover {
+    background-color: #7289da; /* Lighten background on hover (Discord blue) */
+}
+
+/* Close Button */
+#closeModal {
+    background-color: #ff4757; /* Red color for close button */
+    color: white; /* White text */
+    border: none; /* No border */
+    padding: 10px 20px; /* Padding around button text */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+#closeModal:hover {
+    background-color: #ff6b81; /* Lighter red on hover */
 }
