@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 // App struct
@@ -117,6 +118,11 @@ func (a *App) DeleteConfig(path *string) error {
 
 	if path == nil {
 		return fmt.Errorf("le chemin est nul")
+	}
+
+	if strings.HasPrefix(*path, "root") {
+		*path = strings.TrimPrefix(*path, "root/")
+		*path = strings.TrimPrefix(*path, "root\\")
 	}
 
 	appDataPath, err := os.UserConfigDir()
