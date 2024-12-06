@@ -6,7 +6,8 @@ import { CheckSoloConfig, CheckGroupConfig } from '../../wailsjs/go/main/App'
 export async function checkConfig(filepath){
     
     if(filepath.includes("root")){
-        filepath = filepath.replace("root/", "")
+        //filepath = filepath.replace("root/", "")
+        filepath = filepath.replace(/^root[/\\]/, "");
     }
 
     try{
