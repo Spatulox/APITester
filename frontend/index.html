@@ -21,6 +21,21 @@
         <section id="test-execution">
             <h2>Dashbord des Tests</h2>
             <div id="file-list"></div>
+            <div>
+                <input type="button" id="viewTestFilesButton" value="View test files" class="custom-file-upload">
+                <input type="button" value="Add a test" class="custom-file-upload">
+                <label for="fileInput" class="custom-file-upload" id="fileNameDisplay">
+                    Import Insomnia/Postman extract
+                    <input type="file" id="fileInput" style="display: none;" />
+                </label>
+                <!-- Modal for Group Selection -->
+                <div id="groupSelectionModal" style="display: none;">
+                    <h3>Select a Group/Folder</h3>
+                    <ul id="groupList"></ul>
+                    <button id="closeModal">Close</button>
+                </div>
+
+            </div>
         </section>
 
         <section id="configuration-management" style="display:none;">
