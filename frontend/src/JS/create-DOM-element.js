@@ -1,7 +1,9 @@
 import { editName, toggleFileListVisibility } from "./rename-element"
+import { checkConfig } from "./check-config"
 
 export function createFileList(folderFiles) {
     const fileListContainer = document.getElementById('file-list');
+    fileListContainer.innerHTML = ""
 
     for (const [folderName, files] of Object.entries(folderFiles)) {
         if (folderName === "root") {
@@ -24,13 +26,6 @@ export function createFileList(folderFiles) {
                     toggleFileListVisibility(fileListDiv, folderDiv.querySelector('.arrow'));
                 }
             };
-            files.forEach(fileName => {
-                console.log(files)
-                // const fileElement = fileListDiv.querySelector(`[data-filename="${fileName}"]`);
-                // if (fileElement) {
-                //     addPlayButton(fileElement, fileName);
-                // }
-            });
         }
     }
 }
@@ -52,19 +47,40 @@ function createControlsDiv(name) {
     const controlsDiv = document.createElement('div');
     controlsDiv.className = 'folder-controls';
     
-    const arrowSpan = document.createElement('span');
-    arrowSpan.className = 'arrow';
-    arrowSpan.innerHTML = '<';
-    
     const playButton = document.createElement('button');
     playButton.className = 'play-button';
     playButton.innerHTML = '▶';
     playButton.onclick = function(event) {
         event.stopPropagation();
-        alert(`Play ${name}`);
+        checkConfig(`${name}/`)
+        alert(`Play ${name}/`);
     };
     
+    const editButton = document.createElement('button');
+    editButton.className = 'edit-button';
+    editButton.style.visibility = "hidden"
+    editButton.style.onclick = null
+    editButton.innerHTML = '🔧';
+
+    const deleteButton = document.createElement('button'); // Create the delete button
+    deleteButton.className = 'delete-button';
+    deleteButton.innerHTML = '🗑️';
+    deleteButton.onclick = function(event) {
+        event.stopPropagation();
+        const confirmDelete = confirm(`Are you sure you want to delete ${name}?`);
+        if (confirmDelete) {
+            console.log(`Deleting ${parentFolder}/${name}`)
+            element.remove();
+        }
+    };
+    
+    const arrowSpan = document.createElement('span');
+    arrowSpan.className = 'arrow';
+    arrowSpan.innerHTML = '<';
+    
     controlsDiv.appendChild(playButton);
+    controlsDiv.appendChild(editButton);
+    controlsDiv.appendChild(deleteButton);
     controlsDiv.appendChild(arrowSpan);
     return controlsDiv;
 }
@@ -83,15 +99,50 @@ function createFolderTextElement(folderName) {
 }
 
 function addPlayButton(element, name) {
+    const controlsDiv = document.createElement('div');
+    controlsDiv.className = 'file-controls';
+
     const playButton = document.createElement('button');
     playButton.className = 'play-button';
     playButton.innerHTML = '▶';
+
+    const editButton = document.createElement('button');
+    editButton.className = 'edit-button';
+    editButton.innerHTML = '🔧';
+
+    const deleteButton = document.createElement('button'); // Create the delete button
+    deleteButton.className = 'delete-button';
+    deleteButton.innerHTML = '🗑️';
+
+    controlsDiv.appendChild(playButton);
+    controlsDiv.appendChild(editButton);
+    controlsDiv.appendChild(deleteButton);
+    element.appendChild(controlsDiv);
+
+    // Détectez le dossier parent après avoir ajouté les contrôles
+    let parentFolder = detectCurrentFolder(element);
+    console.log("Parent folder:", parentFolder);
+
     playButton.onclick = function(event) {
         event.stopPropagation();
-        alert(`Play ${name}`);
+        alert(`Play ${parentFolder}/${name}`);
+        checkConfig(`${parentFolder}/${name}`)
     };
-    element.appendChild(playButton);
+
+    editButton.onclick = function(event) {
+        event.stopPropagation();
+    };
+
+    deleteButton.onclick = function(event) {
+        event.stopPropagation();
+        const confirmDelete = confirm(`Are you sure you want to delete ${name}?`);
+        if (confirmDelete) {
+            console.log(`Deleting ${parentFolder}/${name}`);
+            element.remove()
+        }
+    };
 }
+
 
 // Fonction pour créer la liste des fichiers dans un dossier
 function createFileListElement(files) {
@@ -123,7 +174,8 @@ function createFileElement(file) {
     };
 
     fileDiv.appendChild(fileText);
-    addPlayButton(fileDiv, file);
+    // yerk JS priorities, need to do it like that to work :vomiting:
+    setTimeout(() => addPlayButton(fileDiv, file), 0);
 
     return fileDiv;
 }
@@ -135,4 +187,21 @@ export function createSpanElement(text) {
     span.style.cursor = 'pointer';
 
     return span;
+}
+
+function detectCurrentFolder(element) {
+    let current = element;
+
+    while (current && !current.classList.contains('folder') && current.id !== 'file-list') {
+        if (current.classList.contains('file-list')) {
+            let folderElement = current.previousElementSibling;
+            if (folderElement && folderElement.classList.contains('folder')) {
+                let folderName = folderElement.querySelector('span').innerText.trim();
+                return folderName;
+            }
+        }
+        current = current.parentElement;
+    }
+
+    return 'root';
 }
