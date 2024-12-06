@@ -86,7 +86,7 @@ function jsonToHtml(jsonData) {
 
             html += '<div class="http-state-section">';
             html += '<h5>Expected HTTP State:</h5>';
-            html += makeEditable(test.expectedHttpState);
+            html += makeEditable(test.expectedHttpState || "No Provided");
             html += '</div>';
 
             html += '</div>'; // method-content
@@ -214,10 +214,8 @@ function setupAuthTabs() {
 function adjustInputSize(input) {
     if (input.tagName.toLowerCase() === 'input') {
         input.style.width = 'auto';
-        input.style.width = (input.scrollWidth + 5) + 'px';
     } else if (input.tagName.toLowerCase() === 'textarea') {
         input.style.height = 'auto';
-        input.style.height = (input.scrollHeight + 5) + 'px';
     }
 }
 
