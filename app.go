@@ -147,3 +147,20 @@ func (a *App) DeleteConfig(path *string) error {
 		return os.Remove(fullPath)
 	}
 }
+
+func (a *App) PrintJsonFile(path string) (Config, error) {
+	/*	appDataPath, err := os.UserConfigDir()
+		if err != nil {
+			return Config{}, fmt.Errorf("error obtaining AppData/conf folder: %v", err)
+		}
+
+		pathDir := filepath.Join(appDataPath, "ApiTester")
+		pathDir = filepath.Join(pathDir, path)*/
+
+	var conf Config
+	err := ReadJsonFile(path, &conf)
+	if err != nil {
+		return Config{}, err
+	}
+	return conf, nil
+}

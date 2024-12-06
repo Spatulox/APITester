@@ -1,6 +1,8 @@
 import {editName, toggleFileListVisibility} from "./rename-element"
 import {checkConfig} from "./check-config"
 import {DeleteConfig} from "../../wailsjs/go/main/App";
+import {showSection} from "./event-listener";
+import {printJsonToEditTab} from "./edit-config";
 
 export function createFileList(folderFiles) {
     const fileListContainer = document.getElementById('file-list');
@@ -59,7 +61,7 @@ function createControlsDiv(name) {
     const editButton = document.createElement('button');
     editButton.className = 'edit-button';
     editButton.style.visibility = "hidden"
-    editButton.style.onclick = null
+    //editButton.style.onclick = null
     editButton.innerHTML = '🔧';
 
     const deleteButton = document.createElement('button'); // Create the delete button
@@ -133,9 +135,15 @@ function addPlayButton(element, name) {
         await checkConfig(`${parentFolder}/${name}`)
     };
 
-    editButton.onclick = function(event) {
-        event.stopPropagation();
-    };
+    editButton.onclick = async function(event){
+        try{
+            event.stopPropagation();
+            await printJsonToEditTab(`${parentFolder}/${name}`)
+            showConfiguration(event, controlsDiv)
+        } catch (e) {
+            console.log(e)
+        }
+    }
 
     deleteButton.onclick = async function(event) {
         event.stopPropagation();
@@ -212,4 +220,10 @@ function detectCurrentFolder(element) {
     }
 
     return 'root';
+}
+
+
+function showConfiguration(event, controlsDiv){
+    console.log(controlsDiv)
+    showSection(event, 'configuration-management')
 }

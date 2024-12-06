@@ -30,7 +30,7 @@ element3.addEventListener('mousedown', (evt) => openTab(evt, 'error'));
 
 
 // Fonction pour afficher la section principale
-function showSection(evt, sectionId) {
+export function showSection(evt, sectionId) {
     // Masquer toutes les sections
     var sections = document.querySelectorAll('main > section');
     sections.forEach(function(section) {

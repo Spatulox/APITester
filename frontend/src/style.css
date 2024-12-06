@@ -301,3 +301,92 @@ footer {
 #closeModal:hover {
     background-color: #ff6b81; /* Lighter red on hover */
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.config-header, .endpoints {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+h2 {
+    color: #0078d4;
+    border-bottom: 2px solid #0078d4;
+    padding-bottom: 10px;
+    margin-top: 0;
+}
+
+h3, h4, h5 {
+    color: #333;
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
+
+.endpoint-header, .method-header {
+    background-color: #e8f1fb;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.endpoint-header:hover, .method-header:hover {
+    background-color: #d0e5f8;
+}
+
+.endpoint-content, .method-content {
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+pre {
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    overflow-x: auto;
+    font-size: 14px;
+}
+
+p {
+    margin: 10px 0;
+}
+
+strong {
+    color: #0078d4;
+}
+
+.test-method {
+    margin-bottom: 15px;
+}
+
+/* Animation pour l'ouverture/fermeture des sections */
+.endpoint-content, .method-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.endpoint-content.open, .method-content.open {
+    max-height: 1000px; /* Ajustez selon vos besoins */
+}
