@@ -112,3 +112,32 @@ func (a *App) SendJsonToGoFunction(data map[string]interface{}, path string, fil
 
 	return nil
 }
+
+func (a *App) DeleteConfig(path *string) error {
+
+	if path == nil {
+		return fmt.Errorf("le chemin est nul")
+	}
+
+	appDataPath, err := os.UserConfigDir()
+	if err != nil {
+		return fmt.Errorf("error obtaining AppData/conf folder: %v", err)
+	}
+
+	pathDir := filepath.Join(appDataPath, "ApiTester")
+	pathDir = filepath.Join(pathDir, *path)
+
+	Log.Infos(pathDir)
+	fullPath := filepath.Clean(pathDir)
+
+	fileInfo, err := os.Stat(fullPath)
+	if err != nil {
+		return err
+	}
+	Log.Infos(fullPath)
+	if fileInfo.IsDir() {
+		return os.RemoveAll(fullPath)
+	} else {
+		return os.Remove(fullPath)
+	}
+}

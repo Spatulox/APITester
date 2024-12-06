@@ -1,5 +1,6 @@
-import { editName, toggleFileListVisibility } from "./rename-element"
-import { checkConfig } from "./check-config"
+import {editName, toggleFileListVisibility} from "./rename-element"
+import {checkConfig} from "./check-config"
+import {DeleteConfig} from "../../wailsjs/go/main/App";
 
 export function createFileList(folderFiles) {
     const fileListContainer = document.getElementById('file-list');
@@ -50,10 +51,9 @@ function createControlsDiv(name) {
     const playButton = document.createElement('button');
     playButton.className = 'play-button';
     playButton.innerHTML = '▶';
-    playButton.onclick = function(event) {
+    playButton.onclick = async function(event) {
         event.stopPropagation();
-        checkConfig(`${name}/`)
-        alert(`Play ${name}/`);
+        await checkConfig(`${name}/`)
     };
     
     const editButton = document.createElement('button');
@@ -65,12 +65,16 @@ function createControlsDiv(name) {
     const deleteButton = document.createElement('button'); // Create the delete button
     deleteButton.className = 'delete-button';
     deleteButton.innerHTML = '🗑️';
-    deleteButton.onclick = function(event) {
+    deleteButton.onclick = async function(event) {
         event.stopPropagation();
         const confirmDelete = confirm(`Are you sure you want to delete ${name}?`);
         if (confirmDelete) {
-            console.log(`Deleting ${parentFolder}/${name}`)
-            element.remove();
+            try{
+                await DeleteConfig(`${name}`)
+                controlsDiv.remove();
+            } catch (e) {
+                alert(e.toString())
+            }
         }
     };
     
@@ -123,22 +127,27 @@ function addPlayButton(element, name) {
     let parentFolder = detectCurrentFolder(element);
     console.log("Parent folder:", parentFolder);
 
-    playButton.onclick = function(event) {
+    playButton.onclick = async function(event) {
         event.stopPropagation();
         alert(`Play ${parentFolder}/${name}`);
-        checkConfig(`${parentFolder}/${name}`)
+        await checkConfig(`${parentFolder}/${name}`)
     };
 
     editButton.onclick = function(event) {
         event.stopPropagation();
     };
 
-    deleteButton.onclick = function(event) {
+    deleteButton.onclick = async function(event) {
         event.stopPropagation();
         const confirmDelete = confirm(`Are you sure you want to delete ${name}?`);
         if (confirmDelete) {
-            console.log(`Deleting ${parentFolder}/${name}`);
-            element.remove()
+            try{
+                console.log(`Deleting ${parentFolder}/${name}`)
+                await DeleteConfig(`${parentFolder}/${name}`)
+                element.remove();
+            } catch (e) {
+                alert(e.toString())
+            }
         }
     };
 }
@@ -196,8 +205,7 @@ function detectCurrentFolder(element) {
         if (current.classList.contains('file-list')) {
             let folderElement = current.previousElementSibling;
             if (folderElement && folderElement.classList.contains('folder')) {
-                let folderName = folderElement.querySelector('span').innerText.trim();
-                return folderName;
+                return folderElement.querySelector('span').innerText.trim();
             }
         }
         current = current.parentElement;
