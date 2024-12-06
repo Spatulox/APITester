@@ -1,14 +1,12 @@
 import { editName, toggleFileListVisibility } from "./rename-element"
 
-// Fonction principale pour créer la liste des fichiers et dossiers
 export function createFileList(folderFiles) {
     const fileListContainer = document.getElementById('file-list');
 
     for (const [folderName, files] of Object.entries(folderFiles)) {
         if (folderName === "root") {
-            const hr = document.createElement("hr")
+            const hr = document.createElement("hr");
             fileListContainer.appendChild(hr);
-            // Traitement spécial pour le dossier "root"
             if (Array.isArray(files) && files.length > 0) {
                 files.forEach(fileName => {
                     const fileElement = createFileElement(fileName);
@@ -20,17 +18,23 @@ export function createFileList(folderFiles) {
             const folderDiv = createFolderElement(folderName);
             fileListContainer.appendChild(folderDiv);
             const fileListDiv = createFileListElement(files);
-            fileListContainer.appendChild(fileListDiv); // Ajouter la liste des fichiers en dehors du dossier
+            fileListContainer.appendChild(fileListDiv);
             folderDiv.onclick = function(event) {
-                if (event.target !== folderDiv.querySelector('.arrow')) {
+                if (!folderDiv.querySelector('.folder-controls').contains(event.target)) {
                     toggleFileListVisibility(fileListDiv, folderDiv.querySelector('.arrow'));
                 }
             };
+            files.forEach(fileName => {
+                console.log(files)
+                // const fileElement = fileListDiv.querySelector(`[data-filename="${fileName}"]`);
+                // if (fileElement) {
+                //     addPlayButton(fileElement, fileName);
+                // }
+            });
         }
     }
 }
 
-// Fonction pour créer un élément de dossier
 function createFolderElement(folderName) {
     const folderDiv = document.createElement('div');
     folderDiv.className = 'folder';
@@ -38,33 +42,55 @@ function createFolderElement(folderName) {
     const folderText = createFolderTextElement(folderName);
     folderDiv.appendChild(folderText);
 
-    const arrow = createArrowElement();
-    folderDiv.appendChild(arrow);
+    const controlsDiv = createControlsDiv(folderName);
+    folderDiv.appendChild(controlsDiv);
 
     return folderDiv;
 }
 
-// Fonction pour créer l'élément texte du dossier
+function createControlsDiv(name) {
+    const controlsDiv = document.createElement('div');
+    controlsDiv.className = 'folder-controls';
+    
+    const arrowSpan = document.createElement('span');
+    arrowSpan.className = 'arrow';
+    arrowSpan.innerHTML = '<';
+    
+    const playButton = document.createElement('button');
+    playButton.className = 'play-button';
+    playButton.innerHTML = '▶';
+    playButton.onclick = function(event) {
+        event.stopPropagation();
+        alert(`Play ${name}`);
+    };
+    
+    controlsDiv.appendChild(playButton);
+    controlsDiv.appendChild(arrowSpan);
+    return controlsDiv;
+}
+
 function createFolderTextElement(folderName) {
     const folderText = document.createElement('span');
     folderText.innerText = folderName;
     folderText.style.cursor = 'pointer';
 
-    // Événement de clic pour modifier le nom du dossier
     folderText.onclick = function(event) {
-        event.stopPropagation(); // Empêche le clic d'être propagé au dossier
-        editName(folderText, true)
+        event.stopPropagation();
+        editName(folderText, true);
     };
 
     return folderText;
 }
 
-// Fonction pour créer l'élément flèche
-function createArrowElement() {
-    const arrow = document.createElement('span');
-    arrow.className = 'arrow';
-    arrow.innerHTML = '>'; // Icône flèche vers la droite
-    return arrow;
+function addPlayButton(element, name) {
+    const playButton = document.createElement('button');
+    playButton.className = 'play-button';
+    playButton.innerHTML = '▶';
+    playButton.onclick = function(event) {
+        event.stopPropagation();
+        alert(`Play ${name}`);
+    };
+    element.appendChild(playButton);
 }
 
 // Fonction pour créer la liste des fichiers dans un dossier
@@ -97,6 +123,7 @@ function createFileElement(file) {
     };
 
     fileDiv.appendChild(fileText);
+    addPlayButton(fileDiv, file);
 
     return fileDiv;
 }

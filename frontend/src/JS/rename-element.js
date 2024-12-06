@@ -7,7 +7,7 @@ export function toggleFileListVisibility(fileListDiv, arrow) {
         arrow.innerHTML = '▼'; // Flèche vers le bas
     } else {
         fileListDiv.style.display = 'none'; // Masquer les fichiers
-        arrow.innerHTML = '>'; // Flèche vers la droite
+        arrow.innerHTML = '<'; // Flèche vers la droite
     }
 }
 

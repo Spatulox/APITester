@@ -67,6 +67,12 @@ section {
     margin-bottom: 5px;
 }
 
+.folder-controls{
+    width: 50px;
+    display: flex;
+    justify-content: space-between;
+}
+
 .tabs {
     display: flex;
     justify-content: space-between; /* Espace entre les onglets */
@@ -145,6 +151,9 @@ footer {
 
 
 
+.arrow {
+    cursor: pointer;
+}
 
 .folder {
     display: flex;
@@ -162,10 +171,11 @@ footer {
 .file {
     display: flex;
     align-items: center;
-    /*justify-content: space-between;*/
+    justify-content: space-between;
     padding: 10px;
     background-color: #868484;
     color: black;
+    padding-right: 31px;
 }
 
 .folder:hover, .file:hover {
@@ -176,6 +186,9 @@ footer {
     margin-right: 10px; /* Espace entre le texte et l'icône */
 }
 
-.arrow {
-    cursor: pointer;
+.play-button{
+    background-color: green;
+    border-width: 0;
+    border-radius: 5px;
+    width: 30px;
 }
