@@ -28,7 +28,6 @@ export function editName(element, isFolder = false) {
         let finalName;
 
         let currentFolder = detectCurrentFolder(fileElement);
-        console.log(currentFolder)
 
         if (isFolder) {
             success = handleFolderNameChange(newName, element);
