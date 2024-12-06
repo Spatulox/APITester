@@ -319,12 +319,22 @@ footer {
 
 
 
-.config-header, .endpoints {
-    background-color: #ffffff;
+.config-header, .endpoints, .auth-section, .oauth2-details, .basic-auth-details {
+    background-color: #ffffff94;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
     margin-bottom: 20px;
+}
+
+.endpoint {
+    cursor: move;
+}
+
+.auth-section, .oauth2-details, .basic-auth-details {
+    background-color: #f9f9f9;
+    margin-top: 15px;
+    padding: 15px;
 }
 
 h2 {
@@ -357,6 +367,7 @@ h3, h4, h5 {
     background-color: #f9f9f9;
     border-radius: 5px;
     margin-top: 10px;
+    display: none;
 }
 
 pre {
@@ -366,10 +377,17 @@ pre {
     padding: 10px;
     overflow-x: auto;
     font-size: 14px;
+    color: black;
 }
 
 p {
     margin: 10px 0;
+    color: black;
+}
+
+
+#output span{
+    color: black;
 }
 
 strong {
@@ -382,11 +400,95 @@ strong {
 
 /* Animation pour l'ouverture/fermeture des sections */
 .endpoint-content, .method-content {
-    max-height: 0;
-    overflow: hidden;
+/*    max-height: 0;
+    overflow: hidden;*/
     transition: max-height 0.3s ease-out;
 }
 
 .endpoint-content.open, .method-content.open {
     max-height: 1000px; /* Ajustez selon vos besoins */
+}
+
+
+
+.auth-tabs {
+    margin-top: 20px;
+}
+
+.tab-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    border-bottom: 2px solid #0078d4;
+}
+
+.tab-item {
+    padding: 10px 20px;
+    cursor: pointer;
+    background-color: #7289da;
+    border: 1px solid #ddd;
+    border-bottom: none;
+    margin-right: 5px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+.tab-item.active {
+    background-color: #4f67bd;
+    color: white;
+    border-color: #0078d4;
+}
+
+.tab-content {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    padding: 20px;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+.editable .edit-input {
+    width: auto;
+    min-width: 100%;
+    box-sizing: border-box;
+    padding: 2px 5px;
+    border: 1px solid #0078d4;
+    border-radius: 3px;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.editable textarea.edit-input {
+    min-height: 100px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    resize: both;
+}
+
+.discord-button {
+    background-color: #7289da; /* Couleur principale de Discord */
+    color: white; /* Texte en blanc */
+    border: none; /* Pas de bordure */
+    border-radius: 5px; /* Coins arrondis */
+    padding: 10px 15px; /* Espacement interne */
+    font-size: 14px; /* Taille de la police */
+    font-weight: bold; /* Texte en gras */
+    cursor: pointer; /* Curseur en main */
+    transition: background-color 0.3s, transform 0.2s; /* Animation pour le survol */
+}
+
+.discord-button:hover {
+    background-color: #5b6eae; /* Couleur plus foncée au survol */
+}
+
+.discord-button:active {
+    transform: scale(0.95); /* Réduction de la taille au clic */
 }

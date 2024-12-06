@@ -1,4 +1,4 @@
-import {createFileList} from "./JS/create-DOM-element"
+import {createFileList} from "./JS/dashboard/create-DOM-element"
 import {ListJsonFile, OpenFileExplorer} from "../wailsjs/go/main/App";
 
 

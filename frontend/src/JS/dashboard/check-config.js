@@ -1,5 +1,5 @@
 
-import { CheckSoloConfig, CheckGroupConfig } from '../../wailsjs/go/main/App'
+import { CheckSoloConfig, CheckGroupConfig } from '../../../wailsjs/go/main/App'
 
 
 

@@ -1,8 +1,8 @@
 import {editName, toggleFileListVisibility} from "./rename-element"
 import {checkConfig} from "./check-config"
-import {DeleteConfig} from "../../wailsjs/go/main/App";
-import {showSection} from "./event-listener";
-import {printJsonToEditTab} from "./edit-config";
+import {DeleteConfig} from "../../../wailsjs/go/main/App";
+import {showSection} from "../event-listener";
+import {printJsonToEditTab} from "../edit-config/edit-config";
 
 export function createFileList(folderFiles) {
     const fileListContainer = document.getElementById('file-list');
@@ -139,7 +139,7 @@ function addPlayButton(element, name) {
         try{
             event.stopPropagation();
             await printJsonToEditTab(`${parentFolder}/${name}`)
-            showConfiguration(event, controlsDiv)
+            showConfiguration(event)
         } catch (e) {
             console.log(e)
         }
@@ -223,7 +223,6 @@ function detectCurrentFolder(element) {
 }
 
 
-function showConfiguration(event, controlsDiv){
-    console.log(controlsDiv)
+function showConfiguration(event){
     showSection(event, 'configuration-management')
 }

@@ -1,5 +1,6 @@
 import { SendJsonToGoFunction } from "../../wailsjs/go/main/App";
 import { refreshFile } from "../main";
+import {createEmptyConf, createMethodElement} from "./edit-config/edit-config";
 
 const element1 = document.getElementById('ok-tab');
 const element2 = document.getElementById('warning-tab');
@@ -47,7 +48,11 @@ export function showSection(evt, sectionId) {
     });
 
     // Ajouter une classe active au lien sélectionné
-    evt.currentTarget.classList.add('active');
+    try{
+        evt.currentTarget.classList.add('active');
+    } catch (e) {
+        
+    }
 }
 element4.addEventListener('mousedown', (evt) => showSection(evt, 'test-execution'));
 element5.addEventListener('mousedown', (evt) => showSection(evt, 'configuration-management'));
@@ -60,8 +65,11 @@ document.addEventListener("DOMContentLoaded", function() {
     document.querySelector('.tablink').click(); // Ouvrir le premier onglet par défaut dans le tableau de bord
 });
 
-
-
+const element7 = document.getElementById("add_test_config")
+element7.addEventListener('click', (event)=>{
+    createEmptyConf()
+    showSection(event, 'configuration-management')
+})
 
 
 document.getElementById('closeModal').onclick = function() {
