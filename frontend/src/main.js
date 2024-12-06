@@ -1,6 +1,5 @@
-import { createFileList } from "./JS/create-DOM-element"
-import {ListJsonFile} from "../wailsjs/go/main/App";
-import { OpenFileExplorer } from "../wailsjs/go/main/App";
+import {createFileList} from "./JS/create-DOM-element"
+import {ListJsonFile, OpenFileExplorer} from "../wailsjs/go/main/App";
 
 
 document.getElementById("viewTestFilesButton").onclick = async () => {
@@ -25,16 +24,14 @@ async function getSortedFolderFiles() {
         }, {});
     }
 
-    // Trier les clés et déplacer "root" à la fin
-    let sortedFolderFiles;
-    if (folderFiles.root) {
-        const { root, ...rest } = folderFiles;
-        sortedFolderFiles = { ...sortObjectKeys(rest), root };
-    } else {
-        sortedFolderFiles = sortObjectKeys(folderFiles);
+    // Initialiser root à un tableau vide s'il n'existe pas
+    if (!folderFiles.root) {
+        folderFiles.root = [];
     }
 
-    return sortedFolderFiles;
+    // Trier les clés et déplacer "root" à la fin
+    const { root, ...rest } = folderFiles;
+    return {...sortObjectKeys(rest), root};
 }
 
 let oldListFolder = []
@@ -48,7 +45,7 @@ export async function refreshFile() {
 }
 
 async function startup(){
-    refreshFile()
+    await refreshFile()
     setInterval(() => { refreshFile() }, 3000);
 }
 
