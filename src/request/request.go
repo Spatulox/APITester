@@ -93,7 +93,7 @@ func (api *Api) DELETE(endpoint string) (int, string, error) {
 
 // ------------------------------------------------------------------------- //
 
-func (api *Api) genericRequest(method, endpoint string, data interface{}) (int, string, error) {
+/*func (api *Api) genericRequest(method, endpoint string, data interface{}) (int, string, error) {
 	var body *bytes.Buffer
 	if data != nil {
 		jsonData, err := json.Marshal(data)
@@ -114,18 +114,42 @@ func (api *Api) genericRequest(method, endpoint string, data interface{}) (int, 
 
 	api.addAuth(req)
 
-	/*// Débogage : Afficher les détails de la requête
-	fmt.Printf("Méthode: %s\n", req.Method)
-	fmt.Printf("URL: %s\n", req.URL)
-	fmt.Printf("Headers:\n")
-	for key, values := range req.Header {
-		for _, value := range values {
-			fmt.Printf("  %s: %s\n", key, value)
+	//// Débogage : Afficher les détails de la requête
+	//fmt.Printf("Méthode: %s\n", req.Method)
+	//fmt.Printf("URL: %s\n", req.URL)
+	//fmt.Printf("Headers:\n")
+	//for key, values := range req.Header {
+	//	for _, value := range values {
+	//		fmt.Printf("  %s: %s\n", key, value)
+	//	}
+	//}
+	//if body != nil {
+	//	fmt.Printf("Body: %s\n", body.String())
+	//}
+
+	return api.request(req)
+}*/
+
+func (api *Api) genericRequest(method, endpoint string, data interface{}) (int, string, error) {
+	var bodyReader io.Reader
+	if data != nil {
+		jsonData, err := json.Marshal(data)
+		if err != nil {
+			return 0, "", err
 		}
+		bodyReader = bytes.NewBuffer(jsonData)
 	}
-	if body != nil {
-		fmt.Printf("Body: %s\n", body.String())
-	}*/
+
+	req, err := http.NewRequest(method, api.baseApi+endpoint, bodyReader)
+	if err != nil {
+		return 0, "", err
+	}
+
+	if data != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
+	api.addAuth(req)
 
 	return api.request(req)
 }
