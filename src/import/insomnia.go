@@ -1,7 +1,9 @@
 package insomnia
 
 import (
+	. "ApiTester/src/log"
 	. "ApiTester/src/struct"
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -24,6 +26,7 @@ import (
 func ParseInsomniaExport(export map[string]interface{}) (Config, error) {
 	config := Config{}
 	var urls []string
+	endpointMap := make(map[string]*Endpoint)
 
 	resources, ok := export["resources"].([]interface{})
 	if !ok {
@@ -60,18 +63,43 @@ func ParseInsomniaExport(export map[string]interface{}) (Config, error) {
 			// Utiliser la baseUrl détectée pour extraire le chemin
 			path := strings.TrimPrefix(url, config.BasicURL)
 
-			// auth, _ := res["authentication"].(map[string]interface{})
-			// config.Authentication = parseAuthentication(auth)
+			if path != "/" && strings.HasSuffix(path, "/") {
+				path = path[:len(path)-1]
+			}
 
 			body, _ := res["body"].(map[string]interface{})
-			params, _ := body["params"].([]interface{})
-
 			input := make(map[string]interface{})
-			for _, param := range params {
-				p, _ := param.(map[string]interface{})
-				name, _ := p["name"].(string)
-				value, _ := p["value"].(string)
-				input[name] = value
+
+			if mimeType, ok := body["mimeType"].(string); ok && mimeType == "application/json" {
+				if text, ok := body["text"].(string); ok {
+					var jsonInput interface{}
+					err := json.Unmarshal([]byte(text), &jsonInput)
+					if err == nil {
+						input = jsonInput.(map[string]interface{})
+					}
+				}
+			} else {
+				params, _ := body["params"].([]interface{})
+				for _, param := range params {
+					p, _ := param.(map[string]interface{})
+					name, _ := p["name"].(string)
+					value, _ := p["value"].(string)
+
+					if strings.HasPrefix(value, "{") || strings.HasPrefix(value, "[") {
+						var jsonValue interface{}
+						err := json.Unmarshal([]byte(value), &jsonValue)
+						if err == nil {
+							input[name] = jsonValue
+						} else {
+							unescaped := strings.Replace(value, "\\\"", "\"", -1)
+							unescaped = strings.Replace(unescaped, "\\t", "\t", -1)
+							unescaped = strings.Replace(unescaped, "\\n", "\n", -1)
+							input[name] = unescaped
+						}
+					} else {
+						input[name] = value
+					}
+				}
 			}
 
 			test := Test{
@@ -81,13 +109,24 @@ func ParseInsomniaExport(export map[string]interface{}) (Config, error) {
 				ExpectedHttpState: "",
 			}
 
-			endpoint := Endpoint{
-				Path:  path,
-				Tests: []Test{test},
+			// Vérifier si l'endpoint existe déjà
+			if endpoint, exists := endpointMap[path]; exists {
+				// Ajouter le test à l'endpoint existant
+				endpoint.Tests = append(endpoint.Tests, test)
+			} else {
+				// Créer un nouvel endpoint
+				newEndpoint := &Endpoint{
+					Path:  path,
+					Tests: []Test{test},
+				}
+				endpointMap[path] = newEndpoint
 			}
-
-			config.Endpoint = append(config.Endpoint, endpoint)
 		}
+	}
+
+	// Convertir la map en slice pour la structure Config
+	for _, endpoint := range endpointMap {
+		config.Endpoint = append(config.Endpoint, *endpoint)
 	}
 
 	return config, nil
@@ -155,7 +194,7 @@ func detectBaseURL(urls []string) string {
 	// Comparer chaque partie avec toutes les autres URLs
 	for i, part := range parts {
 		isCommon := true
-		for _, url := range urls[1:] {
+		for _, url := range urls {
 			urlParts := strings.Split(url, "/")
 			if i >= len(urlParts) || urlParts[i] != part {
 				isCommon = false
@@ -169,7 +208,15 @@ func detectBaseURL(urls []string) string {
 		}
 	}
 
-	return strings.Join(commonParts, "/")
+	// Retirer le dernier segment commun s'il n'est pas vide
+	if len(commonParts) > 0 && commonParts[len(commonParts)-1] != "" {
+		commonParts = commonParts[:len(commonParts)-1]
+	}
+
+	baseURL := strings.Join(commonParts, "/")
+
+	Log.Debug(baseURL)
+	return baseURL
 }
 
 // ----------------------------------------------------------- //
