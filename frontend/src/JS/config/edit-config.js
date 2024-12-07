@@ -65,12 +65,13 @@ function jsonToHtml(jsonData, filename) {
 
     config.endpoints.forEach(endpoint => {
         html += `<div class="endpoint">`;
-        html += `<h3 class="endpoint-header">${makeEditable(endpoint.path)}</h3>`;
+        html += `<h3 class="endpoint-header">${makeEditable(endpoint.path)}<button class="delete-endpoint delete-button" onclick="removeElement(this)">🗑️</button></h3>`;
+
         html += `<div class="endpoint-content">`;
 
         endpoint.tests.forEach(test => {
             html += `<div class="test-method">`;
-            html += `<h4 class="method-header">${makeEditable(test.method)}</h4>`;
+            html += `<h4 class="method-header">${makeEditable(test.method)}<button class="delete-method  delete-button" onclick="removeElement(this)">🗑️</button></h4>`;
             html += `<div class="method-content">`;
 
             html += '<div class="input-section">';
@@ -89,7 +90,7 @@ function jsonToHtml(jsonData, filename) {
 
             html += '<div class="http-state-section">';
             html += '<h5>Expected HTTP State:</h5>';
-            html += makeEditable(test.expectedHttpState || "No Provided");
+            html += makeEditable(test.expectedHttpState || "Not Provided");
             html += '</div>';
 
             html += '</div>'; // method-content
@@ -285,11 +286,11 @@ export function createMethodElement(method = 'GET') {
     let html = '';
 
     html += `<div class="endpoint">`;
-    html += `<h3 class="endpoint-header">${makeEditable('/endpoint')}</h3>`;
+    html += `<h3 class="endpoint-header">${makeEditable("/endpoint")}<button class="delete-endpoint delete-button" onclick="removeElement(this)">🗑️</button></h3>`;
     html += `<div id="endpoint-content" class="endpoint-content">`;
 
     html += `<div class="test-method">`;
-    html += `<h4 class="method-header">${makeEditable(method)}</h4>`;
+    html += `<h4 class="method-header">${makeEditable(method)}<button class="delete-method  delete-button" onclick="removeElement(this)">🗑️</button></h4>`;
     html += `<div class="method-content">`;
 
     html += '<div class="input-section">';

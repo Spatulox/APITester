@@ -36,27 +36,32 @@ export function showSection(evt, sectionId) {
     // Masquer toutes les sections
     var sections = document.querySelectorAll('main > section');
     sections.forEach(function(section) {
-        section.style.visibility = 'hidden';
-        section.style.marginBottom = '0';
-        section.style.height = '0';
+        section.style.visibility = 'hidden'; // Masquer sans retirer du flux
+        section.style.height = '0'; // Réinitialiser la hauteur
+        section.style.marginBottom = '0'; // Réinitialiser les marges
     });
 
-    if(sectionId.includes("results-dashboard")){
-        document.getElementById("results-dashboard-child").style.display = "block"
+    // Gérer l'affichage du tableau de résultats
+    if (!sectionId.includes("results-dashboard")) {
+        document.getElementById("results-dashboard-child").style.height = "0px";
     } else {
-        document.getElementById("results-dashboard-child").style.display = "none"
+        document.getElementById("results-dashboard-child").style.height = "auto";
     }
 
+    // Afficher la section sélectionnée
     const selectedSection = document.getElementById(sectionId);
-    selectedSection.style.visibility = 'visible';
+    selectedSection.style.visibility = 'visible'; // Afficher avec display
     selectedSection.style.height = 'auto';
+    selectedSection.style.marginBottom = '30px';
 
+    // Ajouter une classe active au lien sélectionné
     try {
         evt.currentTarget.classList.add('active');
     } catch (e) {
         console.error("Error adding active class:", e);
     }
 }
+
 
 element4.addEventListener('mousedown', (evt) => showSection(evt, 'test-execution'));
 element5.addEventListener('mousedown', (evt) => showSection(evt, 'configuration-management'));

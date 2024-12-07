@@ -323,6 +323,8 @@ h3, h4, h5 {
 }
 
 .endpoint-header, .method-header {
+    display: flex;
+    justify-content: space-between;
     background-color: #e8f1fb;
     padding: 10px 15px;
     border-radius: 5px;

@@ -23,16 +23,16 @@ export function htmlToJson() {
     // Récupérer tous les endpoints
     document.querySelectorAll('.endpoint').forEach(endpointElement => {
         let endpoint = {
-            path: endpointElement.querySelector('.endpoint-header')?.textContent || '',
+            path: endpointElement.querySelector('.endpoint-header')?.childNodes[0].textContent.trim() || '', // Ignore le bouton
             tests: []
         };
 
         endpointElement.querySelectorAll('.test-method').forEach(testElement => {
             let test = {
-                method: testElement.querySelector('.method-header')?.textContent || '',
+                method: testElement.querySelector('.method-header')?.childNodes[0].textContent.trim() || '', // Ignore le bouton
                 input: parseJsonSafely(testElement.querySelector('.input-section pre')),
                 expectedOutput: parseJsonSafely(testElement.querySelector('.output-section pre')),
-                expectedHttpState: testElement.querySelector('.http-state-section span')?.textContent || ''
+                expectedHttpState: testElement.querySelector('.http-state-section span')?.textContent.trim() || ''
             };
 
             endpoint.tests.push(test);
@@ -40,6 +40,7 @@ export function htmlToJson() {
 
         config.endpoints.push(endpoint);
     });
+
 
     return config;
 }
