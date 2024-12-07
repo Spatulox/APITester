@@ -366,6 +366,12 @@ h3, h4, h5 {
     display: none;
 }
 
+.method-content{
+    border-color: black;
+    border-width: 1px;
+    border-style: solid;
+}
+
 pre {
     background-color: #f0f0f0;
     border: 1px solid #ddd;
