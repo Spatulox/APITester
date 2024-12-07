@@ -96,27 +96,36 @@ section > h2 {
     flex: 1;
     padding: 15px; /* Augmenter le padding pour un meilleur confort */
     cursor: pointer;
-    background-color: #40444b; /* Couleur de fond des onglets */
     border-radius: 5px; /* Coins arrondis pour les onglets */
     border-width: 0;
     transition: background-color 0.3s ease; /* Transition douce pour le changement de couleur */
     margin: 0 5px; /* Ajout d'une marge à gauche et à droite */
+
+
+    background-color: #7289da;
+    color: white;
+    border-color: #0078d4;
 }
 
+
 .tablink:first-child {
-    margin-left: 0; /* Pas de marge à gauche pour le premier onglet */
+    margin-left: 0;
 }
 
 .tablink:last-child {
-    margin-right: 0; /* Pas de marge à droite pour le dernier onglet */
+    margin-right: 0;
 }
 
 .tablink:hover {
-    background-color: #5e6e82; /* Couleur d'arrière-plan au survol des onglets */
+    background-color: #4f67bd;
 }
 
 .tabcontent {
-    display: none; /* Hidden by default */
+    display: none;
+}
+
+.tabcontent > p {
+    color: black !important;
 }
 
 .notification {
@@ -152,12 +161,6 @@ footer {
 }
 
 
-
-
-
-
-
-
 .custom-file-upload {
     font-family: Arial, Helvetica, sans-serif;
     display: inline-block;
@@ -178,11 +181,6 @@ footer {
     margin-top: 10px;
     padding: 8.5px 19px;
 }
-
-
-
-
-
 
 
 
@@ -234,20 +232,6 @@ footer {
 .delete-button{
     background-color: darkred;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -307,18 +291,6 @@ footer {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 .config-header, .endpoints, .auth-section, .oauth2-details, .basic-auth-details {
     background-color: #ffffff94;
     border-radius: 8px;
@@ -352,6 +324,7 @@ h3, h4, h5 {
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    margin-bottom: 0;
 }
 
 .endpoint-header:hover, .method-header:hover {
@@ -362,7 +335,7 @@ h3, h4, h5 {
     padding: 15px;
     background-color: #f9f9f9;
     border-radius: 5px;
-    margin-top: 10px;
+    /*margin-top: 10px;*/
     display: none;
 }
 
@@ -400,15 +373,13 @@ strong {
     margin-bottom: 15px;
 }
 
-/* Animation pour l'ouverture/fermeture des sections */
+
 .endpoint-content, .method-content {
-/*    max-height: 0;
-    overflow: hidden;*/
     transition: max-height 0.3s ease-out;
 }
 
 .endpoint-content.open, .method-content.open {
-    max-height: 1000px; /* Ajustez selon vos besoins */
+    max-height: 1000px;
 }
 
 
@@ -496,4 +467,58 @@ strong {
 
 .discord-button:active {
     transform: scale(0.95); /* Réduction de la taille au clic */
+}
+
+
+/* Styles généraux pour le tableau de bord des résultats */
+#results-dashboard {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    background-color: #ffffff94;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    color: #ffffff; /* Texte blanc */
+}
+
+/* Styles pour les éléments de résultat */
+.result-item {
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 5px rgba(255, 255, 255, 0.1); /* Ombre légère */
+}
+.result-item p {
+    color: black !important;
+}
+
+/* Styles pour les sections OK, Warning et Error */
+#ok {
+    border-left: 5px solid #28a745; /* Vert pour OK */
+}
+
+#warning {
+    border-left: 5px solid #ffc107; /* Jaune pour Warning */
+}
+
+#error {
+    border-left: 5px solid #dc3545; /* Rouge pour Error */
+}
+
+/* Styles pour les messages d'absence de résultats */
+#ok p,
+#warning p,
+#error p {
+    font-style: italic;
+    color: #bbb; /* Couleur grise claire pour les messages d'absence */
+}
+
+.endpoint-container{
+    margin: 10px 5px;
+}
+
+/* Styles pour le contenu des endpoints */
+.endpoint-content {
+    padding: 10px;
+    /*background-color: #333333; /* Fond sombre pour le contenu des endpoints */
+    border-radius: 5px;
 }
