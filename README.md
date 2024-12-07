@@ -11,7 +11,8 @@ Build with GO and Wails
 ## Features
 ### Test Execution
 
-	Test Selection Menu: Choose which tests to run from multiple configuration files, allowing for organized and grouped testing scenarios.
+	Choose which config (or a group of config) to run from multiple configuration files, allowing for organized and grouped testing scenarios.
+    Execute only one endpoint en the config to test it
 
 ### Configuration Management
 
@@ -69,9 +70,9 @@ The results are presented in a clear, tabbed interface for easy analysis:
 
 # <a id="current-implementation"></a>Current implementation
 > - Import Insomnia / Postman extraction
-> - Save/Read a config
+> - Rename/Delete/Read a config
 > - Execute a config
-> - Execute a folder of config (multithread)
+> - Execute a folder of config (multithread) / execute a config
 
 
 # README
