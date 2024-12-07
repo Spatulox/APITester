@@ -1,4 +1,4 @@
-function htmlToJson() {
+export function htmlToJson() {
     let config = {
         basicUrl: document.querySelector('.config-header p strong + span').textContent,
         authentication: {
@@ -20,17 +20,16 @@ function htmlToJson() {
     // Récupérer tous les endpoints
     document.querySelectorAll('.endpoint').forEach(endpointElement => {
         let endpoint = {
-            path: endpointElement.querySelector('.endpoint-header').textContent,
+            path: endpointElement.querySelector('.endpoint-header')?.textContent || '',
             tests: []
         };
 
-        // Récupérer tous les tests pour cet endpoint
         endpointElement.querySelectorAll('.test-method').forEach(testElement => {
             let test = {
-                method: testElement.querySelector('.method-header').textContent,
-                input: JSON.parse(testElement.querySelector('.input-section pre').textContent || '{}'),
-                expectedOutput: JSON.parse(testElement.querySelector('.output-section pre').textContent || '{}'),
-                expectedHttpState: testElement.querySelector('.http-state-section span').textContent
+                method: testElement.querySelector('.method-header')?.textContent || '',
+                input: parseJsonSafely(testElement.querySelector('.input-section pre')),
+                expectedOutput: parseJsonSafely(testElement.querySelector('.output-section pre')),
+                expectedHttpState: testElement.querySelector('.http-state-section span')?.textContent || ''
             };
 
             endpoint.tests.push(test);
@@ -40,4 +39,34 @@ function htmlToJson() {
     });
 
     return config;
+}
+
+function parseJsonSafely(element) {
+    if (!element) return {};
+
+    let jsonString = '';
+    const span = element.querySelector('.display-value');
+    const textarea = element.querySelector('.edit-input');
+
+    // Vérifier si le span est visible et prendre son contenu
+    if (span && getComputedStyle(span).display !== 'none') {
+        jsonString = span.textContent;
+    } else if (textarea) { // Sinon, prendre le contenu du textarea
+        jsonString = textarea.value;
+    }
+
+    jsonString = jsonString.trim();
+
+    // Si la chaîne est vide ou égale à '{}', retourner un objet vide
+    if (!jsonString || jsonString === '{}') {
+        return {};
+    }
+
+    try {
+        return JSON.parse(jsonString);
+    } catch (e) {
+        console.error('Error parsing JSON:', e);
+        console.log('Problematic JSON string:', jsonString);
+        return {};
+    }
 }

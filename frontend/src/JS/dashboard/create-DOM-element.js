@@ -2,7 +2,7 @@ import {editName, toggleFileListVisibility} from "./rename-element"
 import {checkConfig} from "./check-config"
 import {DeleteConfig} from "../../../wailsjs/go/main/App";
 import {showSection} from "../event-listener";
-import {printJsonToEditTab} from "../edit-config/edit-config";
+import {printJsonToEditTab} from "../config/edit-config";
 
 export function createFileList(folderFiles) {
     const fileListContainer = document.getElementById('file-list');

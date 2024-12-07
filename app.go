@@ -7,6 +7,7 @@ import (
 	. "ApiTester/src/log"
 	. "ApiTester/src/struct"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -84,7 +85,7 @@ func (a *App) CheckGroupConfig(pathFilename string) ([]RequestResult, error) {
 	return res, nil
 }
 
-func (a *App) SendJsonToGoFunction(data map[string]interface{}, path string, filename string) error {
+func (a *App) ParseExtractionJsonToGoFunction(data map[string]interface{}, path string, filename string) error {
 	var config Config
 	var err error
 
@@ -151,6 +152,37 @@ func (a *App) RenameFolder(oldName string, newName string) error {
 	err = os.Rename(oldPath, newPath)
 	if err != nil {
 		return fmt.Errorf("error renaming: %v", err)
+	}
+
+	return nil
+}
+
+func (a *App) UpdateConfig(jsonData interface{}, filename string) error {
+	// Marshal the JSON data
+	jsonBytes, err := json.Marshal(jsonData)
+	if err != nil {
+		return fmt.Errorf("error marshaling JSON: %v", err)
+	}
+
+	appDataPath, err := os.UserConfigDir()
+	if err != nil {
+		return fmt.Errorf("error obtaining AppData/conf folder: %v", err)
+	}
+
+	// Create the full path for the file
+	pathDir := filepath.Join(appDataPath, "ApiTester", filename)
+
+	// Create the directory if it doesn't exist
+	dir := filepath.Dir(pathDir) // Get the directory part of the path
+	err = os.MkdirAll(dir, 0755) // Create the directory and all parents if necessary
+	if err != nil {
+		return fmt.Errorf("error creating directory: %v", err)
+	}
+
+	// Write to the specified file
+	err = os.WriteFile(pathDir, jsonBytes, 0644) // 0644 sets permissions for the file
+	if err != nil {
+		return fmt.Errorf("error writing to file: %v", err)
 	}
 
 	return nil

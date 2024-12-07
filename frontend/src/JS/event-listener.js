@@ -1,6 +1,7 @@
-import { SendJsonToGoFunction } from "../../wailsjs/go/main/App";
+import {ParseExtractionJsonToGoFunction, UpdateConfig} from "../../wailsjs/go/main/App";
 import { refreshFile } from "../main";
-import {createEmptyConf, createMethodElement} from "./edit-config/edit-config";
+import {createEmptyConf} from "./config/edit-config";
+import {htmlToJson} from "./config/save-config";
 
 const element1 = document.getElementById('ok-tab');
 const element2 = document.getElementById('warning-tab');
@@ -77,6 +78,15 @@ document.getElementById('closeModal').onclick = function() {
 };
 
 
+document.getElementById("save-config").addEventListener("click", async ()=>{
+    const fileNameElement = document.getElementById("fileNameConfiguration")
+    const displayValue = fileNameElement.querySelector('.editable .display-value').textContent
+
+    const jsonData = htmlToJson()
+    console.log(jsonData)
+    await UpdateConfig(jsonData, displayValue)
+})
+
 
 
 
@@ -149,7 +159,7 @@ async function showGroupSelectionModal(jsonData, fileName) {
             }
 
             console.log(`Sending JSON with filename: ${newFileName}`);
-            await SendJsonToGoFunction(jsonData, group, newFileName); // Send with potentially renamed file name
+            await ParseExtractionJsonToGoFunction(jsonData, group, newFileName); // Send with potentially renamed file name
             modal.style.display = 'none'; // Close the modal
             refreshFile(); // Refresh the file list after saving
         };
@@ -195,7 +205,7 @@ export async function showGroupSelection(jsonData, fileName) {
             }
 
             console.log(`Sending JSON with filename: ${newFileName}`);
-            await SendJsonToGoFunction(jsonData, group, newFileName); // Send with potentially renamed file name
+            await ParseExtractionJsonToGoFunction(jsonData, group, newFileName); // Send with potentially renamed file name
             modal.style.display = 'none'; // Close the modal
             refreshFile(); // Refresh the file list after saving
         };
