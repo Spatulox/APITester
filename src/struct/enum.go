@@ -17,6 +17,8 @@ type ResultWarning int
 const (
 	WarningNoWarning ResultWarning = iota
 	WarningHttpStatusNotSame
+	WarningUnknownHttpStatusExpected
+	WarningUnknownOutputExpected
 	WarningExtraKeyValue
 	WarningNoResponse
 	WarningDeprecatedField

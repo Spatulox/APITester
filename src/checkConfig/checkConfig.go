@@ -183,10 +183,21 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 	returnResult.ActualOutput = jsonRes
 
 	// Compare http code result
+	if inputData.ExpectedHttpState == "" {
+		returnResult.Warning = append(returnResult.Warning, WarningUnknownHttpStatusExpected)
+		Log.Error(fmt.Sprintf("No expected http state for this endpoint : %s", endpoint.Path))
+		return returnResult, fmt.Errorf("No expected http state for this endpoint : %s", endpoint.Path)
+	}
 	resultError, resultWarning := compareHttpStatus(inputData.ExpectedHttpState, status)
 	if !saveResult(resultError, resultWarning, &returnResult) {
 		Log.Error(fmt.Sprintf("Not the same HTTP Status for this request : %s", endpoint.Path))
 		return returnResult, fmt.Errorf("Not the same HTTP Status for this request : %s", endpoint.Path)
+	}
+
+	if inputData.ExpectedOutput == nil {
+		returnResult.Warning = append(returnResult.Warning, WarningUnknownOutputExpected)
+		Log.Error(fmt.Sprintf("No expected output for this endpoint : %s", endpoint.Path))
+		return returnResult, fmt.Errorf("No expected output for this endpoint : %s", endpoint.Path)
 	}
 
 	// Compare the Json answer

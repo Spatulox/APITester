@@ -13,11 +13,13 @@ const ResultError = {
 const ResultWarning = {
     0: 'WarningNoWarning',
     1: 'WarningHttpStatusNotSame',
-    2: 'WarningExtraKeyValue',
-    3: 'WarningNoResponse',
-    4: 'WarningDeprecatedField',
-    5: 'WarningPerformanceIssue',
-    6: 'WarningInconsistentDataTypes',
+    2: 'WarningUnknownHttpStatusExpected',
+    3: 'WarningUnknownOutputExpected',
+    4: 'WarningExtraKeyValue',
+    5: 'WarningNoResponse',
+    6: 'WarningDeprecatedField',
+    7: 'WarningPerformanceIssue',
+    8: 'WarningInconsistentDataTypes',
 };
 
 // Invert the "enum" entry (name => int) instead of (int => name)
