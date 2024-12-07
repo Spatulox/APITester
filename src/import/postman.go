@@ -4,6 +4,7 @@ import (
 	. "ApiTester/src/struct"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -33,6 +34,10 @@ func ParsePostmanExport(export map[string]interface{}) (Config, error) {
 	// Extraire la baseURL et les endpoints
 	config.BasicURL, config.Endpoint = extractEndpoints(items)
 
+	sort.Slice(config.Endpoint, func(i, j int) bool {
+		return config.Endpoint[i].Path < config.Endpoint[j].Path
+	})
+
 	return config, nil
 }
 
@@ -51,12 +56,12 @@ func ParsePostmanExport(export map[string]interface{}) (Config, error) {
 // - @A slice of Endpoint containing all extracted endpoints with their associated tests.
 func extractEndpoints(items []interface{}) (string, []Endpoint) {
 	var baseURL string
-	var endpoints []Endpoint
+	endpointMap := make(map[string]*Endpoint)
 
 	var extractItem func(item map[string]interface{})
 	extractItem = func(item map[string]interface{}) {
 		if request, ok := item["request"].(map[string]interface{}); ok {
-			endpoint := Endpoint{}
+			var path string
 
 			// Extraire l'URL
 			if url, ok := request["url"].(map[string]interface{}); ok {
@@ -64,7 +69,12 @@ func extractEndpoints(items []interface{}) (string, []Endpoint) {
 				if baseURL == "" {
 					baseURL = extractBaseURL(raw)
 				}
-				endpoint.Path = strings.TrimPrefix(raw, baseURL)
+				path = strings.TrimPrefix(raw, baseURL)
+
+				if path != "/" && strings.HasSuffix(path, "/") {
+					path = path[:len(path)-1]
+				}
+
 			}
 
 			// Extraire la méthode
@@ -96,8 +106,15 @@ func extractEndpoints(items []interface{}) (string, []Endpoint) {
 				ExpectedHttpState: "",
 			}
 
-			endpoint.Tests = append(endpoint.Tests, test)
-			endpoints = append(endpoints, endpoint)
+			// Ajouter ou mettre à jour l'endpoint
+			if endpoint, exists := endpointMap[path]; exists {
+				endpoint.Tests = append(endpoint.Tests, test)
+			} else {
+				endpointMap[path] = &Endpoint{
+					Path:  path,
+					Tests: []Test{test},
+				}
+			}
 		}
 
 		// Récursivement extraire les items imbriqués
@@ -114,6 +131,12 @@ func extractEndpoints(items []interface{}) (string, []Endpoint) {
 		if itemMap, ok := item.(map[string]interface{}); ok {
 			extractItem(itemMap)
 		}
+	}
+
+	// Convertir la map en slice
+	var endpoints []Endpoint
+	for _, endpoint := range endpointMap {
+		endpoints = append(endpoints, *endpoint)
 	}
 
 	return baseURL, endpoints
