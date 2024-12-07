@@ -173,7 +173,7 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 		return returnResult, fmt.Errorf("Impossible to retrieve the %s! %v", endpoint.Path, err)
 	}
 
-	var jsonRes map[string]interface{}
+	var jsonRes interface{}
 	errJson := json.Unmarshal([]byte(result), &jsonRes)
 	if errJson != nil {
 		Log.Error(fmt.Sprintf("Impossible to cast the answer into a json (%s) : %v", endpoint.Path, errJson))
@@ -251,6 +251,10 @@ func compareHttpStatus(expectedStatus string, actualStatus int) (ResultError, Re
 		return ErrorInvalidJSON, 0
 	}
 
+	if expectedStatus == "Not Provided" {
+		return 0, WarningUnknownHttpStatusExpected
+	}
+
 	// Check if the status codes are in the same range (first digit)
 	if expectedStatusInt/100 != actualStatus/100 {
 		return ErrorWrongHttpStatusRange, 0
@@ -288,55 +292,122 @@ func compareResults(expectedOutput interface{}, actualResult string) (ResultErro
 	}
 	expectedOutputString := string(expectedOutputBytes)
 
+	// Vérifier si les résultats attendus et réels sont identiques
+	if actualResult == expectedOutputString {
+		return 0, 0 // Les résultats sont identiques
+	}
+
 	if actualResult == "" {
 		expectedLower := strings.ToLower(expectedOutputString)
 		if strings.Contains(expectedLower, "_@empty") || strings.Contains(expectedLower, "_@nothing") {
 			return 0, 0
 		}
 		return 0, WarningNoResponse
-	} else if actualResult == expectedOutputString {
-		return 0, 0
-	} else {
-		var expectedMap, actualMap map[string]interface{}
+	}
 
+	var expectedArray []interface{}
+	var actualArray []interface{}
+	var expectedMap map[string]interface{}
+	var actualMap map[string]interface{}
+
+	// Essayer de unmarshall les résultats en tant que tableaux
+	err = json.Unmarshal(expectedOutputBytes, &expectedArray)
+	if err != nil {
+		Log.Infos(fmt.Sprintf("Error unmarshalling expected output as array: %v", err))
+
+		// Essayer de unmarshall en tant qu'objet
 		err = json.Unmarshal(expectedOutputBytes, &expectedMap)
 		if err != nil {
-			Log.Error(fmt.Sprintf("Error unmarshalling expected output: %v", err))
+			Log.Error(fmt.Sprintf("Error unmarshalling expected output as array AND map: %v", err))
 			return ErrorInvalidJSON, 0
 		}
-
-		err = json.Unmarshal([]byte(actualResult), &actualMap)
+	} else {
+		err = json.Unmarshal([]byte(actualResult), &actualArray)
 		if err != nil {
-			Log.Error(fmt.Sprintf("Error unmarshalling actual result: %v", err))
+			Log.Error(fmt.Sprintf("Error unmarshalling actual result as array: %v", err))
 			return ErrorInvalidJSON, 0
 		}
 
-		missingKeys := []string{}
-		inconsistentTypes := false
+		if len(expectedArray) != len(actualArray) {
+			Log.Error("Different number of elements in arrays")
+			return ErrorMissingKeyValue, 0 // ou une autre logique selon vos besoins
+		}
 
-		for key, expectedValue := range expectedMap {
-			actualValue, exists := actualMap[key]
+		for i := range expectedArray {
+			expectedMap, ok1 := expectedArray[i].(map[string]interface{})
+			actualMap, ok2 := actualArray[i].(map[string]interface{})
 
-			// The ExpectedOutPut
-			if !exists {
-				missingKeys = append(missingKeys, key)
-			} else if reflect.TypeOf(expectedValue) != reflect.TypeOf(actualValue) {
-				inconsistentTypes = true
+			if !ok1 || !ok2 {
+				Log.Error("Expected and actual outputs are not maps")
+				return ErrorInvalidJSON, 0
+			}
+
+			missingKeys := []string{}
+			inconsistentTypes := false
+
+			for key, expectedValue := range expectedMap {
+				actualValue, exists := actualMap[key]
+
+				if !exists {
+					missingKeys = append(missingKeys, key)
+				} else if reflect.TypeOf(expectedValue) != reflect.TypeOf(actualValue) {
+					inconsistentTypes = true
+				}
+			}
+
+			if len(missingKeys) > 0 {
+				Log.Error(fmt.Sprintf("Missing keys in index %d: %v", i, missingKeys))
+				return ErrorMissingKeyValue, 0
+			}
+
+			if inconsistentTypes {
+				Log.Infos(fmt.Sprintf("Inconsistent data types detected at index %d", i))
+				return 0, WarningInconsistentDataTypes
+			}
+
+			if !reflect.DeepEqual(expectedMap, actualMap) {
+				Log.Infos(fmt.Sprintf("There is some extra key-value at index %d", i))
+				return 0, WarningExtraKeyValue
 			}
 		}
 
-		if len(missingKeys) > 0 {
-			Log.Error(fmt.Sprintf("Missing keys: %v", missingKeys))
-			return ErrorMissingKeyValue, 0
-		}
+		return 0, 0 // Tout est conforme pour les tableaux
+	}
 
-		if inconsistentTypes {
-			Log.Infos("Inconsistent data types detected")
-			return 0, WarningInconsistentDataTypes
-		}
+	// Si on arrive ici et qu'on a un map pour le résultat attendu.
+	err = json.Unmarshal([]byte(actualResult), &actualMap)
+	if err != nil {
+		Log.Error(fmt.Sprintf("Error unmarshalling actual result as map: %v", err))
+		return ErrorInvalidJSON, 0
+	}
 
-		// If we reach here, all keys exist but values are different
+	missingKeys := []string{}
+	inconsistentTypes := false
+
+	for key, expectedValue := range expectedMap {
+		actualValue, exists := actualMap[key]
+
+		if !exists {
+			missingKeys = append(missingKeys, key)
+		} else if reflect.TypeOf(expectedValue) != reflect.TypeOf(actualValue) {
+			inconsistentTypes = true
+		}
+	}
+
+	if len(missingKeys) > 0 {
+		Log.Error(fmt.Sprintf("Missing keys: %v", missingKeys))
+		return ErrorMissingKeyValue, 0
+	}
+
+	if inconsistentTypes {
+		Log.Infos("Inconsistent data types detected")
+		return 0, WarningInconsistentDataTypes
+	}
+
+	if !reflect.DeepEqual(expectedMap, actualMap) {
 		Log.Infos("There is some extra key-value")
 		return 0, WarningExtraKeyValue
 	}
+
+	return 0, 0 // Tout est conforme pour les objets
 }

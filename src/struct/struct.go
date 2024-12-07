@@ -35,10 +35,10 @@ type Endpoint struct {
 }
 
 type Test struct {
-	Method            string                 `json:"method"`
-	Input             map[string]interface{} `json:"input,omitempty"` // Optional field
-	ExpectedOutput    map[string]interface{} `json:"expectedOutput"`
-	ExpectedHttpState string                 `json:"expectedHttpState"`
+	Method            string      `json:"method"`
+	Input             interface{} `json:"input,omitempty"` // Optional field
+	ExpectedOutput    interface{} `json:"expectedOutput"`
+	ExpectedHttpState string      `json:"expectedHttpState"`
 }
 
 // --------------------------------------------------------- //
@@ -48,5 +48,5 @@ type RequestResult struct {
 	Error        ResultError
 	Warning      []ResultWarning
 	OriginalData Test
-	ActualOutput map[string]interface{}
+	ActualOutput interface{}
 }
