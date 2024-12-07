@@ -8,13 +8,13 @@ function makeEditablePre(value, type = 'json') {
     return `<pre class="editable" data-type="${type}"><span class="display-value">${JSON.stringify(value, null, 2)}</span><textarea class="edit-input" style="display:none;">${JSON.stringify(value, null, 2)}</textarea></pre>`;
 }
 
-function jsonToHtml(jsonData) {
+function jsonToHtml(jsonData, filename) {
     const config = jsonData;
     let html = '';
 
     // En-tête
     html += '<div class="config-header">';
-    html += '<h2>Configuration</h2>';
+    html += `<h2>Configuration : <span id="fileNameConfiguration">\`${makeEditable(filename)}\`</span></h2>`
     html += `<p><strong>Basic URL:</strong> ${makeEditable(config.basicUrl)}</p>`;
 
     // Section d'authentification
@@ -72,12 +72,14 @@ function jsonToHtml(jsonData) {
             html += `<h4 class="method-header">${makeEditable(test.method)}</h4>`;
             html += `<div class="method-content">`;
 
+            html += '<div class="input-section">';
+            html += '<h5>Input:</h5>';
             if (test.input) {
-                html += '<div class="input-section">';
-                html += '<h5>Input:</h5>';
                 html += makeEditablePre(test.input);
-                html += '</div>';
+            } else {
+                html += makeEditablePre({});
             }
+            html += '</div>';
 
             html += '<div class="output-section">';
             html += '<h5>Expected Output:</h5>';
@@ -225,7 +227,7 @@ function createConfigurationSection() {
     let html = '';
 
     html += '<div class="config-header">';
-    html += '<h2>Configuration</h2>';
+    html += `<h2>Configuration : <span id="fileNameConfiguration">\`${makeEditable('File_name.json')}\`</span></h2>`
     html += `<p><strong>Basic URL:</strong> ${makeEditable('')}</p>`;
 
     html += '<div class="auth-section">';
@@ -336,7 +338,7 @@ export async function printJsonToEditTab(path){
         path = path.replace(/^root[/\\]/, "");
     }
     const jsonString = await PrintJsonFile(path); // Votre JSON ici
-    document.getElementById('output').innerHTML = jsonToHtml(jsonString);
+    document.getElementById('output').innerHTML = jsonToHtml(jsonString, path);
     addEventListeners();
 }
 
