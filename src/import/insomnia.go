@@ -156,7 +156,7 @@ func parseAuthentication(auth map[string]interface{}) Authentication {
 
 	switch authType {
 	case "apikey":
-		authentication.APIKey, _ = auth["value"].(string)
+		authentication.APIKey.ApiKey, _ = auth["value"].(string)
 	case "oauth2":
 		oauth2 := OAuth2{}
 		oauth2.ClientID, _ = auth["clientId"].(string)

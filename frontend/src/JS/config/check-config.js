@@ -1,12 +1,12 @@
 
 import { CheckSoloConfig, CheckGroupConfig } from '../../../wailsjs/go/main/App'
+import {printResult} from "../print-test-result";
 
 
 
 export async function checkConfig(filepath){
     
     if(filepath.includes("root")){
-        //filepath = filepath.replace("root/", "")
         filepath = filepath.replace(/^root[/\\]/, "");
     }
 
@@ -25,11 +25,13 @@ export async function checkConfig(filepath){
         else {
             throw new Error("Wrong path the check. Must finish by '/' or by '.json'...")
         }
-        return result
+        printResult(result)
+        //return result
 
     } catch (e){
         console.log(e)
         alert(e.toString())
-        return null
+        printResult(null)
+        //return null
     }
 }

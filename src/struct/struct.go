@@ -8,9 +8,14 @@ type Config struct {
 
 type Authentication struct {
 	Type      string    `json:"type"`
-	APIKey    string    `json:"apikey"`
+	APIKey    ApiKey    `json:"apikey"`
 	OAuth2    OAuth2    `json:"oauth2"`
 	BasicAuth BasicAuth `json:"basicAuth"`
+}
+
+type ApiKey struct {
+	KeyName string `json:"keyname"`
+	ApiKey  string `json:"apikeyvalue"`
 }
 
 type OAuth2 struct {

@@ -3,7 +3,10 @@ export function htmlToJson() {
         basicUrl: document.querySelector('.config-header p strong + span').textContent,
         authentication: {
             type: document.getElementById('authType').textContent,
-            apikey: document.querySelector('#apikey p strong + span').textContent,
+            apikey: {
+                keyname: document.querySelector('#apikey p:nth-child(1) strong + span').textContent,
+                apikeyvalue: document.querySelector('#apikey p:nth-child(2) strong + span').textContent,
+            },
             oauth2: {
                 clientId: document.querySelector('#oauth2 p:nth-child(1) strong + span').textContent,
                 clientSecret: document.querySelector('#oauth2 p:nth-child(2) strong + span').textContent,

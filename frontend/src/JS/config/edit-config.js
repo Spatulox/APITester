@@ -35,7 +35,8 @@ function jsonToHtml(jsonData, filename) {
 
     // API Key
     html += '<div class="tab-pane active" id="apikey">';
-    html += `<p><strong>API Key:</strong> ${makeEditable(config.authentication.apikey || 'Not provided')}</p>`;
+    html += `<p><strong>Key Name:</strong> ${makeEditable(config.authentication.apikey.keyname || 'Not provided')}</p>`;
+    html += `<p><strong>API Key:</strong> ${makeEditable(config.authentication.apikey.apikeyvalue || 'Not provided')}</p>`;
     html += '</div>';
 
     // OAuth2
@@ -244,6 +245,7 @@ function createConfigurationSection() {
     html += '<div class="tab-content">';
 
     html += '<div class="tab-pane active" id="apikey">';
+    html += `<p><strong>Key Name:</strong> ${makeEditable('Not provided')}</p>`;
     html += `<p><strong>API Key:</strong> ${makeEditable('Not provided')}</p>`;
     html += '</div>';
 
@@ -337,9 +339,13 @@ export async function printJsonToEditTab(path){
     if (path.includes("root")) {
         path = path.replace(/^root[/\\]/, "");
     }
-    const jsonString = await PrintJsonFile(path); // Votre JSON ici
-    document.getElementById('output').innerHTML = jsonToHtml(jsonString, path);
-    addEventListeners();
+    try{
+        const jsonString = await PrintJsonFile(path); // Votre JSON ici
+        document.getElementById('output').innerHTML = jsonToHtml(jsonString, path);
+        addEventListeners();
+    } catch (e) {
+        console.log(e)
+    }
 }
 
 export function createEmptyConf(){

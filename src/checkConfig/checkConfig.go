@@ -41,7 +41,7 @@ func CheckConfig(filepath string) ([]RequestResult, error) {
 	}
 
 	apiApiKey := NewApi(config.BasicURL)
-	apiApiKey.AddApiKey("apikey", config.Authentication.APIKey)
+	apiApiKey.AddApiKey(config.Authentication.APIKey.KeyName, config.Authentication.APIKey.ApiKey)
 
 	// Gonna store all the result of each endpoint
 	var configTestResult []RequestResult
