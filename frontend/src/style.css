@@ -61,6 +61,10 @@ main {
     max-width: 100vw;
 }
 
+main > section {
+    transition: visibility 0s, height 0.3s ease; /* Transition pour la visibilité et la hauteur */
+}
+
 section {
     margin-bottom: 30px;
 }
@@ -471,7 +475,7 @@ strong {
 
 
 /* Styles généraux pour le tableau de bord des résultats */
-#results-dashboard {
+#results-dashboard-child {
     font-family: Arial, sans-serif;
     padding: 20px;
     background-color: #ffffff94;

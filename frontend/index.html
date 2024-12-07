@@ -37,34 +37,36 @@
             </div>
         </section>
 
-        <section id="configuration-management" style="display:none;">
+        <section id="configuration-management">
             <h2>Edit Configurations</h2>
             <div id="output"></div>
             <button id="save-config" class="custom-file-upload">Save Config</button>
             <!--<button id="add-configuration">Ajouter Configuration</button>-->
         </section>
 
-        <section id="results-dashboard" style="display:none;">
+        <section id="results-dashboard">
             <h2>Result Dashboard</h2>
-            <div class="tabs">
-                <button class="tablink" id="ok-tab">OK
-                    <span class="notification" id="ok-count">0</span></button>
-                <button class="tablink" id="warning-tab">WARNING
-                    <span class="notification" id="warning-count">0</span></button>
-                <button class="tablink" id="error-tab">ERROR
-                    <span class="notification" id="error-count">0</span></button>
-            </div>
+            <div id="results-dashboard-child">
+                <div class="tabs">
+                    <button class="tablink" id="ok-tab">OK
+                        <span class="notification" id="ok-count">0</span></button>
+                    <button class="tablink" id="warning-tab">WARNING
+                        <span class="notification" id="warning-count">0</span></button>
+                    <button class="tablink" id="error-tab">ERROR
+                        <span class="notification" id="error-count">0</span></button>
+                </div>
 
-            <div id="ok" class="tabcontent" style="display: block;">
-                <p>Aucun test réussi pour le moment.</p>
-            </div>
+                <div id="ok" class="tabcontent" style="display: block;">
+                    <p>Aucun test réussi pour le moment.</p>
+                </div>
 
-            <div id="warning" class="tabcontent">
-                <p>Aucun avertissement pour le moment.</p>
-            </div>
+                <div id="warning" class="tabcontent">
+                    <p>Aucun avertissement pour le moment.</p>
+                </div>
 
-            <div id="error" class="tabcontent">
-                <p>Aucune erreur pour le moment.</p>
+                <div id="error" class="tabcontent">
+                    <p>Aucune erreur pour le moment.</p>
+                </div>
             </div>
         </section>
     </main>

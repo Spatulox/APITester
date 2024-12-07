@@ -36,19 +36,28 @@ export function showSection(evt, sectionId) {
     // Masquer toutes les sections
     var sections = document.querySelectorAll('main > section');
     sections.forEach(function(section) {
-        section.style.display = 'none';
+        section.style.visibility = 'hidden';
+        section.style.marginBottom = '0';
+        section.style.height = '0';
     });
 
-    // Afficher la section sélectionnée
-    document.getElementById(sectionId).style.display = 'block';
+    if(sectionId.includes("results-dashboard")){
+        document.getElementById("results-dashboard-child").style.display = "block"
+    } else {
+        document.getElementById("results-dashboard-child").style.display = "none"
+    }
 
-    // Ajouter une classe active au lien sélectionné
-    try{
+    const selectedSection = document.getElementById(sectionId);
+    selectedSection.style.visibility = 'visible';
+    selectedSection.style.height = 'auto';
+
+    try {
         evt.currentTarget.classList.add('active');
     } catch (e) {
-        
+        console.error("Error adding active class:", e);
     }
 }
+
 element4.addEventListener('mousedown', (evt) => showSection(evt, 'test-execution'));
 element5.addEventListener('mousedown', (evt) => showSection(evt, 'configuration-management'));
 element6.addEventListener('mousedown', (evt) => showSection(evt, 'results-dashboard'));
@@ -77,7 +86,6 @@ document.getElementById("save-config").addEventListener("click", async ()=>{
     const displayValue = fileNameElement.querySelector('.editable .display-value').textContent
 
     const jsonData = htmlToJson()
-    console.log(jsonData)
     await UpdateConfig(jsonData, displayValue)
 })
 
