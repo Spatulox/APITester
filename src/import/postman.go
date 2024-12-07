@@ -57,6 +57,7 @@ func ParsePostmanExport(export map[string]interface{}) (Config, error) {
 func extractEndpoints(items []interface{}) (string, []Endpoint) {
 	var baseURL string
 	endpointMap := make(map[string]*Endpoint)
+	unknownCount := 0
 
 	var extractItem func(item map[string]interface{})
 	extractItem = func(item map[string]interface{}) {
@@ -75,6 +76,11 @@ func extractEndpoints(items []interface{}) (string, []Endpoint) {
 					path = path[:len(path)-1]
 				}
 
+				// Si le chemin est vide, attribuer un nom "Unknown"
+				if path == "" {
+					unknownCount++
+					path = fmt.Sprintf("/Unknown%d", unknownCount)
+				}
 			}
 
 			// Extraire la méthode
