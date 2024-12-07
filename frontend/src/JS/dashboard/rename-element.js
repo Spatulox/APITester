@@ -1,4 +1,5 @@
 import { createSpanElement } from "./create-DOM-element"
+import { RenameFolder } from "../../../wailsjs/go/main/App";
 
 // Fonction pour afficher/masquer la liste des fichiers
 export function toggleFileListVisibility(fileListDiv, arrow) {
@@ -69,26 +70,32 @@ function detectCurrentFolder(element) {
 
 
 // Gérer le changement de nom du dossier
-function handleFolderNameChange(newFolderName, folderText) {
-    if (newFolderName && newFolderName !== folderText.innerText) {
-        if (window.folderFiles[newFolderName]) {
+async function handleFolderNameChange(newFolderName, folderText) {
+    try{
+        const oldFolderName = folderText.innerText;
+
+        if (newFolderName && newFolderName !== folderText.innerText) {
+            if (window.folderFiles[newFolderName]) {
+                console.log(window.folderFiles)
+                return false
+            } else {
+                await RenameFolder(oldFolderName.replace("root/", "").replace("root\\", ""), newFolderName.replace("root/", "").replace("root\\", ""))
+                window.folderFiles[newFolderName] = window.folderFiles[oldFolderName];
+                delete window.folderFiles[oldFolderName];
+                console.log(window.folderFiles)
+                return true
+            }
+        } else if (newFolderName === '') {
             console.log(window.folderFiles)
             return false
-        } else {
-            const oldFolderName = folderText.innerText;
-            window.folderFiles[newFolderName] = window.folderFiles[oldFolderName];
-            delete window.folderFiles[oldFolderName];
-            console.log(window.folderFiles)
-            return true
         }
-    } else if (newFolderName === '') {
-        console.log(window.folderFiles)
-        return false
+    } catch (e) {
+        console.log(e)
     }
 }
 
 // Gérer le changement de nom du fichier
-function handleFileNameChange(newFileName, fileText, currentFolder) {
+async function handleFileNameChange(newFileName, fileText, currentFolder) {
 
     if (newFileName === '') {
         console.log("Le nom du fichier ne peut pas être vide.");
@@ -113,6 +120,7 @@ function handleFileNameChange(newFileName, fileText, currentFolder) {
     } else {
         const oldFileIndex = currentFolderFiles.indexOf(fileText.innerText);
         if (oldFileIndex !== -1) {
+            await RenameFolder(currentFolderFiles[oldFileIndex].replace("root/", "").replace("root\\", ""), newFileName.replace("root/", "").replace("root\\", ""))
             currentFolderFiles[oldFileIndex] = newFileName;
             console.log(`Le nom du fichier a été changé en : ${newFileName}`);
             console.log("Nouvelle structure de folderFiles:", JSON.stringify(window.folderFiles, null, 2));

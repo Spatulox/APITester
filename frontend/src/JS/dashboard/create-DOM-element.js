@@ -127,7 +127,6 @@ function addPlayButton(element, name) {
 
     // Détectez le dossier parent après avoir ajouté les contrôles
     let parentFolder = detectCurrentFolder(element);
-    console.log("Parent folder:", parentFolder);
 
     playButton.onclick = async function(event) {
         event.stopPropagation();

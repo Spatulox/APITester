@@ -114,6 +114,48 @@ func (a *App) SendJsonToGoFunction(data map[string]interface{}, path string, fil
 	return nil
 }
 
+func (a *App) RenameFolder(oldName string, newName string) error {
+
+	appDataPath, err := os.UserConfigDir()
+	if err != nil {
+		return fmt.Errorf("error obtaining AppData/conf folder: %v", err)
+	}
+
+	pathDir := filepath.Join(appDataPath, "ApiTester")
+
+	oldPath := filepath.Join(pathDir, oldName)
+	newPath := filepath.Join(pathDir, newName)
+
+	// Vérifier si l'ancien chemin existe (fichier ou dossier)
+	oldInfo, err := os.Stat(oldPath)
+	if os.IsNotExist(err) {
+		return fmt.Errorf("the path %s does not exist", oldName)
+	} else if err != nil {
+		return fmt.Errorf("error checking old path: %v", err)
+	}
+
+	// Vérifier si le nouveau chemin existe déjà
+	if _, err := os.Stat(newPath); !os.IsNotExist(err) {
+		return fmt.Errorf("a file or folder with the name %s already exists", newName)
+	}
+
+	// Si c'est un dossier, s'assurer que le dossier parent du nouveau chemin existe
+	if oldInfo.IsDir() {
+		newParentDir := filepath.Dir(newPath)
+		if err := os.MkdirAll(newParentDir, os.ModePerm); err != nil {
+			return fmt.Errorf("error creating parent directories: %v", err)
+		}
+	}
+
+	// Renommer le fichier ou le dossier
+	err = os.Rename(oldPath, newPath)
+	if err != nil {
+		return fmt.Errorf("error renaming: %v", err)
+	}
+
+	return nil
+}
+
 func (a *App) DeleteConfig(path *string) error {
 
 	if path == nil {
@@ -133,14 +175,13 @@ func (a *App) DeleteConfig(path *string) error {
 	pathDir := filepath.Join(appDataPath, "ApiTester")
 	pathDir = filepath.Join(pathDir, *path)
 
-	Log.Infos(pathDir)
 	fullPath := filepath.Clean(pathDir)
 
 	fileInfo, err := os.Stat(fullPath)
 	if err != nil {
 		return err
 	}
-	Log.Infos(fullPath)
+
 	if fileInfo.IsDir() {
 		return os.RemoveAll(fullPath)
 	} else {
@@ -149,14 +190,6 @@ func (a *App) DeleteConfig(path *string) error {
 }
 
 func (a *App) PrintJsonFile(path string) (Config, error) {
-	/*	appDataPath, err := os.UserConfigDir()
-		if err != nil {
-			return Config{}, fmt.Errorf("error obtaining AppData/conf folder: %v", err)
-		}
-
-		pathDir := filepath.Join(appDataPath, "ApiTester")
-		pathDir = filepath.Join(pathDir, path)*/
-
 	var conf Config
 	err := ReadJsonFile(path, &conf)
 	if err != nil {
