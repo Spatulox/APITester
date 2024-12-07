@@ -42,12 +42,6 @@ export function showSection(evt, sectionId) {
     // Afficher la section sélectionnée
     document.getElementById(sectionId).style.display = 'block';
 
-    // Supprimer l'état actif des liens de navigation
-    var navLinks = document.querySelectorAll('nav ul li a');
-    navLinks.forEach(function(link) {
-        link.classList.remove('active');
-    });
-
     // Ajouter une classe active au lien sélectionné
     try{
         evt.currentTarget.classList.add('active');
