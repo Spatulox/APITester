@@ -25,7 +25,6 @@ export async function checkConfig(filepath){
         else {
             throw new Error("Wrong path the check. Must finish by '/' or by '.json'...")
         }
-        console.log(result)
         return result
 
     } catch (e){

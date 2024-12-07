@@ -1,5 +1,5 @@
 import {editName, toggleFileListVisibility} from "./rename-element"
-import {checkConfig} from "./check-config"
+import {checkConfig} from "../config/check-config"
 import {DeleteConfig} from "../../../wailsjs/go/main/App";
 import {showSection} from "../event-listener";
 import {printJsonToEditTab} from "../config/edit-config";
@@ -55,7 +55,8 @@ function createControlsDiv(name) {
     playButton.innerHTML = '▶';
     playButton.onclick = async function(event) {
         event.stopPropagation();
-        await checkConfig(`${name}/`)
+        const res = await checkConfig(`${name}/`)
+        console.log(res)
     };
     
     const editButton = document.createElement('button');
@@ -131,7 +132,8 @@ function addPlayButton(element, name) {
     playButton.onclick = async function(event) {
         event.stopPropagation();
         alert(`Play ${parentFolder}/${name}`);
-        await checkConfig(`${parentFolder}/${name}`)
+        const res = await checkConfig(`${parentFolder}/${name}`)
+        console.log(res)
     };
 
     editButton.onclick = async function(event){
