@@ -5,6 +5,7 @@ import (
 	. "ApiTester/src/struct"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -128,6 +129,10 @@ func ParseInsomniaExport(export map[string]interface{}) (Config, error) {
 	for _, endpoint := range endpointMap {
 		config.Endpoint = append(config.Endpoint, *endpoint)
 	}
+
+	sort.Slice(config.Endpoint, func(i, j int) bool {
+		return config.Endpoint[i].Path < config.Endpoint[j].Path
+	})
 
 	return config, nil
 }
