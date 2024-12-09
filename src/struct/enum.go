@@ -20,6 +20,7 @@ const (
 	WarningUnknownHttpStatusExpected
 	WarningUnknownOutputExpected
 	WarningExtraKeyValue
+	WarningNotSameValue
 	WarningNoResponse
 	WarningDeprecatedField
 	WarningPerformanceIssue

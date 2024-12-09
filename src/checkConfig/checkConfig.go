@@ -206,6 +206,7 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 		Log.Error(fmt.Sprintf("Impossible to fill the warning/error for compareHttpStatus for this request : %d", endpoint.Path))
 		return returnResult, fmt.Errorf("Impossible to fill the warning/error for compareResults for this request : %d", endpoint.Path)
 	}
+
 	return returnResult, nil
 }
 
@@ -364,11 +365,11 @@ func compareResults(expectedOutput interface{}, actualResult string) (ResultErro
 				Log.Infos(fmt.Sprintf("Inconsistent data types detected at index %d", i))
 				return 0, WarningInconsistentDataTypes
 			}
-
-			if !reflect.DeepEqual(expectedMap, actualMap) {
+			return compareInterfaces(expectedMap, actualMap)
+			/*if !reflect.DeepEqual(expectedMap, actualMap) {
 				Log.Infos(fmt.Sprintf("There is some extra key-value at index %d", i))
 				return 0, WarningExtraKeyValue
-			}
+			}*/
 		}
 
 		return 0, 0 // Tout est conforme pour les tableaux
@@ -404,10 +405,50 @@ func compareResults(expectedOutput interface{}, actualResult string) (ResultErro
 		return 0, WarningInconsistentDataTypes
 	}
 
-	if !reflect.DeepEqual(expectedMap, actualMap) {
-		Log.Infos("There is some extra key-value")
+	/*	if !reflect.DeepEqual(expectedMap, actualMap) {
+		Log.Debug("There is some extra key-value")
+		return 0, WarningExtraKeyValue
+	}*/
+
+	return compareInterfaces(expectedMap, actualMap)
+
+	//return 0, 0 // Tout est conforme pour les objets
+}
+
+func compareInterfaces(expected, actual interface{}) (ResultError, ResultWarning) {
+	expectedMap, okExpected := expected.(map[string]interface{})
+	actualMap, okActual := actual.(map[string]interface{})
+
+	if !okExpected || !okActual {
+		return ErrorInvalidJSON, 0
+	}
+
+	extraKeys := false
+	differentValues := false
+
+	for key := range expectedMap {
+		if _, exists := actualMap[key]; !exists {
+			return 0, WarningExtraKeyValue
+		}
+		if !reflect.DeepEqual(expectedMap[key], actualMap[key]) {
+			differentValues = true
+		}
+	}
+
+	for key := range actualMap {
+		if _, exists := expectedMap[key]; !exists {
+			extraKeys = true
+			break
+		}
+	}
+
+	if extraKeys {
 		return 0, WarningExtraKeyValue
 	}
 
-	return 0, 0 // Tout est conforme pour les objets
+	if differentValues {
+		return 0, WarningNotSameValue
+	}
+
+	return 0, 0
 }
