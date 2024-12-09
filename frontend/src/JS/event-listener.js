@@ -30,35 +30,42 @@ element1.addEventListener('mousedown', (evt) => openTab(evt, 'ok'));
 element2.addEventListener('mousedown', (evt) => openTab(evt, 'warning'));
 element3.addEventListener('mousedown', (evt) => openTab(evt, 'error'));
 
-
-// Fonction pour afficher la section principale
 export function showSection(evt, sectionId) {
     // Masquer toutes les sections
     var sections = document.querySelectorAll('main > section');
     sections.forEach(function(section) {
-        section.style.visibility = 'hidden'; // Masquer sans retirer du flux
+        section.style.display = 'none'; // Masquer complètement
         section.style.height = '0'; // Réinitialiser la hauteur
         section.style.marginBottom = '0'; // Réinitialiser les marges
+        section.classList.remove("active")
     });
-
-    // Gérer l'affichage du tableau de résultats
-    if (!sectionId.includes("results-dashboard")) {
-        document.getElementById("results-dashboard-child").style.height = "0px";
-    } else {
-        document.getElementById("results-dashboard-child").style.height = "auto";
-    }
 
     // Afficher la section sélectionnée
     const selectedSection = document.getElementById(sectionId);
-    selectedSection.style.visibility = 'visible'; // Afficher avec display
+    selectedSection.style.display = 'block'; // Afficher avec display
     selectedSection.style.height = 'auto';
     selectedSection.style.marginBottom = '30px';
+    selectedSection.classList.add("active")
+
+
+    // Gérer l'affichage du tableau de résultats
+    const resultsDashboard = document.getElementById("results-dashboard-child");
+    if (!sectionId.includes("results-dashboard")) {
+        resultsDashboard.style.display = 'none';
+        resultsDashboard.style.height = '0';
+    } else {
+        resultsDashboard.style.display = 'block';
+        resultsDashboard.style.height = 'auto';
+    }
+
 
     // Ajouter une classe active au lien sélectionné
-    try {
-        evt.currentTarget.classList.add('active');
-    } catch (e) {
-        console.error("Error adding active class:", e);
+    if(evt){
+        try {
+            evt.currentTarget.classList.add('active');
+        } catch (e) {
+            console.error("Error adding active class:", e);
+        }
     }
 }
 

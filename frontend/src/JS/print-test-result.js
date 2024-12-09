@@ -2,7 +2,7 @@ import {showSection} from "./event-listener";
 import {getErrorName, getWarningName} from "./enum";
 
 
-export function printResult(result, evt) {
+export function printResult(event, result) {
     if (result == null) {
         return;
     }
@@ -24,6 +24,9 @@ export function printResult(result, evt) {
     okSection.innerHTML = "";
     warningSection.innerHTML = "";
     errorSection.innerHTML = "";
+    okCount.innerText = "0"
+    warningCount.innerText = "0"
+    errorCount.innerText = "0"
 
     // Regrouper les résultats par type et par endpoint
     const groupedResults = {
@@ -42,11 +45,6 @@ export function printResult(result, evt) {
         // Afficher les détails du test
         resultDiv.innerHTML = `
             <h4>Method: ${OriginalData.method}</h4>
-            <p><strong>Expected HTTP State:</strong> ${OriginalData.expectedHttpState}</p>
-            <p><strong>Expected Output:</strong></p>
-            <pre class="json-output">${JSON.stringify(OriginalData.expectedOutput, null, 2)}</pre>
-            <p><strong>Actual Output:</strong></p>
-            <pre class="json-output">${item.ActualOutput !== null ? JSON.stringify(item.ActualOutput, null, 2) : "null"}</pre>
         `;
 
         // Gérer les erreurs et avertissements
@@ -83,6 +81,15 @@ export function printResult(result, evt) {
             }
             groupedResults.ok[Path].push(resultDiv);
         }
+
+        resultDiv.innerHTML += `
+            <p><strong>Expected HTTP State:</strong> ${OriginalData.expectedHttpState}</p>
+            <p><strong>Actual HTTP State:</strong> ${item.ActualHttpState}</p>
+            <p><strong>Expected Output:</strong></p>
+            <pre class="json-output">${JSON.stringify(OriginalData.expectedOutput, null, 2)}</pre>
+            <p><strong>Actual Output:</strong></p>
+            <pre class="json-output">${item.ActualOutput !== null ? JSON.stringify(item.ActualOutput, null, 2) : "null"}</pre>
+        `;
     });
 
     // Afficher les résultats groupés par type et par endpoint
@@ -135,8 +142,6 @@ export function printResult(result, evt) {
     if (errorTests === 0) {
         errorSection.innerHTML += "<p>Aucune erreur pour le moment.</p>";
     }
+    showSection(null, 'results-dashboard');
 
-    // Afficher la section des résultats
-    showSection(evt, 'results-dashboard');
 }
-

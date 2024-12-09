@@ -108,7 +108,7 @@ function jsonToHtml(jsonData, filename) {
 
 // Fonction pour ajouter les écouteurs d'événements après la création du HTML
 function addEventListeners() {
-    document.querySelectorAll('.endpoint-header').forEach(header => {
+    document.querySelectorAll('#configuration-management .endpoint-header').forEach(header => {
         const content = header.nextElementSibling;
         content.style.display = 'none';
         header.addEventListener('click', function(event) {
@@ -119,7 +119,7 @@ function addEventListeners() {
         });
     });
 
-    document.querySelectorAll('.method-header').forEach(header => {
+    document.querySelectorAll('#configuration-management .method-header').forEach(header => {
         const content = header.nextElementSibling;
         content.style.display = 'none';
         header.addEventListener('click', function(event) {

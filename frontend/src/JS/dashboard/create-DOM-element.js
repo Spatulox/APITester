@@ -55,7 +55,7 @@ function createControlsDiv(name) {
     playButton.innerHTML = '▶';
     playButton.onclick = async function(event) {
         event.stopPropagation();
-        await checkConfig(`${name}/`)
+        await checkConfig(event, `${name}/`)
     };
     
     const editButton = document.createElement('button');
@@ -131,7 +131,7 @@ function addPlayButton(element, name) {
     playButton.onclick = async function(event) {
         event.stopPropagation();
         //alert(`Play ${parentFolder}/${name}`);
-        await checkConfig(`${parentFolder}/${name}`)
+        await checkConfig(event, `${parentFolder}/${name}`)
     };
 
     editButton.onclick = async function(event){
