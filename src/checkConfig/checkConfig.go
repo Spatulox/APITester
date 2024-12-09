@@ -496,25 +496,26 @@ func compareInterfaces(expected, actual interface{}) (ResultError, ResultWarning
 }
 
 func parseActualResult(result string, endpoint Endpoint) ([]interface{}, ResultError) {
-	var ArrjsonRes []interface{}
-	var jsonRes interface{}
-	err := json.Unmarshal([]byte(result), &ArrjsonRes)
+	var arrJsonRes []interface{}
+
+	// Essayer de unmarshall en tant que tableau
+	err := json.Unmarshal([]byte(result), &arrJsonRes)
 	if err != nil {
 		Log.Infos(fmt.Sprintf("Error unmarshalling actual output as array: %v", err))
 
-		// Essayer de unmarshall en tant qu'objet
+		// Essayer de unmarshall en tant qu'objet unique
+		var jsonRes map[string]interface{}
 		err := json.Unmarshal([]byte(result), &jsonRes)
 		if err != nil {
 			Log.Error(fmt.Sprintf("Error unmarshalling actual output as array AND map: %v", err))
+			Log.Debug("16")
 			return nil, ErrorInvalidAPIJSON
 		}
+
+		// Si ce n'est pas un tableau, traiter comme un objet unique
+		return []interface{}{jsonRes}, 0 // Retourner un tableau contenant l'objet unique et une erreur nulle (0)
 	}
 
 	// Vérifier si le résultat est un tableau
-	if arr, ok := jsonRes.([]interface{}); ok {
-		return arr, 0 // Retourner le tableau et une erreur nulle (0)
-	}
-
-	// Si ce n'est pas un tableau, traiter comme un objet unique
-	return []interface{}{jsonRes}, 0 // Retourner un tableau contenant l'objet unique et une erreur nulle (0)
+	return arrJsonRes, 0 // Retourner le tableau et une erreur nulle (0)
 }
