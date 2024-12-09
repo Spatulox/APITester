@@ -55,7 +55,9 @@ function createControlsDiv(name) {
     playButton.innerHTML = '▶';
     playButton.onclick = async function(event) {
         event.stopPropagation();
+        playButton.innerHTML = "image loading"
         await checkConfig(event, `${name}/`)
+        playButton.innerHTML = "▶"
     };
     
     const editButton = document.createElement('button');
@@ -130,8 +132,9 @@ function addPlayButton(element, name) {
 
     playButton.onclick = async function(event) {
         event.stopPropagation();
-        //alert(`Play ${parentFolder}/${name}`);
+        playButton.innerHTML = "image loading"
         await checkConfig(event, `${parentFolder}/${name}`)
+        playButton.innerHTML = "▶"
     };
 
     editButton.onclick = async function(event){

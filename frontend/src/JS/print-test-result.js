@@ -35,6 +35,7 @@ export function printResult(event, result) {
         error: {}
     };
 
+    console.log(result)
     result.forEach(item => {
         const { Path, Error, Warning, OriginalData } = item;
 
@@ -82,13 +83,26 @@ export function printResult(event, result) {
             groupedResults.ok[Path].push(resultDiv);
         }
 
+
+        let ActualOutput = item.ActualOutput
+        console.log(ActualOutput)
+        if(ActualOutput && ActualOutput.length === 1){
+            ActualOutput = ActualOutput[0]
+        }
+
+        let ExpectedOutput = OriginalData.expectedOutput
+        if(ExpectedOutput && ExpectedOutput.length === 1){
+            ExpectedOutput = ExpectedOutput[0]
+        }
+        console.log(ExpectedOutput)
+
         resultDiv.innerHTML += `
             <p><strong>Expected HTTP State:</strong> ${OriginalData.expectedHttpState}</p>
             <p><strong>Actual HTTP State:</strong> ${item.ActualHttpState}</p>
             <p><strong>Expected Output:</strong></p>
-            <pre class="json-output">${JSON.stringify(OriginalData.expectedOutput, null, 2)}</pre>
+            <pre class="json-output">${JSON.stringify(ExpectedOutput, null, 2)}</pre>
             <p><strong>Actual Output:</strong></p>
-            <pre class="json-output">${item.ActualOutput !== null ? JSON.stringify(item.ActualOutput, null, 2) : "null"}</pre>
+            <pre class="json-output">${ActualOutput !== null ? JSON.stringify(ActualOutput, null, 2) : "null"}</pre>
         `;
     });
 

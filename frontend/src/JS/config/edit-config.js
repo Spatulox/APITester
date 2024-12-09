@@ -230,7 +230,7 @@ function createConfigurationSection() {
 
     html += '<div class="config-header">';
     html += `<h2>Configuration : <span id="fileNameConfiguration">\`${makeEditable('File_name.json')}\`</span></h2>`
-    html += `<p><strong>Basic URL:</strong> ${makeEditable('')}</p>`;
+    html += `<p><strong>Basic URL:</strong> ${makeEditable('Not Provided')}</p>`;
 
     html += '<div class="auth-section">';
     html += '<h3>Authentication</h3>';
