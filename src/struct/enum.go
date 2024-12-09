@@ -5,6 +5,7 @@ type ResultError int
 const (
 	ErrorNoError ResultError = iota
 	Error
+	ErrorNoContent
 	ErrorWrongHttpStatusRange
 	ErrorMissingKeyValue
 	ErrorIncorrectKeyValue

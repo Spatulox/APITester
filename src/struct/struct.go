@@ -44,9 +44,10 @@ type Test struct {
 // --------------------------------------------------------- //
 
 type RequestResult struct {
-	Path         string
-	Error        ResultError
-	Warning      []ResultWarning
-	OriginalData Test
-	ActualOutput interface{}
+	Path            string
+	Error           ResultError
+	Warning         []ResultWarning
+	OriginalData    Test
+	ActualOutput    []interface{}
+	ActualHttpState int
 }

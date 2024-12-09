@@ -156,7 +156,7 @@ func CheckFolderConfig(folderPath string) ([]RequestResult, error) {
 func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 int) (RequestResult, error) {
 	var status int
 	var result string
-	var err error
+	var requestErr error
 
 	var input interface{} = inputData.Input
 
@@ -169,37 +169,49 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 
 	/*Log.Debug(endpoint.Path)
 	Log.Infos(fmt.Sprintf("boucle endpoint %d, test %d : %s", i, i2, inputData.Method))*/
-
+	Log.Infos(fmt.Sprintf("Processing endpoint %s : %s", inputData.Method, endpoint.Path))
 	switch strings.ToUpper(inputData.Method) {
 	case "GET":
-		status, result, err = apiApiKey.GET(endpoint.Path, &input)
+		status, result, requestErr = apiApiKey.GET(endpoint.Path, &input)
 	case "POST":
-		status, result, err = apiApiKey.POST(endpoint.Path, input)
+		status, result, requestErr = apiApiKey.POST(endpoint.Path, input)
 	case "PATCH":
-		status, result, err = apiApiKey.PATCH(endpoint.Path, input)
+		status, result, requestErr = apiApiKey.PATCH(endpoint.Path, input)
 	case "PUT":
-		status, result, err = apiApiKey.PUT(endpoint.Path, input)
+		status, result, requestErr = apiApiKey.PUT(endpoint.Path, input)
 	case "DELETE":
-		status, result, err = apiApiKey.DELETE(endpoint.Path)
+		status, result, requestErr = apiApiKey.DELETE(endpoint.Path)
 	default:
 		Log.Infos(fmt.Sprintf("Unknown method for endpoint %d, test %d : %s", i, i2, inputData.Method))
 		return returnResult, fmt.Errorf("Unknown method for endpoint %d, test %d : %s", i, i2, inputData.Method)
 	}
 
-	if err != nil {
-		Log.Error(fmt.Sprintf("Impossible to retrieve the %s! %v", endpoint.Path, err))
-		returnResult.Error = ErrorTimeout
-		return returnResult, fmt.Errorf("Impossible to retrieve the %s! %v", endpoint.Path, err)
+	returnResult.ActualHttpState = status
+
+	if result == "" {
+		Log.Infos("Welp")
+		if inputData.ExpectedOutput == nil || reflect.DeepEqual(inputData.ExpectedOutput, struct{}{}) {
+			Log.Infos("PAs d'expected output")
+			return returnResult, nil // No error, no output expected
+		}
+		Log.Infos("Error no content")
+		returnResult.Error = ErrorNoContent
+		return returnResult, fmt.Errorf("Error no content")
 	}
 
-	var jsonRes interface{}
-	errJson := json.Unmarshal([]byte(result), &jsonRes)
-	if errJson != nil {
-		Log.Error(fmt.Sprintf("Impossible to cast the answer into a json (%s) : %v", endpoint.Path, errJson))
-		return returnResult, errJson
+	ActualRes, err := parseActualResult(result, endpoint)
+	if err != ErrorNoError {
+		returnResult.Error = err
+		return returnResult, fmt.Errorf("Error when parsing actual result : %v", err)
 	}
 
-	returnResult.ActualOutput = jsonRes
+	// Vérification du type avec reflect
+	actualType := reflect.TypeOf(ActualRes)
+	if actualType.Kind() == reflect.Slice && actualType.Elem().Kind() == reflect.Interface {
+		returnResult.ActualOutput = ActualRes
+	} else {
+		returnResult.ActualOutput = []interface{}{ActualRes}
+	}
 
 	// Compare http code result
 	if inputData.ExpectedHttpState == "" {
@@ -207,9 +219,19 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 		Log.Error(fmt.Sprintf("No expected http state for this endpoint : %s", endpoint.Path))
 		return returnResult, fmt.Errorf("No expected http state for this endpoint : %s", endpoint.Path)
 	}
+
 	resultError, resultWarning := compareHttpStatus(inputData.ExpectedHttpState, status)
 	if !saveResult(resultError, resultWarning, &returnResult) {
 		Log.Error(fmt.Sprintf("Not the same HTTP Status for this request : %s", endpoint.Path))
+
+		if status > 400 {
+			// If not the same actual status and expected status
+			if requestErr != nil {
+				Log.Error(fmt.Sprintf("Impossible to retrieve the %s! %v", endpoint.Path, requestErr))
+				returnResult.Error = ResultError(status)
+				return returnResult, fmt.Errorf("Impossible to retrieve the %s! %v", endpoint.Path, requestErr)
+			}
+		}
 		return returnResult, fmt.Errorf("Not the same HTTP Status for this request : %s", endpoint.Path)
 	}
 
@@ -222,8 +244,8 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 	// Compare the Json answer
 	resultError, resultWarning = compareResults(inputData.ExpectedOutput, result)
 	if !saveResult(resultError, resultWarning, &returnResult) {
-		Log.Error(fmt.Sprintf("Impossible to fill the warning/error for compareHttpStatus for this request : %d", endpoint.Path))
-		return returnResult, fmt.Errorf("Impossible to fill the warning/error for compareResults for this request : %d", endpoint.Path)
+		Log.Error(fmt.Sprintf("Impossible to fill the warning/error for compareHttpStatus for this request : %s", endpoint.Path))
+		return returnResult, fmt.Errorf("Impossible to fill the warning/error for compareResults for this request : %s", endpoint.Path)
 	}
 
 	return returnResult, nil
@@ -266,13 +288,12 @@ func saveResult(resultError ResultError, resultWarning ResultWarning, returnResu
 // - @A ResultError indicating any errors related to HTTP status comparison.
 // - @A ResultWarning indicating any warnings related to HTTP status comparison.
 func compareHttpStatus(expectedStatus string, actualStatus int) (ResultError, ResultWarning) {
-	expectedStatusInt, err := strconv.Atoi(expectedStatus)
-	if err != nil {
-		return ErrorInvalidJSON, 0
-	}
-
 	if expectedStatus == "Not Provided" {
 		return 0, WarningUnknownHttpStatusExpected
+	}
+	expectedStatusInt, err := strconv.Atoi(expectedStatus)
+	if err != nil {
+		return Error, 0
 	}
 
 	// Check if the status codes are in the same range (first digit)
@@ -308,7 +329,7 @@ func compareResults(expectedOutput interface{}, actualResult string) (ResultErro
 	expectedOutputBytes, err := json.Marshal(expectedOutput)
 	if err != nil {
 		Log.Error(fmt.Sprintf("Error marshalling expected output: %v", err))
-		return ErrorInvalidJSON, 0
+		return ErrorInvalidExpectedJSON, 0
 	}
 	expectedOutputString := string(expectedOutputBytes)
 
@@ -339,13 +360,13 @@ func compareResults(expectedOutput interface{}, actualResult string) (ResultErro
 		err = json.Unmarshal(expectedOutputBytes, &expectedMap)
 		if err != nil {
 			Log.Error(fmt.Sprintf("Error unmarshalling expected output as array AND map: %v", err))
-			return ErrorInvalidJSON, 0
+			return ErrorInvalidExpectedJSON, 0
 		}
 	} else {
 		err = json.Unmarshal([]byte(actualResult), &actualArray)
 		if err != nil {
 			Log.Error(fmt.Sprintf("Error unmarshalling actual result as array: %v", err))
-			return ErrorInvalidJSON, 0
+			return ErrorInvalidAPIJSON, 0
 		}
 
 		if len(expectedArray) != len(actualArray) {
@@ -357,9 +378,14 @@ func compareResults(expectedOutput interface{}, actualResult string) (ResultErro
 			expectedMap, ok1 := expectedArray[i].(map[string]interface{})
 			actualMap, ok2 := actualArray[i].(map[string]interface{})
 
-			if !ok1 || !ok2 {
-				Log.Error("Expected and actual outputs are not maps")
-				return ErrorInvalidJSON, 0
+			if !ok1 {
+				Log.Error("Expected output isn't map")
+				return ErrorInvalidExpectedJSON, 0
+			}
+
+			if !ok2 {
+				Log.Error("Actual output isn't map")
+				return ErrorInvalidAPIJSON, 0
 			}
 
 			missingKeys := []string{}
@@ -367,6 +393,10 @@ func compareResults(expectedOutput interface{}, actualResult string) (ResultErro
 
 			for key, expectedValue := range expectedMap {
 				actualValue, exists := actualMap[key]
+
+				if actualValue == nil && expectedValue == nil {
+					continue
+				}
 
 				if !exists {
 					missingKeys = append(missingKeys, key)
@@ -385,10 +415,6 @@ func compareResults(expectedOutput interface{}, actualResult string) (ResultErro
 				return 0, WarningInconsistentDataTypes
 			}
 			return compareInterfaces(expectedMap, actualMap)
-			/*if !reflect.DeepEqual(expectedMap, actualMap) {
-				Log.Infos(fmt.Sprintf("There is some extra key-value at index %d", i))
-				return 0, WarningExtraKeyValue
-			}*/
 		}
 
 		return 0, 0 // Tout est conforme pour les tableaux
@@ -398,7 +424,7 @@ func compareResults(expectedOutput interface{}, actualResult string) (ResultErro
 	err = json.Unmarshal([]byte(actualResult), &actualMap)
 	if err != nil {
 		Log.Error(fmt.Sprintf("Error unmarshalling actual result as map: %v", err))
-		return ErrorInvalidJSON, 0
+		return ErrorInvalidAPIJSON, 0
 	}
 
 	missingKeys := []string{}
@@ -424,22 +450,19 @@ func compareResults(expectedOutput interface{}, actualResult string) (ResultErro
 		return 0, WarningInconsistentDataTypes
 	}
 
-	/*	if !reflect.DeepEqual(expectedMap, actualMap) {
-		Log.Debug("There is some extra key-value")
-		return 0, WarningExtraKeyValue
-	}*/
-
 	return compareInterfaces(expectedMap, actualMap)
-
-	//return 0, 0 // Tout est conforme pour les objets
 }
 
 func compareInterfaces(expected, actual interface{}) (ResultError, ResultWarning) {
 	expectedMap, okExpected := expected.(map[string]interface{})
 	actualMap, okActual := actual.(map[string]interface{})
 
-	if !okExpected || !okActual {
-		return ErrorInvalidJSON, 0
+	if !okExpected {
+		return ErrorInvalidExpectedJSON, 0
+	}
+
+	if !okActual {
+		return ErrorInvalidAPIJSON, 0
 	}
 
 	extraKeys := false
@@ -470,4 +493,28 @@ func compareInterfaces(expected, actual interface{}) (ResultError, ResultWarning
 	}
 
 	return 0, 0
+}
+
+func parseActualResult(result string, endpoint Endpoint) ([]interface{}, ResultError) {
+	var ArrjsonRes []interface{}
+	var jsonRes interface{}
+	err := json.Unmarshal([]byte(result), &ArrjsonRes)
+	if err != nil {
+		Log.Infos(fmt.Sprintf("Error unmarshalling actual output as array: %v", err))
+
+		// Essayer de unmarshall en tant qu'objet
+		err := json.Unmarshal([]byte(result), &jsonRes)
+		if err != nil {
+			Log.Error(fmt.Sprintf("Error unmarshalling actual output as array AND map: %v", err))
+			return nil, ErrorInvalidAPIJSON
+		}
+	}
+
+	// Vérifier si le résultat est un tableau
+	if arr, ok := jsonRes.([]interface{}); ok {
+		return arr, 0 // Retourner le tableau et une erreur nulle (0)
+	}
+
+	// Si ce n'est pas un tableau, traiter comme un objet unique
+	return []interface{}{jsonRes}, 0 // Retourner un tableau contenant l'objet unique et une erreur nulle (0)
 }
