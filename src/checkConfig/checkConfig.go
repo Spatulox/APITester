@@ -46,13 +46,32 @@ func CheckConfig(filepath string) ([]RequestResult, error) {
 	// Gonna store all the result of each endpoint
 	var configTestResult []RequestResult
 
-	for i, endpoint := range config.Endpoint {
-		for i2, inputData := range endpoint.Tests {
+	var mu sync.Mutex // Pour protéger l'accès à configTestResults
+	var wg sync.WaitGroup
 
-			result, _ := checkEndpoint(endpoint, inputData, *apiApiKey, i, i2)
-			configTestResult = append(configTestResult, result)
+	// Semaphore pour contrôler le nombre de goroutines actives
+	semaphore := make(chan struct{}, maxConcurrentChecks)
+
+	for i, endpoint := range config.Endpoint {
+		endpoint := endpoint
+		i := i
+		for i2, inputData := range endpoint.Tests {
+			wg.Add(1)
+			semaphore <- struct{}{}
+
+			inputData := inputData
+			i2 := i2
+			go func() {
+				defer wg.Done() // Décrémenter le compteur de goroutines
+				defer func() { <-semaphore }()
+				result, _ := checkEndpoint(endpoint, inputData, *apiApiKey, i, i2)
+				mu.Lock()
+				configTestResult = append(configTestResult, result)
+				mu.Unlock()
+			}()
 		}
 	}
+	wg.Wait()
 	//fmt.Printf("%+v\n", configTestResult)
 	// Send the result to JavaScript
 	return configTestResult, nil
