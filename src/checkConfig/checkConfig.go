@@ -191,6 +191,8 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 		return returnResult, fmt.Errorf("Impossible to retrieve the %s! %v", endpoint.Path, requestErr)
 	}
 
+	returnResult.ActualOuputString = result
+
 	if result == "" {
 		if inputData.ExpectedOutput == nil || reflect.DeepEqual(inputData.ExpectedOutput, struct{}{}) {
 			return returnResult, nil

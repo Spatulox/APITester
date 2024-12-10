@@ -1,5 +1,5 @@
 import {showSection} from "./event-listener";
-import {getErrorName, getWarningName} from "./enum";
+import {getErrorCode, getErrorName, getWarningName} from "./enum";
 
 
 export function printResult(event, result) {
@@ -89,6 +89,10 @@ export function printResult(event, result) {
             ActualOutput = ActualOutput[0]
         }
 
+        if(Error === getErrorCode("ErrorInvalidAPIJSON")){
+            ActualOutput = item.ActualOuputString
+        }
+
         let ExpectedOutput = OriginalData.expectedOutput
         if(ExpectedOutput && ExpectedOutput.length === 1){
             ExpectedOutput = ExpectedOutput[0]
@@ -100,8 +104,14 @@ export function printResult(event, result) {
             <p><strong>Expected Output:</strong></p>
             <pre class="json-output">${JSON.stringify(ExpectedOutput, null, 2)}</pre>
             <p><strong>Actual Output:</strong></p>
-            <pre class="json-output">${ActualOutput !== null ? JSON.stringify(ActualOutput, null, 2) : "null"}</pre>
         `;
+        if(Error === getErrorCode("ErrorInvalidAPIJSON")){
+            resultDiv.innerHTML += `
+            <pre class="json-output">${ActualOutput}</pre>`
+        } else {
+            resultDiv.innerHTML += `
+            <pre class="json-output">${ActualOutput !== null ? JSON.stringify(ActualOutput, null, 2) : "null"}</pre>`
+        }
     });
 
     // Afficher les résultats groupés par type et par endpoint
