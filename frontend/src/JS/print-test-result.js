@@ -85,7 +85,6 @@ export function printResult(event, result) {
 
 
         let ActualOutput = item.ActualOutput
-        console.log(ActualOutput)
         if(ActualOutput && ActualOutput.length === 1){
             ActualOutput = ActualOutput[0]
         }
@@ -94,7 +93,6 @@ export function printResult(event, result) {
         if(ExpectedOutput && ExpectedOutput.length === 1){
             ExpectedOutput = ExpectedOutput[0]
         }
-        console.log(ExpectedOutput)
 
         resultDiv.innerHTML += `
             <p><strong>Expected HTTP State:</strong> ${OriginalData.expectedHttpState}</p>
