@@ -183,9 +183,17 @@ function addEventListeners() {
         button.removeEventListener('click', playEndpoint);
         // Ajouter un nouvel écouteur d'événements pour la fonction playEndpoint
         button.addEventListener('click', async function() {
+
+            setTimeout(()=>{
+                const nextSibling = this.closest('.endpoint-header').nextElementSibling;
+                if (nextSibling) {
+                    nextSibling.style.display = 'none';
+                }
+            }, 0)
+
             button.innerHTML = `<img src="${loadingImage}" alt="Loading"/>`
             if (window.runningConf){
-                alert("Alerady running conf")
+                alert("Already running conf")
                 return
             }
             window.runningConf = true
@@ -385,11 +393,11 @@ export function createEmptyConf(){
 
 
 export async function playEndpoint(button) {
+
     const endpointElement = button.closest('.endpoint');
     const configHeader = document.querySelector('.config-header');
 
     // Récupérer le basic URL
-    //const basicUrl = configHeader.querySelector('p strong:contains("Basic URL:")').nextElementSibling.querySelector('.display-value').textContent;
     let basicUrl
     const basicUrlElement = configHeader.querySelector('p strong');
     if (basicUrlElement && basicUrlElement.textContent.includes('Basic URL:')) {
