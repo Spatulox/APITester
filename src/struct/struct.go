@@ -51,4 +51,5 @@ type RequestResult struct {
 	ActualOutput      []interface{}
 	ActualHttpState   int
 	ActualOuputString string
+	ActualIsArray     bool
 }

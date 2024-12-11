@@ -17,7 +17,7 @@ const (
 	ErrorNetwork
 	ErrorHTTP
 	ErrorConnectionRefused
-	ErrorExpectedOrActualOuputLenght
+	ErrorExpectedOrActualOuputNotMatch
 	ErrorBadRequest                    = 400
 	ErrorUnauthorized                  = 401
 	ErrorPayementRequired              = 402

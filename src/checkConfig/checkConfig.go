@@ -427,11 +427,7 @@ func compareObjects(expectedMap, actualMap map[string]interface{}) (ResultError,
 func compareArrays(expectedArray, actualArray []interface{}) (ResultError, ResultWarning) {
 	if len(expectedArray) != len(actualArray) {
 		Log.Error("Different number of elements in arrays")
-		return ErrorMissingKeyValue, 0
-	}
-
-	if len(expectedArray) != len(actualArray) {
-		return ErrorExpectedOrActualOuputLenght, 0
+		return ErrorExpectedOrActualOuputNotMatch, 0
 	}
 
 	for i := range expectedArray {
