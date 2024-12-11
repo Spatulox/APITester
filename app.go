@@ -75,6 +75,10 @@ func (a *App) CheckSoloConfig(filename string) ([]RequestResult, error) {
 	return res, nil
 }
 
+func (a *App) CheckEndpoint(config Config) ([]RequestResult, error) {
+	return ExecuteConfig(config)
+}
+
 func (a *App) CheckGroupConfig(pathFilename string) ([]RequestResult, error) {
 	res, err := CheckFolderConfig(pathFilename)
 	if err != nil {

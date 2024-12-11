@@ -30,16 +30,8 @@ const maxConcurrentChecks = 2
 //   - @A slice of RequestResult containing the results of checking each endpoint.
 //   - @An error if there is an issue reading the JSON file or if any other error occurs
 //     during the validation process.
-func CheckConfig(filepath string) ([]RequestResult, error) {
-	Log.Debug("--------CheckConfig------")
-	var config Config
-	err := ReadJsonFile(filepath, &config)
-	Log.Debug(fmt.Sprintf("Reading %s", filepath))
-	if err != nil {
-		Log.Error(fmt.Sprintf("Impossible to read the json file : %v", err))
-		return []RequestResult{}, fmt.Errorf("Impossible to read the json file")
-	}
 
+func ExecuteConfig(config Config) ([]RequestResult, error) {
 	apiApiKey := NewApi(config.BasicURL)
 	apiApiKey.AddApiKey(config.Authentication.APIKey.KeyName, config.Authentication.APIKey.ApiKey)
 
@@ -72,9 +64,19 @@ func CheckConfig(filepath string) ([]RequestResult, error) {
 		}
 	}
 	wg.Wait()
-	//fmt.Printf("%+v\n", configTestResult)
-	// Send the result to JavaScript
 	return configTestResult, nil
+}
+
+func CheckConfig(filepath string) ([]RequestResult, error) {
+	Log.Debug("--------CheckConfig------")
+	var config Config
+	err := ReadJsonFile(filepath, &config)
+	Log.Debug(fmt.Sprintf("Reading %s", filepath))
+	if err != nil {
+		Log.Error(fmt.Sprintf("Impossible to read the json file : %v", err))
+		return []RequestResult{}, fmt.Errorf("Impossible to read the json file")
+	}
+	return ExecuteConfig(config)
 }
 
 // ----------------------------------------------------------- //
