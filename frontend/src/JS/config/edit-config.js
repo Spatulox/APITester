@@ -1,4 +1,6 @@
-import {PrintJsonFile} from "../../../wailsjs/go/main/App";
+import {CheckEndpoint, PrintJsonFile} from "../../../wailsjs/go/main/App";
+import {printResult} from "../print-test-result";
+import loadingImage from "../../assets/images/circle-loading.gif"
 
 function makeEditable(value, type = 'text') {
     return `<span class="editable" data-type="${type}"><span class="display-value">${value}</span><input type="text" class="edit-input" style="display:none;" value="${value}"></span>`;
@@ -65,7 +67,7 @@ function jsonToHtml(jsonData, filename) {
 
     config.endpoints.forEach(endpoint => {
         html += `<div class="endpoint">`;
-        html += `<h3 class="endpoint-header">${makeEditable(endpoint.path)}<button class="delete-endpoint delete-button" onclick="removeElement(this)">🗑️</button></h3>`;
+        html += `<h3 class="endpoint-header">${makeEditable(endpoint.path)}<span><button class="play-endpoint play-button"">▶</button><button class="delete-endpoint delete-button" onclick="removeElement(this)">🗑️</button></span></h3>`;
 
         html += `<div class="endpoint-content">`;
 
@@ -174,6 +176,29 @@ function addEventListeners() {
             editInput.style.display = 'none';
         }
     }, true);
+
+    const endpointPlayEvent = document.getElementsByClassName("play-endpoint")
+    Array.from(endpointPlayEvent).forEach(button => {
+        // Supprimer l'écouteur d'événements existant s'il y en a un
+        button.removeEventListener('click', playEndpoint);
+        // Ajouter un nouvel écouteur d'événements pour la fonction playEndpoint
+        button.addEventListener('click', async function() {
+            button.innerHTML = `<img src="${loadingImage}" alt="Loading" style="width: 20px; height: 20px;" />`
+            if (window.runningConf){
+                alert("Alerady running conf")
+                return
+            }
+            window.runningConf = true
+            try{
+                await playEndpoint(button);
+            } catch (e) {
+                console.log(e)
+            }
+            window.runningConf = false
+            button.innerHTML = `▶`
+
+        });
+    });
 
     // Ajout d'un écouteur d'événements au bouton "Add Endpoint"
     const addEndpointBtn = document.getElementById("addEndpointBtn");
@@ -286,7 +311,7 @@ export function createMethodElement(method = 'GET') {
     let html = '';
 
     html += `<div class="endpoint">`;
-    html += `<h3 class="endpoint-header">${makeEditable("/endpoint")}<button class="delete-endpoint delete-button" onclick="removeElement(this)">🗑️</button></h3>`;
+    html += `<h3 class="endpoint-header">${makeEditable("/endpoint")}<span><button class="play-endpoint play-button">▶</button><button class="delete-endpoint delete-button" onclick="removeElement(this)">🗑️</button></span></h3>`;
     html += `<div id="endpoint-content" class="endpoint-content">`;
 
     html += `<div class="test-method">`;
@@ -355,4 +380,89 @@ export function createEmptyConf(){
     output.innerHTML += createEndpointSection()
     addEventListeners();
     setupAuthTabs();
+}
+
+
+
+export async function playEndpoint(button) {
+    const endpointElement = button.closest('.endpoint');
+    const configHeader = document.querySelector('.config-header');
+
+    // Récupérer le basic URL
+    //const basicUrl = configHeader.querySelector('p strong:contains("Basic URL:")').nextElementSibling.querySelector('.display-value').textContent;
+    let basicUrl
+    const basicUrlElement = configHeader.querySelector('p strong');
+    if (basicUrlElement && basicUrlElement.textContent.includes('Basic URL:')) {
+        basicUrl = basicUrlElement.nextElementSibling.querySelector('.display-value').textContent;
+    }
+
+    // Récupérer le type d'authentification
+    const authType = document.getElementById('authType').textContent;
+
+    // Préparer la structure de configuration
+    let config = {
+        basicUrl: basicUrl,
+        authentication: {
+            type: authType
+        },
+        endpoints: []
+    };
+
+    // Récupérer les informations d'authentification
+    switch(authType) {
+        case 'apikey':
+            config.authentication.apikey = {
+                keyname: document.querySelector('#apikey .display-value').textContent,
+                apikeyvalue: document.querySelectorAll('#apikey .display-value')[1].textContent
+            };
+            break;
+        case 'oauth2':
+            config.authentication.oauth2 = {
+                clientId: document.querySelector('#oauth2 .display-value').textContent,
+                clientSecret: document.querySelectorAll('#oauth2 .display-value')[1].textContent,
+                tokenUrl: document.querySelectorAll('#oauth2 .display-value')[2].textContent
+            };
+            break;
+        case 'basicAuth':
+            config.authentication.basicAuth = {
+                username: document.querySelector('#basicAuth .display-value').textContent,
+                password: document.querySelectorAll('#basicAuth .display-value')[1].textContent
+            };
+            break;
+    }
+
+    // Récupérer le chemin de l'endpoint
+    const endpointPath = endpointElement.querySelector('.endpoint-header .display-value').textContent;
+
+    // Préparer l'objet endpoint
+    let endpoint = {
+        path: endpointPath,
+        tests: []
+    };
+
+    // Récupérer toutes les méthodes de test pour cet endpoint
+    const testMethods = endpointElement.querySelectorAll('.test-method');
+
+    testMethods.forEach(method => {
+        const methodName = method.querySelector('.method-header .display-value').textContent;
+        const input = JSON.parse(method.querySelector('.input-section pre .display-value').textContent);
+        const expectedOutput = JSON.parse(method.querySelector('.output-section pre .display-value').textContent);
+        const expectedHttpState = method.querySelector('.http-state-section .display-value').textContent;
+
+        endpoint.tests.push({
+            method: methodName,
+            input: input,
+            expectedOutput: expectedOutput,
+            expectedHttpState: expectedHttpState
+        });
+    });
+
+    config.endpoints.push(endpoint);
+
+    try{
+        const res = await CheckEndpoint(config)
+        printResult("welp", res)
+    } catch (e) {
+        console.log(e)
+    }
 }

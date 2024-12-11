@@ -57,10 +57,19 @@ function createControlsDiv(name) {
     playButton.innerHTML = '▶';
     playButton.onclick = async function(event) {
         event.stopPropagation();
-        playButton.innerHTML = "image loading"
-        playButton.innerHTML = `<img src="${loadingImage}" alt="Loading" style="width: 20px; height: 20px;" />`
-        await checkConfig(event, `${name}/`)
+        if(window.runningConf){
+            alert("Already running config")
+            return
+        }
+        window.runningConf = true
+        try{
+            playButton.innerHTML = `<img src="${loadingImage}" alt="Loading" style="width: 20px; height: 20px;" />`
+            await checkConfig(event, `${name}/`)
+        } catch (e) {
+            console.log(e)
+        }
         playButton.innerHTML = "▶"
+        window.runningConf = false
     };
     
     const editButton = document.createElement('button');
@@ -135,10 +144,19 @@ function addPlayButton(element, name) {
 
     playButton.onclick = async function(event) {
         event.stopPropagation();
-        playButton.innerHTML = "image loading"
-        playButton.innerHTML = `<img src="${loadingImage}" alt="Loading" style="width: 20px; height: 20px;" />`
-        await checkConfig(event, `${parentFolder}/${name}`)
+        if(window.runningConf){
+            alert("Already running config")
+            return
+        }
+        window.runningConf = true
+        try{
+            playButton.innerHTML = `<img src="${loadingImage}" alt="Loading" style="width: 20px; height: 20px;" />`
+            await checkConfig(event, `${parentFolder}/${name}`)
+        } catch (e) {
+            console.log(e)
+        }
         playButton.innerHTML = "▶"
+        window.runningConf = false
     };
 
     editButton.onclick = async function(event){

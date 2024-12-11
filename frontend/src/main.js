@@ -10,8 +10,6 @@ document.getElementById("viewTestFilesButton").onclick = async () => {
         alert("Erreur: " + error.toString());
     }
 };
-
-
 async function getSortedFolderFiles() {
     // Récupérer les données
     const folderFiles = await ListJsonFile();
