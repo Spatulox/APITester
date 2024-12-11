@@ -213,8 +213,10 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 	actualType := reflect.TypeOf(ActualRes)
 	if actualType.Kind() == reflect.Slice && actualType.Elem().Kind() == reflect.Interface {
 		returnResult.ActualOutput = ActualRes
+		returnResult.ActualIsArray = true
 	} else {
 		returnResult.ActualOutput = []interface{}{ActualRes}
+		returnResult.ActualIsArray = false
 	}
 
 	// Compare http code result
@@ -246,7 +248,7 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 	}
 
 	// Compare the Json answer
-	resultError, resultWarning = compareResults(inputData.ExpectedOutput, result)
+	resultError, resultWarning = compareResults(inputData.ExpectedOutput, result, returnResult.ActualIsArray)
 	if !saveResult(resultError, resultWarning, &returnResult) {
 		Log.Error(fmt.Sprintf("Error in compareResult for this request : %s", endpoint.Path))
 		return returnResult, fmt.Errorf("Error in compareResults for this request : %s", endpoint.Path)
@@ -329,7 +331,7 @@ func compareHttpStatus(expectedStatus string, actualStatus int) (ResultError, Re
 //     missing keys.
 //   - @A ResultWarning indicating any warnings related to the comparison, such as inconsistent data types
 //     or extra key-value pairs present in the actual result.
-func compareResults(expectedOutput interface{}, actualResult string) (ResultError, ResultWarning) {
+func compareResults(expectedOutput interface{}, actualResult string, isNormalActualOutputIsArray bool) (ResultError, ResultWarning) {
 	expectedOutputBytes, err := json.Marshal(expectedOutput)
 	if err != nil {
 		Log.Error(fmt.Sprintf("Error marshalling expected output: %v", err))
@@ -368,60 +370,100 @@ func compareResults(expectedOutput interface{}, actualResult string) (ResultErro
 			return ErrorInvalidExpectedJSON, 0
 		}
 
-		//Unmarshall actualResult en tant qu'objet
+		//Unmarshall actualResult en tant que tableau d'objet
 		err = json.Unmarshal([]byte(actualResult), &actualArray)
 		if err != nil {
-
+			Log.Debug("IsNotArray")
 			err = json.Unmarshal([]byte(actualResult), &actualMap)
 			if err != nil {
 				Log.Error(fmt.Sprintf("Error unmarshalling actual result as array AND json (expected ouput just json): %v", err))
 				return ErrorInvalidAPIJSON, 0
 			}
+			return compareObjects(expectedMap, actualMap)
 		}
-
-		return compareObjects(expectedMap, actualMap)
+		// if Actual_output is an array BUT expected_output is not, so need to cast it into a map[string]interface{}
+		if !isNormalActualOutputIsArray {
+			Log.Debug("IsArrayButWantsNoArray")
+			err = json.Unmarshal([]byte(actualResult), &actualMap)
+			if err != nil {
+				Log.Error(fmt.Sprintf("Error unmarshalling actual result as array AND json (expected ouput just json): %v", err))
+				return ErrorNoContent, 0 // A changer
+			}
+			Log.Debug("IsNotArray")
+			return compareObjects(expectedMap, actualMap)
+		}
+		Log.Debug("Array")
+		return compareArrays(expectedArray, actualArray)
 
 	} else {
+		Log.Debug("WTF")
 		// Si expected output est un tableau
+		//if isNormalActualOutputIsArray {
 		err = json.Unmarshal([]byte(actualResult), &actualArray)
 		if err != nil {
 			Log.Error(fmt.Sprintf("Error unmarshalling actual result as array: %v", err))
 			return ErrorInvalidAPIJSON, 0
 		}
-
 		return compareArrays(expectedArray, actualArray)
+		//}
+		//return ErrorInvalidAPIJSON, 0
 	}
 }
 
 func compareObjects(expectedMap, actualMap map[string]interface{}) (ResultError, ResultWarning) {
 	missingKeys := []string{}
+	extraKeys := []string{}
 	inconsistentTypes := false
+	differentValues := false
 
+	Log.Debug(fmt.Sprintf("%v", expectedMap))
+	Log.Debug(fmt.Sprintf("%v", actualMap))
+	// Vérifier les clés manquantes, les types incohérents et les valeurs différentes
 	for key, expectedValue := range expectedMap {
+		Log.Debug(fmt.Sprintf("%s :, %v", key, actualMap[key]))
 		actualValue, exists := actualMap[key]
-
-		if actualValue == nil && expectedValue == nil {
-			continue
-		}
 
 		if !exists {
 			missingKeys = append(missingKeys, key)
-		} else if reflect.TypeOf(expectedValue) != reflect.TypeOf(actualValue) {
-			inconsistentTypes = true
+		} else {
+			expectedType := reflect.TypeOf(expectedValue)
+			actualType := reflect.TypeOf(actualValue)
+
+			if expectedType != actualType {
+				inconsistentTypes = true
+				Log.Infos(fmt.Sprintf("Inconsistent type for key %s: expected %v, got %v", key, expectedType, actualType))
+			} else if !reflect.DeepEqual(expectedValue, actualValue) {
+				differentValues = true
+				Log.Infos(fmt.Sprintf("Different value for key %s: expected %v, got %v", key, expectedValue, actualValue))
+			}
 		}
 	}
 
+	// Vérifier les clés supplémentaires
+	for key := range actualMap {
+		if _, exists := expectedMap[key]; !exists {
+			extraKeys = append(extraKeys, key)
+		}
+	}
+
+	// Retourner les résultats
 	if len(missingKeys) > 0 {
-		Log.Error(fmt.Sprintf("Missing keys: %v", missingKeys))
 		return ErrorMissingKeyValue, 0
 	}
 
+	if len(extraKeys) > 0 {
+		return 0, WarningExtraKeyValue
+	}
+
 	if inconsistentTypes {
-		Log.Infos("Inconsistent data types detected")
 		return 0, WarningInconsistentDataTypes
 	}
 
-	return compareInterfaces(expectedMap, actualMap)
+	if differentValues {
+		return 0, WarningNotSameValue
+	}
+
+	return 0, 0
 }
 
 func compareArrays(expectedArray, actualArray []interface{}) (ResultError, ResultWarning) {
