@@ -375,7 +375,6 @@ func compareResults(expectedOutput interface{}, actualResult string, isNormalAct
 		//Unmarshall actualResult en tant que tableau d'objet
 		err = json.Unmarshal([]byte(actualResult), &actualArray)
 		if err != nil {
-			Log.Debug("IsNotArray")
 			err = json.Unmarshal([]byte(actualResult), &actualMap)
 			if err != nil {
 				Log.Error(fmt.Sprintf("Error unmarshalling actual result as array AND json (expected ouput just json): %v", err))
@@ -385,20 +384,16 @@ func compareResults(expectedOutput interface{}, actualResult string, isNormalAct
 		}
 		// if Actual_output is an array BUT expected_output is not, so need to cast it into a map[string]interface{}
 		if !isNormalActualOutputIsArray {
-			Log.Debug("IsArrayButWantsNoArray")
 			err = json.Unmarshal([]byte(actualResult), &actualMap)
 			if err != nil {
 				Log.Error(fmt.Sprintf("Error unmarshalling actual result as array AND json (expected ouput just json): %v", err))
 				return ErrorNoContent, 0 // A changer
 			}
-			Log.Debug("IsNotArray")
 			return compareObjects(expectedMap, actualMap)
 		}
-		Log.Debug("Array")
 		return compareArrays(expectedArray, actualArray)
 
 	} else {
-		Log.Debug("WTF")
 		// Si expected output est un tableau
 		//if isNormalActualOutputIsArray {
 		err = json.Unmarshal([]byte(actualResult), &actualArray)
@@ -418,11 +413,8 @@ func compareObjects(expectedMap, actualMap map[string]interface{}) (ResultError,
 	inconsistentTypes := false
 	differentValues := false
 
-	Log.Debug(fmt.Sprintf("%v", expectedMap))
-	Log.Debug(fmt.Sprintf("%v", actualMap))
 	// Vérifier les clés manquantes, les types incohérents et les valeurs différentes
 	for key, expectedValue := range expectedMap {
-		Log.Debug(fmt.Sprintf("%s :, %v", key, actualMap[key]))
 		actualValue, exists := actualMap[key]
 
 		if !exists {
@@ -495,48 +487,6 @@ func compareArrays(expectedArray, actualArray []interface{}) (ResultError, Resul
 	}
 
 	return 0, 0 // Tout est conforme pour les tableaux
-}
-
-func compareInterfaces(expected, actual interface{}) (ResultError, ResultWarning) {
-	expectedMap, okExpected := expected.(map[string]interface{})
-	actualMap, okActual := actual.(map[string]interface{})
-
-	if !okExpected {
-		return ErrorInvalidExpectedJSON, 0
-	}
-
-	if !okActual {
-		return ErrorInvalidAPIJSON, 0
-	}
-
-	extraKeys := false
-	differentValues := false
-
-	for key := range expectedMap {
-		if _, exists := actualMap[key]; !exists {
-			return 0, WarningExtraKeyValue
-		}
-		if !reflect.DeepEqual(expectedMap[key], actualMap[key]) {
-			differentValues = true
-		}
-	}
-
-	for key := range actualMap {
-		if _, exists := expectedMap[key]; !exists {
-			extraKeys = true
-			break
-		}
-	}
-
-	if extraKeys {
-		return 0, WarningExtraKeyValue
-	}
-
-	if differentValues {
-		return 0, WarningNotSameValue
-	}
-
-	return 0, 0
 }
 
 func parseActualResult(result string, endpoint Endpoint) ([]interface{}, ResultError) {
