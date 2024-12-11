@@ -78,6 +78,10 @@ The results are presented in a clear, tabbed interface for easy analysis:
 > - Execute only one enpoint
 > - See the result of the execution
 
+# Actual bug
+> - Can add an endpoint, but can't add a method (lol)
+> - When adding and endpoint, some of the eventListener disparaissent (refaire la fonction pour ajouter l'event listener ue sur le dernier ajouter)
+
 # Futur adding
 > - Rework how we move the file between different config group
 > - Adding yaml support for API return ?
