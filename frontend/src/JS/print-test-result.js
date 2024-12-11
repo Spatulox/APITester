@@ -85,7 +85,7 @@ export function printResult(event, result) {
 
 
         let ActualOutput = item.ActualOutput
-        if(ActualOutput && ActualOutput.length === 1){
+        if(ActualOutput && ActualOutput.length === 1 && !item.ActualIsArray){
             ActualOutput = ActualOutput[0]
         }
 
@@ -94,9 +94,6 @@ export function printResult(event, result) {
         }
 
         let ExpectedOutput = OriginalData.expectedOutput
-        if(ExpectedOutput && ExpectedOutput.length === 1){
-            ExpectedOutput = ExpectedOutput[0]
-        }
 
         resultDiv.innerHTML += `
             <p><strong>Expected HTTP State:</strong> ${OriginalData.expectedHttpState}</p>
