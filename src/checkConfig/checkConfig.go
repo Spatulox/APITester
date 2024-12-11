@@ -430,6 +430,9 @@ func compareArrays(expectedArray, actualArray []interface{}) (ResultError, Resul
 		return ErrorMissingKeyValue, 0
 	}
 
+	if len(expectedArray) != len(actualArray) {
+		return ErrorExpectedOrActualOuputLenght, 0
+	}
 
 	for i := range expectedArray {
 		expectedMap, ok1 := expectedArray[i].(map[string]interface{})
