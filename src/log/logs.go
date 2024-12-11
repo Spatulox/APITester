@@ -21,7 +21,7 @@ func log() string {
 func (l *LogHelper) Error(message string, err ...error) {
 	var result = log()
 
-	fmt.Printf("\033[1;31m%s ERROR : \033[0m%s\n", result, message)
+	fmt.Printf("\033[1;31m%sERROR : \033[0m%s\n", result, message)
 
 	if err != nil {
 		fmt.Println(err)
@@ -43,7 +43,7 @@ func (l *LogHelper) Infos(message string, err ...error) {
 func (l *LogHelper) Debug(message string, err ...error) {
 	var result = log()
 
-	fmt.Printf("\033[1;32m%s DEBUG : \033[0m%s\n", result, message)
+	fmt.Printf("\033[1;32m%sDEBUG : \033[0m%s\n", result, message)
 
 	if err != nil {
 		fmt.Println(err)
