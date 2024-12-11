@@ -63,7 +63,7 @@ function createControlsDiv(name) {
         }
         window.runningConf = true
         try{
-            playButton.innerHTML = `<img src="${loadingImage}" alt="Loading" style="width: 20px; height: 20px;" />`
+            playButton.innerHTML = `<img src="${loadingImage}" alt="Loading" />`
             await checkConfig(event, `${name}/`)
         } catch (e) {
             console.log(e)
@@ -150,7 +150,7 @@ function addPlayButton(element, name) {
         }
         window.runningConf = true
         try{
-            playButton.innerHTML = `<img src="${loadingImage}" alt="Loading" style="width: 20px; height: 20px;" />`
+            playButton.innerHTML = `<img src="${loadingImage}" alt="Loading" />`
             await checkConfig(event, `${parentFolder}/${name}`)
         } catch (e) {
             console.log(e)

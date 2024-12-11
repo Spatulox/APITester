@@ -67,7 +67,7 @@ function jsonToHtml(jsonData, filename) {
 
     config.endpoints.forEach(endpoint => {
         html += `<div class="endpoint">`;
-        html += `<h3 class="endpoint-header">${makeEditable(endpoint.path)}<span><button class="play-endpoint play-button"">▶</button><button class="delete-endpoint delete-button" onclick="removeElement(this)">🗑️</button></span></h3>`;
+        html += `<h3 class="endpoint-header">${makeEditable(endpoint.path)}<span class="endpoints-controls"><button class="play-endpoint play-button"">▶</button><button class="delete-endpoint delete-button" onclick="removeElement(this)">🗑️</button></span></h3>`;
 
         html += `<div class="endpoint-content">`;
 
@@ -183,7 +183,7 @@ function addEventListeners() {
         button.removeEventListener('click', playEndpoint);
         // Ajouter un nouvel écouteur d'événements pour la fonction playEndpoint
         button.addEventListener('click', async function() {
-            button.innerHTML = `<img src="${loadingImage}" alt="Loading" style="width: 20px; height: 20px;" />`
+            button.innerHTML = `<img src="${loadingImage}" alt="Loading"/>`
             if (window.runningConf){
                 alert("Alerady running conf")
                 return
@@ -311,7 +311,7 @@ export function createMethodElement(method = 'GET') {
     let html = '';
 
     html += `<div class="endpoint">`;
-    html += `<h3 class="endpoint-header">${makeEditable("/endpoint")}<span><button class="play-endpoint play-button">▶</button><button class="delete-endpoint delete-button" onclick="removeElement(this)">🗑️</button></span></h3>`;
+    html += `<h3 class="endpoint-header">${makeEditable("/endpoint")}<span class="endpoints-controls"><button class="play-endpoint play-button">▶</button><button class="delete-endpoint delete-button" onclick="removeElement(this)">🗑️</button></span></h3>`;
     html += `<div id="endpoint-content" class="endpoint-content">`;
 
     html += `<div class="test-method">`;

@@ -84,11 +84,18 @@ section > h2 {
     height: 24px;
 }
 
-.file-controls{
-    width: 108px;
+.file-controls, .endpoints-controls{
     display: flex;
     justify-content: space-between;
     height: 24px;
+}
+
+.file-controls{
+    width: 108px;
+}
+
+.endpoints-controls{
+    width: 70px;
 }
 
 .tabs {
@@ -227,11 +234,14 @@ footer {
     border-width: 0;
     border-radius: 5px;
     width: 30px;
-    height: 24px
+    height: 24px;
 }
 
 .play-button{
     background-color: green;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .delete-button{
@@ -476,6 +486,10 @@ strong {
     transform: scale(0.95); /* Réduction de la taille au clic */
 }
 
+img[alt="Loading"]{
+    width: 100%;
+    height: auto;
+}
 
 /* Styles généraux pour le tableau de bord des résultats */
 #results-dashboard-child {
