@@ -361,7 +361,7 @@ func compareResults(expectedOutput interface{}, actualResult string) (ResultErro
 	// Essayer de unmarshall les résultats attendus en tant que tableaux
 	err = json.Unmarshal(expectedOutputBytes, &expectedArray)
 	if err != nil {
-		// Si ce n'est pas un tableau, essayer de unmarshall en tant qu'objet
+		// Si expected output n'est pas un tableau, essayer de unmarshall en tant qu'objet
 		err = json.Unmarshal(expectedOutputBytes, &expectedMap)
 		if err != nil {
 			Log.Error(fmt.Sprintf("Error unmarshalling expected output as array AND map: %v", err))
@@ -382,7 +382,7 @@ func compareResults(expectedOutput interface{}, actualResult string) (ResultErro
 		return compareObjects(expectedMap, actualMap)
 
 	} else {
-		// Si c'est un tableau
+		// Si expected output est un tableau
 		err = json.Unmarshal([]byte(actualResult), &actualArray)
 		if err != nil {
 			Log.Error(fmt.Sprintf("Error unmarshalling actual result as array: %v", err))
@@ -429,6 +429,7 @@ func compareArrays(expectedArray, actualArray []interface{}) (ResultError, Resul
 		Log.Error("Different number of elements in arrays")
 		return ErrorMissingKeyValue, 0
 	}
+
 
 	for i := range expectedArray {
 		expectedMap, ok1 := expectedArray[i].(map[string]interface{})
