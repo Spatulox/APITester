@@ -4,6 +4,8 @@ import {DeleteConfig} from "../../../wailsjs/go/main/App";
 import {showSection} from "../event-listener";
 import {printJsonToEditTab} from "../config/edit-config";
 
+import loadingImage from "../../assets/images/circle-loading.gif"
+
 export function createFileList(folderFiles) {
     const fileListContainer = document.getElementById('file-list');
     fileListContainer.innerHTML = ""
@@ -56,6 +58,7 @@ function createControlsDiv(name) {
     playButton.onclick = async function(event) {
         event.stopPropagation();
         playButton.innerHTML = "image loading"
+        playButton.innerHTML = `<img src="${loadingImage}" alt="Loading" style="width: 20px; height: 20px;" />`
         await checkConfig(event, `${name}/`)
         playButton.innerHTML = "▶"
     };
@@ -133,6 +136,7 @@ function addPlayButton(element, name) {
     playButton.onclick = async function(event) {
         event.stopPropagation();
         playButton.innerHTML = "image loading"
+        playButton.innerHTML = `<img src="${loadingImage}" alt="Loading" style="width: 20px; height: 20px;" />`
         await checkConfig(event, `${parentFolder}/${name}`)
         playButton.innerHTML = "▶"
     };
