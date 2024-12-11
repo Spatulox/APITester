@@ -11,8 +11,11 @@ Build with GO and Wails
 ## Features
 ### Test Execution
 
-	Choose which config (or a group of config) to run from multiple configuration files, allowing for organized and grouped testing scenarios.
-    Execute only one endpoint en the config to test it
+	- Choose which config (or a group of config) to run from multiple configuration files, allowing for organized and grouped testing scenarios.
+    - Execute config file and test endpoint in multicore/multithread (up to 4 at the same time)
+    - Execute only one endpoint in the config to test it
+    - Stop an execution when you want
+You can run multiple configuration at the same time, juste beware of API spamming (cause of multicore/multithread)
 
 ### Configuration Management
 
@@ -71,8 +74,15 @@ The results are presented in a clear, tabbed interface for easy analysis:
 # <a id="current-implementation"></a>Current implementation
 > - Import Insomnia / Postman extraction
 > - Rename/Delete/Read a config
-> - Execute a config
-> - Execute a folder of config (multithread) / execute a config
+> - Execute a folder of config / execute a config (with multithread/multicore)
+> - Execute only one enpoint
+> - See the result of the execution
+
+# Futur adding
+> - Rework how we move the file between different config group
+> - Adding yaml support for API return ?
+> - Stop a config execution
+> - Add a tab system per timestamp to run multiple config at the same time
 
 
 # README
