@@ -35,9 +35,8 @@ export function printResult(event, result) {
         error: {}
     };
 
-    console.log(result)
     result.forEach(item => {
-        const { Path, Error, Warning, OriginalData } = item;
+        const { Path, Error, Warning, OriginalData, ActualIsArray } = item;
 
         // Créer un objet pour stocker le résultat
         const resultDiv = document.createElement("div");
@@ -85,7 +84,7 @@ export function printResult(event, result) {
 
 
         let ActualOutput = item.ActualOutput
-        if(ActualOutput && ActualOutput.length === 1 && !item.ActualIsArray){
+        if(ActualIsArray === false){
             ActualOutput = ActualOutput[0]
         }
 
