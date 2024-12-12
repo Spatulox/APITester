@@ -108,17 +108,30 @@ function jsonToHtml(jsonData, filename) {
     return html;
 }
 
+function openMethod(event, content){
+    if (!event.target.closest('.editable')) {
+        content.style.display = content.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
 // Fonction pour ajouter les écouteurs d'événements après la création du HTML
 function addEventListeners() {
     document.querySelectorAll('#configuration-management .endpoint-header').forEach(header => {
         const content = header.nextElementSibling;
         content.style.display = 'none';
-        header.addEventListener('click', function(event) {
-            // Vérifiez si le clic n'est pas sur un élément éditable
-            if (!event.target.closest('.editable')) {
-                content.style.display = content.style.display === 'none' ? 'block' : 'none';
-            }
-        });
+
+        if(!header.hasClickListener){
+            header.addEventListener('click', function(event) {
+                openMethod(event, content)
+            });
+            header.hasClickListener = true;
+        }
+        // header.removeEventListener('click', function(event) {
+        //     openMethod(event, content)
+        // });
+        // header.addEventListener('click', function(event) {
+        //     openMethod(event, content)
+        // });
     });
 
     document.querySelectorAll('#configuration-management .method-header').forEach(header => {
