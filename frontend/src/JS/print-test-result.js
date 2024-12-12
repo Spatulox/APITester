@@ -84,7 +84,7 @@ export function printResult(event, result) {
 
 
         let ActualOutput = item.ActualOutput
-        if(ActualIsArray === false){
+        if(ActualOutput && ActualOutput.length === 1 && ActualIsArray === false){
             ActualOutput = ActualOutput[0]
         }
 
