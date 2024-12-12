@@ -205,21 +205,14 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 		return returnResult, fmt.Errorf("Error no content")
 	}
 
-	ActualRes, err := parseActualResult(result, endpoint)
+	ActualRes, err, isArray := parseActualResult(result, endpoint)
 	if err != ErrorNoError {
 		returnResult.Error = err
 		return returnResult, fmt.Errorf("Error when parsing actual result : %v", err)
 	}
 
-	// Vérification du type avec reflect
-	actualType := reflect.TypeOf(ActualRes)
-	if actualType.Kind() == reflect.Slice && actualType.Elem().Kind() == reflect.Interface {
-		returnResult.ActualOutput = ActualRes
-		returnResult.ActualIsArray = true
-	} else {
-		returnResult.ActualOutput = []interface{}{ActualRes}
-		returnResult.ActualIsArray = false
-	}
+	returnResult.ActualIsArray = isArray
+	returnResult.ActualOutput = ActualRes
 
 	// Compare http code result
 	if inputData.ExpectedHttpState == "" {
@@ -395,15 +388,15 @@ func compareResults(expectedOutput interface{}, actualResult string, isNormalAct
 
 	} else {
 		// Si expected output est un tableau
-		//if isNormalActualOutputIsArray {
-		err = json.Unmarshal([]byte(actualResult), &actualArray)
-		if err != nil {
-			Log.Error(fmt.Sprintf("Error unmarshalling actual result as array: %v", err))
-			return ErrorInvalidAPIJSON, 0
+		if isNormalActualOutputIsArray {
+			err = json.Unmarshal([]byte(actualResult), &actualArray)
+			if err != nil {
+				Log.Error(fmt.Sprintf("Error unmarshalling actual result as array: %v", err))
+				return ErrorInvalidAPIJSON, 0
+			}
+			return compareArrays(expectedArray, actualArray)
 		}
-		return compareArrays(expectedArray, actualArray)
-		//}
-		//return ErrorInvalidAPIJSON, 0
+		return ErrorExpectedOrActualOuputNotMatch, 0
 	}
 }
 
@@ -489,7 +482,7 @@ func compareArrays(expectedArray, actualArray []interface{}) (ResultError, Resul
 	return 0, 0 // Tout est conforme pour les tableaux
 }
 
-func parseActualResult(result string, endpoint Endpoint) ([]interface{}, ResultError) {
+func parseActualResult(result string, endpoint Endpoint) ([]interface{}, ResultError, bool) {
 	var arrJsonRes []interface{}
 
 	// Essayer de unmarshall en tant que tableau
@@ -502,13 +495,13 @@ func parseActualResult(result string, endpoint Endpoint) ([]interface{}, ResultE
 		err := json.Unmarshal([]byte(result), &jsonRes)
 		if err != nil {
 			Log.Error(fmt.Sprintf("Error unmarshalling actual output as array AND map: %v", err))
-			return nil, ErrorInvalidAPIJSON
+			return nil, ErrorInvalidAPIJSON, false
 		}
 
 		// Si ce n'est pas un tableau, traiter comme un objet unique
-		return []interface{}{jsonRes}, 0 // Retourner un tableau contenant l'objet unique et une erreur nulle (0)
+		return []interface{}{jsonRes}, 0, false // Retourner un tableau contenant l'objet unique et une erreur nulle (0)
 	}
 
 	// Vérifier si le résultat est un tableau
-	return arrJsonRes, 0 // Retourner le tableau et une erreur nulle (0)
+	return arrJsonRes, 0, true // Retourner le tableau et une erreur nulle (0)
 }
