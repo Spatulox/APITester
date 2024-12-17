@@ -80,13 +80,13 @@ The results are presented in a clear, tabbed interface for easy analysis:
 
 # Actual bug
 > - Can add an endpoint, but can't add a method (lol)
-> - When adding and endpoint, some of the eventListener disparaissent (refaire la fonction pour ajouter l'event listener ue sur le dernier ajouter)
 
 # Futur adding
 > - Rework how we move the file between different config group
 > - Adding yaml support for API return ?
 > - Stop a config execution
 > - Add a tab system per timestamp to run multiple config at the same time
+> - Ingore some warning/error
 
 
 # README
