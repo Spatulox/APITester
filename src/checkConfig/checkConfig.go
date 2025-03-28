@@ -104,8 +104,6 @@ func CheckConfig(filePath string, fillExpectedOutput bool) ([]RequestResult, err
 
 	if fillExpectedOutput {
 		config.GlobalAskedToFillExpectedOutPut = "true"
-	} else {
-		config.GlobalAskedToFillExpectedOutPut = "false"
 	}
 
 	err = SaveConfigToJson(config, dirPath, fileName)
