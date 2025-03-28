@@ -498,7 +498,7 @@ export async function playEndpoint(button) {
     try{
         let automaticFillExpectedOutput = false
         if(!isExpectedOutputFilled){
-            automaticFillExpectedOutput = confirm("Do you want to automatically fill the expected output with the actual output ?")
+            automaticFillExpectedOutput = confirm("This endpoint don't have any ExpectedOutput.\nDo you want to automatically fill the expected output with the actual output ?\nConsider adding '_@empty' if the endpoint send back nothing")
             endpointElement.querySelector('.endpoint-header .isAlreadyAskedToFillExpectedOutput').textContent = automaticFillExpectedOutput
             document.getElementById("save-config").click()
         }
