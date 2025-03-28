@@ -37,6 +37,7 @@ export function jsonToHtml(jsonData, filename) {
     html += '<li class="tab-item active" data-tab="apikey">API Key</li>';
     html += '<li class="tab-item" data-tab="oauth2">OAuth2</li>';
     html += '<li class="tab-item" data-tab="basicAuth">Basic Auth</li>';
+    html += '<li class="tab-item" data-tab="noauth">No Auth</li>';
     html += '</ul>';
 
     // Contenu des onglets
@@ -270,7 +271,7 @@ function setupAuthTabs() {
             const tabId = item.getAttribute('data-tab');
             const type = document.getElementById("authType")
             type.innerText = tabId
-            document.getElementById(tabId).classList.add('active');
+            try{document.getElementById(tabId).classList.add('active')}catch(e){};
         });
     });
 }
@@ -302,6 +303,7 @@ function createConfigurationSection() {
     html += '<li class="tab-item active" data-tab="apikey">API Key</li>';
     html += '<li class="tab-item" data-tab="oauth2">OAuth2</li>';
     html += '<li class="tab-item" data-tab="basicAuth">Basic Auth</li>';
+    html += '<li class="tab-item" data-tab="noauth">No Auth</li>';
     html += '</ul>';
 
     html += '<div class="tab-content">';
