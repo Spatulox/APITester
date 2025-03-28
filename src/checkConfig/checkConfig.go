@@ -31,9 +31,14 @@ const maxConcurrentChecks = 2
 //   - @An error if there is an issue reading the JSON file or if any other error occurs
 //     during the validation process.
 
-func ExecuteConfig(config Config) ([]RequestResult, error) {
+func ExecuteConfig(config Config, fillExpectedOutput ...bool) ([]RequestResult, error) {
 	apiApiKey := NewApi(config.BasicURL)
 	apiApiKey.AddApiKey(config.Authentication.APIKey.KeyName, config.Authentication.APIKey.ApiKey)
+
+	shouldFill := false
+	if len(fillExpectedOutput) > 0 {
+		shouldFill = fillExpectedOutput[0]
+	}
 
 	// Gonna store all the result of each endpoint
 	var configTestResult []RequestResult
@@ -60,6 +65,16 @@ func ExecuteConfig(config Config) ([]RequestResult, error) {
 				mu.Lock()
 				configTestResult = append(configTestResult, result)
 				mu.Unlock()
+
+				if shouldFill /*&& expectedOutput != nil*/ {
+					Log.Infos("Remplissage (fake) du ExpectedOutput")
+					//Ouvrir le fichier correspondant, trouver l'endpoint et rajouter le ExpectedOutput
+
+					// Adapter les code d'erreurs (si possible)
+					// - WarningDeprecatedField (peut être)
+					// - Le Warning qui touche au fait d'y avoir un ActualOutput alors que rien n'est attendu (peut être celui au dessus) => WarningUnknownExpectedOutput
+				}
+
 			}()
 		}
 	}
@@ -67,8 +82,14 @@ func ExecuteConfig(config Config) ([]RequestResult, error) {
 	return configTestResult, nil
 }
 
-func CheckConfig(filepath string) ([]RequestResult, error) {
+func CheckConfig(filepath string, fillExpectedOutput ...bool) ([]RequestResult, error) {
 	Log.Debug("--------CheckConfig------")
+
+	shouldFill := false
+	if len(fillExpectedOutput) > 0 {
+		shouldFill = fillExpectedOutput[0]
+	}
+
 	var config Config
 	err := ReadJsonFile(filepath, &config)
 	Log.Debug(fmt.Sprintf("Reading %s", filepath))
@@ -76,7 +97,7 @@ func CheckConfig(filepath string) ([]RequestResult, error) {
 		Log.Error(fmt.Sprintf("Impossible to read the json file : %v", err))
 		return []RequestResult{}, fmt.Errorf("Impossible to read the json file")
 	}
-	return ExecuteConfig(config)
+	return ExecuteConfig(config, shouldFill)
 }
 
 // ----------------------------------------------------------- //
@@ -94,9 +115,14 @@ func CheckConfig(filepath string) ([]RequestResult, error) {
 //     all configurations found in the folder.
 //   - @An error if there is an issue listing the JSON files or if any other error occurs
 //     during the validation process.
-func CheckFolderConfig(folderPath string) ([]RequestResult, error) {
+func CheckFolderConfig(folderPath string, fillExpectedOutput ...bool) ([]RequestResult, error) {
 
 	Log.Debug("--------CheckFolder------")
+
+	shouldFill := false
+	if len(fillExpectedOutput) > 0 {
+		shouldFill = fillExpectedOutput[0]
+	}
 
 	folderFiles, err := ListJsonFile(&folderPath)
 	if err != nil {
@@ -122,7 +148,7 @@ func CheckFolderConfig(folderPath string) ([]RequestResult, error) {
 					defer wg.Done()                // Décrémenter le compteur de goroutines
 					defer func() { <-semaphore }() // Libérer un slot dans le sémaphore
 
-					results, err := CheckConfig(filePath)
+					results, err := CheckConfig(filePath, shouldFill)
 					if err != nil {
 						Log.Error(fmt.Sprintf("Error checking config for file %s: %v", fileName, err))
 						return
@@ -155,7 +181,7 @@ func CheckFolderConfig(folderPath string) ([]RequestResult, error) {
 // Returns:
 // - @A RequestResult containing the outcome of the endpoint check, including any errors or warnings.
 // - @An error if there is an issue during the request or processing of results.
-func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 int) (RequestResult, error) {
+func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 int, fillExpectedOutput ...bool) (RequestResult, error) {
 	var status int
 	var result string
 	var requestErr error
@@ -190,6 +216,7 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 	if requestErr != nil && (status == ErrorTimeout || status == 0) {
 		Log.Error(fmt.Sprintf("Impossible to retrieve the %s! %v", endpoint.Path, requestErr))
 		returnResult.Error = ErrorTimeout
+		returnResult.ActualHttpState = ErrorTimeout
 		return returnResult, fmt.Errorf("Impossible to retrieve the %s! %v", endpoint.Path, requestErr)
 	}
 
@@ -237,8 +264,8 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 	}
 
 	if inputData.ExpectedOutput == nil {
-		returnResult.Warning = append(returnResult.Warning, WarningUnknownOutputExpected)
-		Log.Error(fmt.Sprintf("No expected output for this endpoint : %s", endpoint.Path))
+		returnResult.Warning = append(returnResult.Warning, WarningUnknownExpectedOutput)
+		Log.Infos(fmt.Sprintf("No expected output for this endpoint : %s", endpoint.Path))
 		//return returnResult, fmt.Errorf("No expected output for this endpoint : %s", endpoint.Path)
 	}
 
@@ -334,7 +361,7 @@ func compareResults(expectedOutput interface{}, actualResult string, isNormalAct
 	}
 	expectedOutputString := string(expectedOutputBytes)
 	if expectedOutputString == "" || expectedOutputString == "{}" || expectedOutput == nil || reflect.DeepEqual(expectedOutput, struct{}{}) {
-		return 0, WarningUnknownOutputExpected
+		return 0, WarningUnknownExpectedOutput
 	}
 
 	// Vérifier si les résultats attendus et réels sont identiques
@@ -427,13 +454,14 @@ func compareObjects(expectedMap, actualMap map[string]interface{}) (ResultError,
 	}
 
 	// Vérifier les clés supplémentaires
+	// Verify Extra keys
 	for key := range actualMap {
 		if _, exists := expectedMap[key]; !exists {
 			extraKeys = append(extraKeys, key)
 		}
 	}
 
-	// Retourner les résultats
+	// Return result
 	if len(missingKeys) > 0 {
 		return ErrorMissingKeyValue, 0
 	}
