@@ -1,9 +1,10 @@
 package _struct
 
 type Config struct {
-	BasicURL       string         `json:"basicUrl"`
-	Authentication Authentication `json:"authentication"`
-	Endpoint       []Endpoint     `json:"endpoints"`
+	BasicURL                        string         `json:"basicUrl"`
+	Authentication                  Authentication `json:"authentication"`
+	Endpoint                        []Endpoint     `json:"endpoints"`
+	GlobalAskedToFillExpectedOutPut string         `json:"globalAskedToFillExpectedOutPut"`
 }
 
 type Authentication struct {

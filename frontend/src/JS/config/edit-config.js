@@ -10,7 +10,12 @@ function makeEditablePre(value, type = 'json') {
     return `<pre class="editable" data-type="${type}"><span class="display-value">${JSON.stringify(value, null, 2)}</span><textarea class="edit-input" style="display:none;">${JSON.stringify(value, null, 2)}</textarea></pre>`;
 }
 
-function jsonToHtml(jsonData, filename) {
+export function clearEditConfig(){
+    document.getElementById("output").innerHTML = ""
+}
+
+export function jsonToHtml(jsonData, filename) {
+    console.log(filename)
     const config = jsonData;
     let html = '';
 
@@ -18,6 +23,7 @@ function jsonToHtml(jsonData, filename) {
     html += '<div class="config-header">';
     html += `<h2>Configuration : <span id="fileNameConfiguration">\`${makeEditable(filename)}\`</span></h2>`
     html += `<p><strong>Basic URL:</strong> ${makeEditable(config.basicUrl)}</p>`;
+    html += `<span class="globalAskedToFillExpectedOutPut"> ${config.globalAskedToFillExpectedOutPut}</span>`;
 
     // Section d'authentification
     html += '<div class="auth-section">';

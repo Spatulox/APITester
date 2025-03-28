@@ -1,6 +1,7 @@
 
-import { CheckSoloConfig, CheckGroupConfig } from '../../../wailsjs/go/main/App'
+import { CheckSoloConfig, CheckGroupConfig, PrintJsonFile } from '../../../wailsjs/go/main/App'
 import {printResult} from "../print-test-result";
+import { clearEditConfig, jsonToHtml} from './edit-config';
 
 export async function checkConfig(event, filepath){
     
@@ -8,17 +9,34 @@ export async function checkConfig(event, filepath){
         filepath = filepath.replace(/^root[/\\]/, "");
     }
 
+    let fillExpectedOutput = false
+
+    if(filepath.endsWith(".json")){
+        const jsonString = await PrintJsonFile(`${filepath}`);
+        
+        console.log(jsonString.globalAskedToFillExpectedOutPut)
+
+        if(jsonString.globalAskedToFillExpectedOutPut.includes("false")){
+            fillExpectedOutput = confirm("Do you want to automatically fill the expected output with the actual output ?")
+            jsonString.globalAskedToFillExpectedOutPut = "true"
+
+            document.getElementById('output').innerHTML = jsonToHtml(jsonString, `${filepath}`);
+            document.getElementById("save-config").click()
+            clearEditConfig()
+        }
+    }
+
     try{
         let result
         // If it's a file
         if(filepath.endsWith(".json")){
             console.log("Checking file")
-            result = await CheckSoloConfig(filepath)
+            result = await CheckSoloConfig(filepath, fillExpectedOutput)
         }
         // If not a file
         else if (filepath.endsWith("/")){
             console.log("Checking folder")
-            result = await CheckGroupConfig(filepath)
+            result = await CheckGroupConfig(filepath, fillExpectedOutput)
         }
         else {
             throw new Error("Wrong path the check. Must finish by '/' or by '.json'...")

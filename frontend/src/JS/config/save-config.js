@@ -1,6 +1,7 @@
 export function htmlToJson() {
     let config = {
         basicUrl: document.querySelector('.config-header p strong + span').textContent,
+        globalAskedToFillExpectedOutPut: document.querySelector('.config-header .globalAskedToFillExpectedOutPut').textContent || "false",
         authentication: {
             type: document.getElementById('authType').textContent,
             apikey: {

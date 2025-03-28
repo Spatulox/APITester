@@ -318,6 +318,10 @@ footer {
     margin-bottom: 20px;
 }
 
+.config-header .globalAskedToFillExpectedOutPut{
+    display: none;
+}
+
 .auth-section, .oauth2-details, .basic-auth-details {
     background-color: #f9f9f9;
     margin-top: 15px;
