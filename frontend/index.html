@@ -83,16 +83,15 @@
     <script src="./src/JS/event-listener.js" type="module"></script>
     <script type="application/javascript">
         function removeElement(button) {
-            // Vérifier si le bouton est pour une méthode ou un endpoint
-            const testMethodDiv = button.closest('.test-method'); // Trouver l'élément test-method parent
-            if (testMethodDiv) {
-                // Si c'est une méthode, supprimer seulement la méthode
-                testMethodDiv.remove();
-            } else {
-                // Sinon, c'est un endpoint, supprimer l'endpoint entier
-                const endpointDiv = button.closest('.endpoint'); // Trouver l'élément endpoint parent
-                if (endpointDiv) {
-                    endpointDiv.remove(); // Supprimer l'endpoint et toutes ses méthodes
+            if (confirm("Are you sure ?")) {
+                const testMethodDiv = button.closest('.test-method');
+                if (testMethodDiv) {
+                    testMethodDiv.remove();
+                } else {
+                    const endpointDiv = button.closest('.endpoint');
+                    if (endpointDiv) {
+                        endpointDiv.remove();
+                    }
                 }
             }
         }
