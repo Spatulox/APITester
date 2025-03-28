@@ -87,7 +87,7 @@ export function printResult(event, result) {
         }
 
         if(Error === getErrorCode("ErrorInvalidAPIJSON")){
-            ActualOutput = item.ActualOuputString
+            ActualOutput = item.ActualOutputString
         }
 
         let ExpectedOutput = OriginalData.expectedOutput
