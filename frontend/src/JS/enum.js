@@ -58,7 +58,7 @@ const ResultError = {
 const ResultWarning = {
     0: 'WarningNoWarning',
     1: 'WarningHttpStatusNotSame',
-    2: 'WarningUnknownHttpStatusExpected',
+    2: 'WarningUnknownExpectedHttpStatus',
     3: 'WarningUnknownExpectedOutput',
     4: 'WarningExtraKeyValue',
     5: 'WarningNotSameValue',
