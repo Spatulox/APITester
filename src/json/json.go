@@ -93,6 +93,10 @@ func ListJsonFile(folderPath *string) (map[string]interface{}, error) {
 		pathDir = filepath.Join(pathDir, *folderPath)
 	}
 
+	if err := os.MkdirAll(pathDir, os.ModePerm); err != nil {
+		return nil, fmt.Errorf("error creating directory %s: %v", pathDir, err)
+	}
+
 	err = filepath.Walk(pathDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
