@@ -99,6 +99,7 @@ document.getElementById("save-config").addEventListener("click", async ()=>{
 
     const jsonData = htmlToJson()
     await UpdateConfig(jsonData, displayValue)
+    alert("Saved")
 })
 
 
