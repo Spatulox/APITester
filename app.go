@@ -65,8 +65,30 @@ func (a *App) OpenFileExplorer() error {
 	}
 }
 
-func (a *App) CheckSoloConfig(filename string) ([]RequestResult, error) {
-	res, err := CheckConfig(filename)
+func (a *App) CheckSoloConfig(filename string, fillExpectedOutput ...bool) ([]RequestResult, error) {
+
+	shouldFill := false
+	if len(fillExpectedOutput) > 0 {
+		shouldFill = fillExpectedOutput[0]
+	}
+
+	res, err := CheckConfig(filename, shouldFill)
+	if err != nil {
+		Log.Error(fmt.Sprintf("Error when checking config : %v", err))
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (a *App) CheckGroupConfig(pathFilename string, fillExpectedOutput ...bool) ([]RequestResult, error) {
+
+	shouldFill := false
+	if len(fillExpectedOutput) > 0 {
+		shouldFill = fillExpectedOutput[0]
+	}
+
+	res, err := CheckFolderConfig(pathFilename, shouldFill)
 	if err != nil {
 		Log.Error(fmt.Sprintf("Error when checking config : %v", err))
 		return nil, err
@@ -77,16 +99,6 @@ func (a *App) CheckSoloConfig(filename string) ([]RequestResult, error) {
 
 func (a *App) CheckEndpoint(config Config) ([]RequestResult, error) {
 	return ExecuteConfig(config)
-}
-
-func (a *App) CheckGroupConfig(pathFilename string) ([]RequestResult, error) {
-	res, err := CheckFolderConfig(pathFilename)
-	if err != nil {
-		Log.Error(fmt.Sprintf("Error when checking config : %v", err))
-		return nil, err
-	}
-
-	return res, nil
 }
 
 func (a *App) ParseExtractionJsonToGoFunction(data map[string]interface{}, path string, filename string) error {
