@@ -1,10 +1,9 @@
 
-import { CheckSoloConfig, CheckGroupConfig, PrintJsonFile } from '../../../wailsjs/go/main/App'
+import { CheckSoloConfig, CheckGroupConfig, PrintJsonFile, DetectIfOneOreMoreConfFileHaveEmptyExpectedOutputInAConfDir } from '../../../wailsjs/go/main/App'
 import {printResult} from "../print-test-result";
 import { clearEditConfig, jsonToHtml} from './edit-config';
 
 export async function checkConfig(event, filepath){
-    
     if(filepath.includes("root")){
         filepath = filepath.replace(/^root[/\\]/, "");
     }
@@ -18,7 +17,7 @@ export async function checkConfig(event, filepath){
         console.log(jsonString.globalAskedToFillExpectedOutPut)
 
         if(jsonString.globalAskedToFillExpectedOutPut.includes("false")){
-            fillExpectedOutput = confirm("Do you want to automatically fill the expected output with the actual output ?")
+            fillExpectedOutput = confirm("This endpoint don't have any ExpectedOutput.\nDo you want to automatically fill the expected output with the actual output ?\nConsider adding '_@empty' if the endpoint send back nothing")
             jsonString.globalAskedToFillExpectedOutPut = "true"
 
             document.getElementById('output').innerHTML = jsonToHtml(jsonString, `${filepath}`);
@@ -30,7 +29,14 @@ export async function checkConfig(event, filepath){
     else {
         // Lire tous les fichiers de conf, détecter si un des trucs est "globalAskedToFillExpectedOutPut = false"
         // Si oui, demande a l'utilisateur s'il veut que les ExpectedOutput non rempli
-        fillExpectedOutput = confirm("Do you want to automatically fill the expected output ?\nThis will not overwrite the existing ExpectedOutput.")
+        try{
+            console.log(await DetectIfOneOreMoreConfFileHaveEmptyExpectedOutputInAConfDir(`${filepath}`))
+            if(await DetectIfOneOreMoreConfFileHaveEmptyExpectedOutputInAConfDir(`${filepath}`)){
+                fillExpectedOutput = confirm("Do you want to automatically fill the expected output ?\nThis will not overwrite the existing ExpectedOutput.")
+            }
+        } catch (e){
+            console.log(e)
+        }
     }
 
     try{

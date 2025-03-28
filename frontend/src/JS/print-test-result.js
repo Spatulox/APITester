@@ -7,8 +7,6 @@ export function printResult(event, result) {
         return;
     }
 
-    console.log(result);
-
     const okCount = document.getElementById("ok-count");
     const warningCount = document.getElementById("warning-count");
     const errorCount = document.getElementById("error-count");
