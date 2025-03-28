@@ -3,12 +3,13 @@ import {printResult} from "../print-test-result";
 import loadingImage from "../../assets/images/circle-loading.gif"
 
 function makeEditable(value, type = 'text') {
-    return `<span class="editable" data-type="${type}"><span class="display-value">${value}</span><input type="text" class="edit-input" style="display:none;" value="${value}"></span>`;
+    return `<span class="editable" data-type="${type}"><span class="display-value">${value}</span><input type="text" class="edit-input" style="display:none;" value="${value}" onblur="updateEditableContent(this)"></span>`;
 }
 
 function makeEditablePre(value, type = 'json') {
-    return `<pre class="editable" data-type="${type}"><span class="display-value">${JSON.stringify(value, null, 2)}</span><textarea class="edit-input" style="display:none;">${JSON.stringify(value, null, 2)}</textarea></pre>`;
+    return `<pre class="editable" data-type="${type}"><span class="display-value">${JSON.stringify(value, null, 2)}</span><textarea class="edit-input" style="display:none;" onblur="updateEditableContent(this)">${JSON.stringify(value, null, 2)}</textarea></pre>`;
 }
+
 
 export function clearEditConfig(){
     document.getElementById("output").innerHTML = ""

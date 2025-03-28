@@ -94,6 +94,14 @@
                 }
             }
         }
+
+        function updateEditableContent(input) {
+            const editable = input.closest('.editable');
+            const displayValue = editable.querySelector('.display-value');
+            displayValue.textContent = input.value ? input.value : "{}";
+            displayValue.style.display = '';
+            input.style.display = 'none';
+        }
     </script>
 </body>
 
