@@ -18,20 +18,7 @@ const maxConcurrentChecks = 2
 
 // ----------------------------------------------------------- //
 
-// CheckConfig reads a JSON configuration file from the specified filepath (based on the UserConfigFolder),
-// validates the configuration by checking each endpoint defined in it,
-// and returns the results of these checks.
-//
-// Parameters:
-//   - @filepath: A string representing the path to the JSON configuration file
-//     that contains API endpoint definitions and authentication details.
-//
-// Returns:
-//   - @A slice of RequestResult containing the results of checking each endpoint.
-//   - @An error if there is an issue reading the JSON file or if any other error occurs
-//     during the validation process.
-
-func ExecuteConfig(config Config, fillExpectedOutput bool) ([]RequestResult, error) {
+func ExecuteConfig(config *Config, fillExpectedOutput bool) ([]RequestResult, error) {
 	apiApiKey := NewApi(config.BasicURL)
 	apiApiKey.AddApiKey(config.Authentication.APIKey.KeyName, config.Authentication.APIKey.ApiKey)
 
@@ -44,50 +31,88 @@ func ExecuteConfig(config Config, fillExpectedOutput bool) ([]RequestResult, err
 	// Semaphore pour contrôler le nombre de goroutines actives
 	semaphore := make(chan struct{}, maxConcurrentChecks)
 
-	for i, endpoint := range config.Endpoint {
-		endpoint := endpoint
-		i := i
+	for i := range config.Endpoint {
+		endpoint := &config.Endpoint[i]
+
 		for i2, inputData := range endpoint.Tests {
 			wg.Add(1)
 			semaphore <- struct{}{}
 
-			inputData := inputData
-			i2 := i2
-			go func() {
-				defer wg.Done() // Décrémenter le compteur de goroutines
+			go func(ep *Endpoint, testIndex int, input Test) {
+				defer wg.Done()
 				defer func() { <-semaphore }()
-				result, _ := checkEndpoint(endpoint, inputData, *apiApiKey, i, i2)
+
+				result, _ := checkEndpoint(*ep, input, *apiApiKey, i, testIndex)
+
+				if fillExpectedOutput && ep.IsAlreadyAskedToFillExpectedOutPut == "false" {
+					Log.Infos(fmt.Sprintf("Filling the Expected Output for %s/%v", input.Method, ep.Path))
+
+					mu.Lock()
+					ep.IsAlreadyAskedToFillExpectedOutPut = "true"
+					ep.Tests[testIndex].ExpectedOutput = result.ActualOutput
+					mu.Unlock()
+
+					if containsWarning(result.Warning, WarningUnknownExpectedOutput) {
+						removeWarning(&result, WarningUnknownExpectedOutput)
+					}
+				}
+
 				mu.Lock()
 				configTestResult = append(configTestResult, result)
 				mu.Unlock()
-
-				if fillExpectedOutput /*&& expectedOutput != nil*/ {
-					Log.Infos("Remplissage (fake) du ExpectedOutput")
-					//Ouvrir le fichier correspondant, trouver l'endpoint et rajouter le ExpectedOutput
-
-					// Adapter les code d'erreurs (si possible)
-					// - WarningDeprecatedField (peut être)
-					// - Le Warning qui touche au fait d'y avoir un ActualOutput alors que rien n'est attendu (peut être celui au dessus) => WarningUnknownExpectedOutput
-				}
-
-			}()
+			}(endpoint, i2, inputData)
 		}
 	}
 	wg.Wait()
 	return configTestResult, nil
 }
 
-func CheckConfig(filepath string, fillExpectedOutput bool) ([]RequestResult, error) {
+// CheckConfig reads a JSON configuration file from the specified filePath (based on the UserConfigFolder),
+// validates the configuration by checking each endpoint defined in it,
+// and returns the results of these checks.
+//
+// Parameters:
+//   - @filePath: A string representing the path to the JSON configuration file
+//     that contains API endpoint definitions and authentication details.
+//
+// Returns:
+//   - @A slice of RequestResult containing the results of checking each endpoint.
+//   - @An error if there is an issue reading the JSON file or if any other error occurs
+//     during the validation process.
+
+func CheckConfig(filePath string, fillExpectedOutput bool) ([]RequestResult, error) {
 	Log.Debug("--------CheckConfig------")
 
 	var config Config
-	err := ReadJsonFile(filepath, &config)
-	Log.Debug(fmt.Sprintf("Reading %s", filepath))
+	err := ReadJsonFile(filePath, &config)
+	Log.Debug(fmt.Sprintf("Reading %s", filePath))
 	if err != nil {
 		Log.Error(fmt.Sprintf("Impossible to read the json file : %v", err))
 		return []RequestResult{}, fmt.Errorf("Impossible to read the json file")
 	}
-	return ExecuteConfig(config, fillExpectedOutput)
+
+	var requestResult []RequestResult
+	requestResult, err = ExecuteConfig(&config, fillExpectedOutput)
+	if err != nil {
+		Log.Infos("WTF, c'est impossible lol")
+		return requestResult, err
+	}
+
+	fileName := filepath.Base(filePath)
+	dirPath := filepath.Dir(filePath)
+
+	if fillExpectedOutput {
+		config.GlobalAskedToFillExpectedOutPut = "true"
+	} else {
+		config.GlobalAskedToFillExpectedOutPut = "false"
+	}
+
+	err = SaveConfigToJson(config, dirPath, fileName)
+	if err != nil {
+		Log.Error(fmt.Sprintf("Impossible to save the updated config file : %v", err))
+	}
+
+	return requestResult, err
 }
 
 // ----------------------------------------------------------- //
@@ -125,9 +150,24 @@ func CheckFolderConfig(folderPath string, fillExpectedOutput bool) ([]RequestRes
 		if fileList, ok := files.([]string); ok {
 			for _, fileName := range fileList {
 				filePath := filepath.Join(folderPath, fileName)
-
 				wg.Add(1)               // Incrémenter le compteur de goroutines
 				semaphore <- struct{}{} // Acquérir un slot dans le sémaphore
+
+				// Read the File, check if globalAskedToFillExpectedOutPut = false et si fillExpectedOutput = true
+				// If Yes : fillExpectedOutput = true
+				// If No : fillExpectedOutput = false
+
+				var config Config
+				err := ReadJsonFile(filePath, &config)
+				if err != nil {
+					Log.Error("Impossible to read the file for some reason, so do not automatically fill the expected output")
+					fillExpectedOutput = false
+				}
+
+				// If already asked to fill or not
+				if config.GlobalAskedToFillExpectedOutPut == "true" {
+					fillExpectedOutput = false
+				}
 
 				go func(filePath string, fileName string) {
 					defer wg.Done()                // Décrémenter le compteur de goroutines
@@ -217,7 +257,7 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 		return returnResult, fmt.Errorf("Error no content")
 	}
 
-	ActualRes, err, isArray := parseActualResult(result, endpoint)
+	ActualRes, err, isArray := parseActualResult(result)
 	if err != ErrorNoError {
 		returnResult.Error = err
 		return returnResult, fmt.Errorf("Error when parsing actual result : %v", err)
@@ -495,7 +535,7 @@ func compareArrays(expectedArray, actualArray []interface{}) (ResultError, Resul
 	return 0, 0 // Tout est conforme pour les tableaux
 }
 
-func parseActualResult(result string, endpoint Endpoint) ([]interface{}, ResultError, bool) {
+func parseActualResult(result string) ([]interface{}, ResultError, bool) {
 	var arrJsonRes []interface{}
 
 	// Essayer de unmarshall en tant que tableau
@@ -517,4 +557,35 @@ func parseActualResult(result string, endpoint Endpoint) ([]interface{}, ResultE
 
 	// Vérifier si le résultat est un tableau
 	return arrJsonRes, 0, true // Retourner le tableau et une erreur nulle (0)
+}
+
+/*
+
+
+
+
+
+ */
+
+func containsWarning(warningsArray []ResultWarning, warningCode ResultWarning) bool {
+	for _, warning := range warningsArray {
+		if warning == warningCode {
+			return true
+		}
+	}
+	return false
+}
+
+func removeWarning(result *RequestResult, warning ResultWarning) {
+	if result == nil {
+		return
+	}
+
+	newWarnings := make([]ResultWarning, 0, len(result.Warning))
+	for _, warning := range result.Warning {
+		if warning != warning {
+			newWarnings = append(newWarnings, warning)
+		}
+	}
+	result.Warning = newWarnings
 }

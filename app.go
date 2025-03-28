@@ -88,7 +88,7 @@ func (a *App) CheckGroupConfig(pathFilename string, fillExpectedOutput bool) ([]
 
 // Only Front call
 func (a *App) CheckEndpoint(config Config, fillExpectedOutput bool) ([]RequestResult, error) {
-	return ExecuteConfig(config, fillExpectedOutput)
+	return ExecuteConfig(&config, fillExpectedOutput)
 }
 
 func (a *App) ParseExtractionJsonToGoFunction(data map[string]interface{}, path string, filename string) error {

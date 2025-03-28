@@ -23,7 +23,7 @@ func initJsonFiles() {
 	SaveConfigToJson(conf, "test", "test.json")
 	SaveConfigToJson(conf, "test", "test1.json")
 
-	_, err := CheckFolderConfig("test")
+	_, err := CheckFolderConfig("test", false)
 	if err != nil {
 		return
 	}
