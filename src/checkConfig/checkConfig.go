@@ -31,14 +31,9 @@ const maxConcurrentChecks = 2
 //   - @An error if there is an issue reading the JSON file or if any other error occurs
 //     during the validation process.
 
-func ExecuteConfig(config Config, fillExpectedOutput ...bool) ([]RequestResult, error) {
+func ExecuteConfig(config Config, fillExpectedOutput bool) ([]RequestResult, error) {
 	apiApiKey := NewApi(config.BasicURL)
 	apiApiKey.AddApiKey(config.Authentication.APIKey.KeyName, config.Authentication.APIKey.ApiKey)
-
-	shouldFill := false
-	if len(fillExpectedOutput) > 0 {
-		shouldFill = fillExpectedOutput[0]
-	}
 
 	// Gonna store all the result of each endpoint
 	var configTestResult []RequestResult
@@ -66,7 +61,7 @@ func ExecuteConfig(config Config, fillExpectedOutput ...bool) ([]RequestResult, 
 				configTestResult = append(configTestResult, result)
 				mu.Unlock()
 
-				if shouldFill /*&& expectedOutput != nil*/ {
+				if fillExpectedOutput /*&& expectedOutput != nil*/ {
 					Log.Infos("Remplissage (fake) du ExpectedOutput")
 					//Ouvrir le fichier correspondant, trouver l'endpoint et rajouter le ExpectedOutput
 
@@ -82,13 +77,8 @@ func ExecuteConfig(config Config, fillExpectedOutput ...bool) ([]RequestResult, 
 	return configTestResult, nil
 }
 
-func CheckConfig(filepath string, fillExpectedOutput ...bool) ([]RequestResult, error) {
+func CheckConfig(filepath string, fillExpectedOutput bool) ([]RequestResult, error) {
 	Log.Debug("--------CheckConfig------")
-
-	shouldFill := false
-	if len(fillExpectedOutput) > 0 {
-		shouldFill = fillExpectedOutput[0]
-	}
 
 	var config Config
 	err := ReadJsonFile(filepath, &config)
@@ -97,7 +87,7 @@ func CheckConfig(filepath string, fillExpectedOutput ...bool) ([]RequestResult, 
 		Log.Error(fmt.Sprintf("Impossible to read the json file : %v", err))
 		return []RequestResult{}, fmt.Errorf("Impossible to read the json file")
 	}
-	return ExecuteConfig(config, shouldFill)
+	return ExecuteConfig(config, fillExpectedOutput)
 }
 
 // ----------------------------------------------------------- //

@@ -30,8 +30,9 @@ type BasicAuth struct {
 }
 
 type Endpoint struct {
-	Path  string `json:"path"`
-	Tests []Test `json:"tests"`
+	Path                               string `json:"path"`
+	IsAlreadyAskedToFillExpectedOutPut string `json:isAlreadyAskedToFillExpectedOutput`
+	Tests                              []Test `json:"tests"`
 }
 
 type Test struct {
