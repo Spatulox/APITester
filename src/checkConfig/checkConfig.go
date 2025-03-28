@@ -20,7 +20,15 @@ const maxConcurrentChecks = 2
 
 func ExecuteConfig(config *Config, fillExpectedOutput bool) ([]RequestResult, error) {
 	apiApiKey := NewApi(config.BasicURL)
-	apiApiKey.AddApiKey(config.Authentication.APIKey.KeyName, config.Authentication.APIKey.ApiKey)
+	switch config.Authentication.Type {
+	case "apikey":
+		apiApiKey.AddApiKey(config.Authentication.APIKey.KeyName, config.Authentication.APIKey.ApiKey)
+	case "oauth2":
+	case "basicAuth":
+		apiApiKey.AddBasicAuth(config.Authentication.BasicAuth.Username, config.Authentication.BasicAuth.Password)
+	case "noauth":
+	default:
+	}
 
 	// Gonna store all the result of each endpoint
 	var configTestResult []RequestResult
