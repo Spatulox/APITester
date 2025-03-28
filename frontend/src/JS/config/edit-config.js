@@ -386,13 +386,9 @@ export async function printJsonToEditTab(path){
     if (path.includes("root")) {
         path = path.replace(/^root[/\\]/, "");
     }
-    try{
-        const jsonString = await PrintJsonFile(path); // Votre JSON ici
-        document.getElementById('output').innerHTML = jsonToHtml(jsonString, path);
-        addEventListeners();
-    } catch (e) {
-        console.log(e)
-    }
+    const jsonString = await PrintJsonFile(path); // Votre JSON ici
+    document.getElementById('output').innerHTML = jsonToHtml(jsonString, path);
+    addEventListeners();
 }
 
 export function createEmptyConf(){
