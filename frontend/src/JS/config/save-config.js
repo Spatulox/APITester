@@ -23,9 +23,11 @@ export function htmlToJson() {
     // Récupérer tous les endpoints
     document.querySelectorAll('.endpoint').forEach(endpointElement => {
         let endpoint = {
-            path: endpointElement.querySelector('.endpoint-header')?.childNodes[0].textContent.trim() || '', // Ignore le bouton
+            isAlreadyAskedToFillExpectedOutput: endpointElement.querySelector('.endpoint-header .isAlreadyAskedToFillExpectedOutput').textContent.trim() || "true",
+            path: endpointElement.querySelector('.endpoint-header .display-value').textContent.trim() || '', // Ignore le chemin
             tests: []
         };
+
 
         endpointElement.querySelectorAll('.test-method').forEach(testElement => {
             let test = {

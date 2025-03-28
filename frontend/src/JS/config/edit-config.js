@@ -67,7 +67,14 @@ function jsonToHtml(jsonData, filename) {
 
     config.endpoints.forEach(endpoint => {
         html += `<div class="endpoint">`;
-        html += `<h3 class="endpoint-header">${makeEditable(endpoint.path)}<span class="endpoints-controls"><button class="play-endpoint play-button"">▶</button><button class="delete-endpoint delete-button" onclick="removeElement(this)">🗑️</button></span></h3>`;
+        html += `<h3 class="endpoint-header">
+        ${makeEditable(endpoint.path)}
+            <span class="isAlreadyAskedToFillExpectedOutput">${endpoint.IsAlreadyAskedToFillExpectedOutPut}</span>
+            <span class="endpoints-controls">
+                <button class="play-endpoint play-button"">▶</button>
+                <button class="delete-endpoint delete-button" onclick="removeElement(this)">🗑️</button>
+            </span>
+        </h3>`;
 
         html += `<div class="endpoint-content">`;
 
@@ -450,20 +457,26 @@ export async function playEndpoint(button) {
 
     // Récupérer le chemin de l'endpoint
     const endpointPath = endpointElement.querySelector('.endpoint-header .display-value').textContent;
+    const isAlreadyAsked = endpointElement.querySelector('.endpoint-header .isAlreadyAskedToFillExpectedOutput').textContent;
 
     // Préparer l'objet endpoint
     let endpoint = {
         path: endpointPath,
-        tests: []
+        tests: [],
+        isAlreadyAsked
     };
 
     // Récupérer toutes les méthodes de test pour cet endpoint
     const testMethods = endpointElement.querySelectorAll('.test-method');
+    let isExpectedOutputFilled = false
 
     testMethods.forEach(method => {
         const methodName = method.querySelector('.method-header .display-value').textContent;
         const input = JSON.parse(method.querySelector('.input-section pre .display-value').textContent);
         const expectedOutput = JSON.parse(method.querySelector('.output-section pre .display-value').textContent);
+        if ((expectedOutput && Object.keys(expectedOutput).length > 0) || isAlreadyAsked == "true") {
+            isExpectedOutputFilled = true;
+        }        
         const expectedHttpState = method.querySelector('.http-state-section .display-value').textContent;
 
         endpoint.tests.push({
@@ -477,7 +490,13 @@ export async function playEndpoint(button) {
     config.endpoints.push(endpoint);
 
     try{
-        const res = await CheckEndpoint(config)
+        let automaticFillExpectedOutput = false
+        if(!isExpectedOutputFilled){
+            automaticFillExpectedOutput = confirm("Do you want to automatically fill the expected output with the actual output ?")
+            endpointElement.querySelector('.endpoint-header .isAlreadyAskedToFillExpectedOutput').textContent = automaticFillExpectedOutput
+            document.getElementById("save-config").click()
+        }
+        const res = await CheckEndpoint(config, automaticFillExpectedOutput)
         printResult("welp", res)
     } catch (e) {
         console.log(e)

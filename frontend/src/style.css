@@ -98,6 +98,10 @@ section > h2 {
     width: 70px;
 }
 
+.isAlreadyAskedToFillExpectedOutput{
+    display: none;
+}
+
 .tabs {
     display: flex;
     justify-content: space-between; /* Espace entre les onglets */
