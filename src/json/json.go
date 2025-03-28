@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // -------------------------------------------- //
@@ -155,6 +156,10 @@ func SaveConfigToJson(config Config, path string, filename string) error {
 
 	if err := os.MkdirAll(pathDir, os.ModePerm); err != nil {
 		return fmt.Errorf("error creating directory %s: %v", pathDir, err)
+	}
+
+	if !strings.HasSuffix(filename, ".json") {
+		filename += ".json"
 	}
 
 	filePath := filepath.Join(pathDir, filename)
