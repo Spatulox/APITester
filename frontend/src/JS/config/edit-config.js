@@ -23,7 +23,7 @@ export function jsonToHtml(jsonData, filename) {
     html += '<div class="config-header">';
     html += `<h2>Configuration : <span id="fileNameConfiguration">\`${makeEditable(filename)}\`</span></h2>`
     html += `<p><strong>Basic URL:</strong> ${makeEditable(config.basicUrl)}</p>`;
-    html += `<span class="globalAskedToFillExpectedOutPut"> ${config.globalAskedToFillExpectedOutPut}</span>`;
+    html += `<span class="globalAskedToFillExpectedOutPut">${config.globalAskedToFillExpectedOutPut}</span>`;
 
     // Section d'authentification
     html += '<div class="auth-section">';
@@ -290,6 +290,7 @@ function createConfigurationSection() {
     html += '<div class="config-header">';
     html += `<h2>Configuration : <span id="fileNameConfiguration">\`${makeEditable('File_name.json')}\`</span></h2>`
     html += `<p><strong>Basic URL:</strong> ${makeEditable('Not Provided')}</p>`;
+    html += `<span class="globalAskedToFillExpectedOutPut">false</span>`;
 
     html += '<div class="auth-section">';
     html += '<h3>Authentication</h3>';
@@ -345,7 +346,15 @@ export function createMethodElement(method = 'GET') {
     let html = '';
 
     html += `<div class="endpoint">`;
-    html += `<h3 class="endpoint-header">${makeEditable("/endpoint")}<span class="endpoints-controls"><button class="play-endpoint play-button">▶</button><button class="delete-endpoint delete-button" onclick="removeElement(this)">🗑️</button></span></h3>`;
+    html += `<h3 class="endpoint-header">
+        ${makeEditable("/endpoint")}
+        <span class="isAlreadyAskedToFillExpectedOutput">false</span>
+        <span class="endpoints-controls">
+        <button class="play-endpoint play-button">▶</button>
+        <button class="delete-endpoint delete-button" onclick="removeElement(this)">🗑️</button>
+        </span>
+    </h3>`;
+    
     html += `<div id="endpoint-content" class="endpoint-content">`;
 
     html += `<div class="test-method">`;
