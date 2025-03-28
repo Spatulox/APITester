@@ -52,15 +52,25 @@ func ExecuteConfig(config *Config, fillExpectedOutput bool) ([]RequestResult, er
 
 				result, _ := checkEndpoint(*ep, input, *apiApiKey, i, testIndex)
 
-				if fillExpectedOutput && ep.IsAlreadyAskedToFillExpectedOutPut == "false" {
+				if fillExpectedOutput { // && ep.IsAlreadyAskedToFillExpectedOutPut == "false" {
 					Log.Infos(fmt.Sprintf("Filling the Expected Output for %s/%v", input.Method, ep.Path))
 
 					mu.Lock()
-					ep.IsAlreadyAskedToFillExpectedOutPut = "true"
-					ep.Tests[testIndex].ExpectedOutput = result.ActualOutput
+					//ep.IsAlreadyAskedToFillExpectedOutPut = "true"
+					// cé pété ici, problème de type
+					if result.ActualOutput != nil {
+						Log.Debug("DEBUG 12")
+						fmt.Sprintf("%v", result.ActualOutput...)
+						ep.Tests[testIndex].ExpectedOutput = result.ActualOutput
+					} else if result.ActualOutputString != "" {
+						Log.Debug("DEBUG 34")
+						ep.Tests[testIndex].ExpectedOutput = result.ActualOutputString
+						fmt.Sprintf("%v", result.ActualOutputString)
+					}
 					mu.Unlock()
 
 					if containsWarning(result.Warning, WarningUnknownExpectedOutput) {
+						Log.Debug("COUCOU")
 						removeWarning(&result, WarningUnknownExpectedOutput)
 					}
 				}
@@ -111,7 +121,7 @@ func CheckConfig(filePath string, fillExpectedOutput bool) ([]RequestResult, err
 	dirPath := filepath.Dir(filePath)
 
 	if fillExpectedOutput {
-		config.GlobalAskedToFillExpectedOutPut = "true"
+		config.GlobalAskedToFillExpectedOutPut = "false"
 	}
 
 	err = SaveConfigToJson(config, dirPath, fileName)
