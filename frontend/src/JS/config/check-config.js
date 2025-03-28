@@ -23,7 +23,11 @@ export async function checkConfig(event, filepath){
         else {
             throw new Error("Wrong path the check. Must finish by '/' or by '.json'...")
         }
-        printResult(event, result)
+        if(result){
+            printResult(event, result)
+        } else {
+            alert("Impossible to show the file conf")
+        }
         //return result
 
     } catch (e){

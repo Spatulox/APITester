@@ -165,6 +165,7 @@ function addPlayButton(element, name) {
             await printJsonToEditTab(`${parentFolder}/${name}`)
             showConfiguration(event)
         } catch (e) {
+            alert("Impossible to display the file")
             console.log(e)
         }
     }
