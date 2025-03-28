@@ -70,6 +70,7 @@ func ExecuteConfig(config *Config, fillExpectedOutput bool) ([]RequestResult, er
 // CheckConfig reads a JSON configuration file from the specified filePath (based on the UserConfigFolder),
 // validates the configuration by checking each endpoint defined in it,
 // and returns the results of these checks.
+// CheckConfig update the GlobalAskedToFillExpectedOutPut if it's comes from false to true
 //
 // Parameters:
 //   - @filePath: A string representing the path to the JSON configuration file
@@ -152,22 +153,6 @@ func CheckFolderConfig(folderPath string, fillExpectedOutput bool) ([]RequestRes
 				filePath := filepath.Join(folderPath, fileName)
 				wg.Add(1)               // Incrémenter le compteur de goroutines
 				semaphore <- struct{}{} // Acquérir un slot dans le sémaphore
-
-				// Read the File, check if globalAskedToFillExpectedOutPut = false et si fillExpectedOutput = true
-				// If Yes : fillExpectedOutput = true
-				// If No : fillExpectedOutput = false
-
-				var config Config
-				err := ReadJsonFile(filePath, &config)
-				if err != nil {
-					Log.Error("Impossible to read the file for some reason, so do not automatically fill the expected output")
-					fillExpectedOutput = false
-				}
-
-				// If already asked to fill or not
-				if config.GlobalAskedToFillExpectedOutPut == "true" {
-					fillExpectedOutput = false
-				}
 
 				go func(filePath string, fileName string) {
 					defer wg.Done()                // Décrémenter le compteur de goroutines
