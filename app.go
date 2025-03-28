@@ -65,14 +65,9 @@ func (a *App) OpenFileExplorer() error {
 	}
 }
 
-func (a *App) CheckSoloConfig(filename string, fillExpectedOutput ...bool) ([]RequestResult, error) {
+func (a *App) CheckSoloConfig(filename string, fillExpectedOutput bool) ([]RequestResult, error) {
 
-	shouldFill := false
-	if len(fillExpectedOutput) > 0 {
-		shouldFill = fillExpectedOutput[0]
-	}
-
-	res, err := CheckConfig(filename, shouldFill)
+	res, err := CheckConfig(filename, fillExpectedOutput)
 	if err != nil {
 		Log.Error(fmt.Sprintf("Error when checking config : %v", err))
 		return nil, err
@@ -81,14 +76,8 @@ func (a *App) CheckSoloConfig(filename string, fillExpectedOutput ...bool) ([]Re
 	return res, nil
 }
 
-func (a *App) CheckGroupConfig(pathFilename string, fillExpectedOutput ...bool) ([]RequestResult, error) {
-
-	shouldFill := false
-	if len(fillExpectedOutput) > 0 {
-		shouldFill = fillExpectedOutput[0]
-	}
-
-	res, err := CheckFolderConfig(pathFilename, shouldFill)
+func (a *App) CheckGroupConfig(pathFilename string, fillExpectedOutput bool) ([]RequestResult, error) {
+	res, err := CheckFolderConfig(pathFilename, fillExpectedOutput)
 	if err != nil {
 		Log.Error(fmt.Sprintf("Error when checking config : %v", err))
 		return nil, err

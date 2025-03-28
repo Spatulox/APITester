@@ -105,14 +105,9 @@ func CheckConfig(filepath string, fillExpectedOutput bool) ([]RequestResult, err
 //     all configurations found in the folder.
 //   - @An error if there is an issue listing the JSON files or if any other error occurs
 //     during the validation process.
-func CheckFolderConfig(folderPath string, fillExpectedOutput ...bool) ([]RequestResult, error) {
+func CheckFolderConfig(folderPath string, fillExpectedOutput bool) ([]RequestResult, error) {
 
 	Log.Debug("--------CheckFolder------")
-
-	shouldFill := false
-	if len(fillExpectedOutput) > 0 {
-		shouldFill = fillExpectedOutput[0]
-	}
 
 	folderFiles, err := ListJsonFile(&folderPath)
 	if err != nil {
@@ -138,7 +133,7 @@ func CheckFolderConfig(folderPath string, fillExpectedOutput ...bool) ([]Request
 					defer wg.Done()                // Décrémenter le compteur de goroutines
 					defer func() { <-semaphore }() // Libérer un slot dans le sémaphore
 
-					results, err := CheckConfig(filePath, shouldFill)
+					results, err := CheckConfig(filePath, fillExpectedOutput)
 					if err != nil {
 						Log.Error(fmt.Sprintf("Error checking config for file %s: %v", fileName, err))
 						return
@@ -171,7 +166,7 @@ func CheckFolderConfig(folderPath string, fillExpectedOutput ...bool) ([]Request
 // Returns:
 // - @A RequestResult containing the outcome of the endpoint check, including any errors or warnings.
 // - @An error if there is an issue during the request or processing of results.
-func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 int, fillExpectedOutput ...bool) (RequestResult, error) {
+func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 int) (RequestResult, error) {
 	var status int
 	var result string
 	var requestErr error
