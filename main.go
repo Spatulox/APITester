@@ -7,6 +7,7 @@ import (
 	. "ApiTester/src/struct"
 	"embed"
 	"fmt"
+
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -29,18 +30,18 @@ func initJsonFiles() {
 
 	//INSOMNIA
 	var json map[string]interface{}
-	OldReadJsonFile("./Insomnia.json", &json)
+	OldReadJsonFile("./Insomnia_Extract.json", &json)
 
 	config, err := ParseInsomniaExport(json)
 	if err != nil {
 		fmt.Printf("%v", err)
 		return
 	}
-
+	SaveConfigToJson(config, "", "test11.json")
 	fmt.Printf("+v\n", config)
 
 	//POSTMAN
-	OldReadJsonFile("./Postman.json", &json)
+	OldReadJsonFile("./Postman_Extract.json", &json)
 
 	config, err = ParsePostmanExport(json)
 	if err != nil {
@@ -48,11 +49,13 @@ func initJsonFiles() {
 		return
 	}
 
+	SaveConfigToJson(config, "", "test12.json")
 	fmt.Printf("+v\n", config)
 }
 
 func main() {
 
+	//initJsonFiles()
 	// Create an instance of the app structure
 	app := NewApp()
 
