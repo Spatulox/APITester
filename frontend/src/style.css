@@ -378,6 +378,8 @@ pre {
     overflow-x: auto;
     font-size: 14px;
     color: black;
+    max-height: 500px;
+    overflow: auto;
 }
 
 p {
