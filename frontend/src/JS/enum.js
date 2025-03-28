@@ -59,7 +59,7 @@ const ResultWarning = {
     0: 'WarningNoWarning',
     1: 'WarningHttpStatusNotSame',
     2: 'WarningUnknownHttpStatusExpected',
-    3: 'WarningUnknownOutputExpected',
+    3: 'WarningUnknownExpectedOutput',
     4: 'WarningExtraKeyValue',
     5: 'WarningNotSameValue',
     6: 'WarningNoResponse',

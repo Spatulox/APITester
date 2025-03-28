@@ -63,7 +63,7 @@ const (
 	WarningNoWarning ResultWarning = iota
 	WarningHttpStatusNotSame
 	WarningUnknownHttpStatusExpected
-	WarningUnknownOutputExpected
+	WarningUnknownExpectedOutput
 	WarningExtraKeyValue
 	WarningNotSameValue
 	WarningNoResponse
