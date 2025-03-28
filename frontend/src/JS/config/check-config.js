@@ -11,6 +11,7 @@ export async function checkConfig(event, filepath){
 
     let fillExpectedOutput = false
 
+    // File
     if(filepath.endsWith(".json")){
         const jsonString = await PrintJsonFile(`${filepath}`);
         
@@ -24,6 +25,12 @@ export async function checkConfig(event, filepath){
             document.getElementById("save-config").click()
             clearEditConfig()
         }
+    }
+    // Folder
+    else {
+        // Lire tous les fichiers de conf, détecter si un des trucs est "globalAskedToFillExpectedOutPut = false"
+        // Si oui, demande a l'utilisateur s'il veut que les ExpectedOutput non rempli
+        fillExpectedOutput = confirm("Do you want to automatically fill the expected output ?\nThis will not overwrite the existing ExpectedOutput.")
     }
 
     try{
