@@ -20,7 +20,8 @@ export async function checkConfig(event, filepath){
             fillExpectedOutput = confirm("This endpoint don't have any ExpectedOutput.\nDo you want to automatically fill the expected output with the actual output ?\nConsider adding '_@empty' if the endpoint send back nothing")
             jsonString.globalAskedToFillExpectedOutPut = "true"
 
-            document.getElementById('output').innerHTML = jsonToHtml(jsonString, `${filepath}`);
+            document.getElementById('output').innerHTML = ""
+            document.getElementById('output').appendChild(jsonToHtml(jsonString, `${filepath}`));
             document.getElementById("save-config").click()
             clearEditConfig()
         }

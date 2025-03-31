@@ -2,11 +2,11 @@ import {CheckEndpoint, PrintJsonFile} from "../../../wailsjs/go/main/App";
 import {printResult} from "../print-test-result";
 import loadingImage from "../../assets/images/circle-loading.gif"
 
-function makeEditable(value, type = 'text') {
+function makeEditableOld(value, type = 'text') {
     return `<span class="editable" data-type="${type}"><span class="display-value">${value}</span><input type="text" class="edit-input" style="display:none;" value="${value}" onblur="updateEditableContent(this)"></span>`;
 }
 
-function makeEditableNode(value, type = 'text') {
+function makeEditable(value, type = 'text') {
     // Création de l'élément conteneur principal
     const editableSpan = document.createElement('span');
     editableSpan.classList.add('editable');
@@ -37,9 +37,35 @@ function makeEditableNode(value, type = 'text') {
 }
 
 
-function makeEditablePre(value, type = 'json') {
+function makeEditablePreOld(value, type = 'json') {
     return `<pre class="editable" data-type="${type}"><span class="display-value">${JSON.stringify(value, null, 2)}</span><textarea class="edit-input" style="display:none;" onblur="updateEditableContent(this)">${JSON.stringify(value, null, 2)}</textarea></pre>`;
 }
+
+function makeEditablePre(value, type = 'json') {
+    // Crée l'élément <pre>
+    const preElement = document.createElement('pre');
+    preElement.className = 'editable';
+    preElement.dataset.type = type;
+
+    // Crée l'élément <span> pour afficher la valeur
+    const displayValueSpan = document.createElement('span');
+    displayValueSpan.className = 'display-value';
+    displayValueSpan.textContent = JSON.stringify(value, null, 2);
+    preElement.appendChild(displayValueSpan);
+
+    // Crée l'élément <textarea> pour l'édition
+    const editInputTextarea = document.createElement('textarea');
+    editInputTextarea.className = 'edit-input';
+    editInputTextarea.style.display = 'none';
+    editInputTextarea.onblur = function () {
+        updateEditableContent(this); // Appelle la fonction pour mettre à jour le contenu
+    };
+    editInputTextarea.textContent = JSON.stringify(value, null, 2);
+    preElement.appendChild(editInputTextarea);
+
+    return preElement;
+}
+
 
 
 export function clearEditConfig(){
@@ -47,116 +73,308 @@ export function clearEditConfig(){
 }
 
 export function jsonToHtml(jsonData, filename) {
-    console.log(filename)
+    console.log(filename);
     const config = jsonData;
-    let html = '';
+
+    // Conteneur principal
+    const container = document.createElement("div");
 
     // En-tête
-    html += '<div class="config-header">';
-    html += `<h2>Configuration : <span id="fileNameConfiguration">\`${makeEditable(filename)}\`</span></h2>`
-    html += `<p><strong>Basic URL:</strong> ${makeEditable(config.basicUrl)}</p>`;
-    html += `<span class="globalAskedToFillExpectedOutPut">${config.globalAskedToFillExpectedOutPut}</span>`;
+    const header = document.createElement("div");
+    header.className = "config-header";
+
+    // Création du titre principal
+    const title = document.createElement('h2');
+    title.textContent = 'Configuration : ';
+
+    // Création du span avec l'ID "fileNameConfiguration"
+    const fileNameSpan = document.createElement('span');
+    fileNameSpan.id = 'fileNameConfiguration';
+
+    // Ajout du contenu éditable dans le span
+    fileNameSpan.appendChild(makeEditable(filename));
+
+    // Ajout du span au titre
+    title.appendChild(fileNameSpan);
+
+    header.appendChild(title);
+
+    // Création de l'élément <p> pour Basic URL
+    const basicUrl = document.createElement('p');
+
+    // Création de l'élément <strong> pour le texte "Basic URL:"
+    const strong = document.createElement('strong');
+    strong.textContent = 'Basic URL:';
+
+    // Ajout du texte fort au paragraphe
+    basicUrl.appendChild(strong);
+
+    // Ajout du contenu éditable (généré par makeEditable) au paragraphe
+    basicUrl.appendChild(makeEditable(config.basicUrl));
+
+    header.appendChild(basicUrl);
+
+    const globalSpan = document.createElement("span");
+    globalSpan.className = "globalAskedToFillExpectedOutPut";
+    globalSpan.textContent = config.globalAskedToFillExpectedOutPut;
+    header.appendChild(globalSpan);
+
+    container.appendChild(header);
 
     // Section d'authentification
-    html += '<div class="auth-section">';
-    html += '<h3>Authentication</h3>';
-    html += `<p><strong>Type:</strong> <span id="authType">${config.authentication.type}</span></p>`;
+    const authSection = document.createElement("div");
+    authSection.className = "auth-section";
 
-    
-    
-    
-    
+    const authTitle = document.createElement("h3");
+    authTitle.textContent = "Authentication";
+    authSection.appendChild(authTitle);
+
+    const authType = document.createElement("p");
+    authType.innerHTML = `<strong>Type:</strong> <span id="authType">${config.authentication.type}</span>`;
+    authSection.appendChild(authType);
+
     // Système d'onglets pour l'authentification
-    html += '<div class="auth-tabs">';
-    html += '<ul class="tab-list">';
-    html += `<li class="tab-item ${config.authentication.type === "apikey" ? "active"  : ""}" data-tab="apikey">API Key</li>`;
-    html += `<li class="tab-item ${config.authentication.type === "oauth2" ? "active"  : ""}" data-tab="oauth2">OAuth2</li>`;
-    html += `<li class="tab-item ${config.authentication.type === "basicAuth" ? "active"  : ""}" data-tab="basicAuth">Basic Auth</li>`;
-    html += `<li class="tab-item ${config.authentication.type === "noauth" ? "active"  : ""}" data-tab="noauth">No Auth</li>`;
-    html += '</ul>';
+    const authTabs = document.createElement("div");
+    authTabs.className = "auth-tabs";
 
-    // Contenu des onglets
-    html += '<div class="tab-content">';
+    const tabList = document.createElement("ul");
+    tabList.className = "tab-list";
 
-    // API Key
-    html += `<div class="tab-pane ${config.authentication.type === "apikey" ? "active"  : ""}" id="apikey">`;
-    html += `<p><strong>Key Name:</strong> ${makeEditable(config.authentication.apikey.keyname || 'Not provided')}</p>`;
-    html += `<p><strong>API Key:</strong> ${makeEditable(config.authentication.apikey.apikeyvalue || 'Not provided')}</p>`;
-    html += '</div>';
-
-    // OAuth2
-    html += `<div class="tab-pane ${config.authentication.type === "oauth2" ? "active"  : ""}" id="oauth2">`;
-    html += `<p><strong>Client ID:</strong> ${makeEditable(config.authentication.oauth2.clientId || 'Not provided')}</p>`;
-    html += `<p><strong>Client Secret:</strong> ${makeEditable(config.authentication.oauth2.clientSecret ? '********' : 'Not provided')}</p>`;
-    html += `<p><strong>Token URL:</strong> ${makeEditable(config.authentication.oauth2.tokenUrl || 'Not provided')}</p>`;
-    html += '</div>';
-
-    // Basic Auth
-    html += `<div class="tab-pane ${config.authentication.type === "basicAuth" ? "active"  : ""}" id="basicAuth">`;
-    html += `<p><strong>Username:</strong> ${makeEditable(config.authentication.basicAuth.username || 'Not provided')}</p>`;
-    html += `<p><strong>Password:</strong> ${makeEditable(config.authentication.basicAuth.password ? '********' : 'Not provided')}</p>`;
-    html += '</div>';
-
-    html += '</div>'; // tab-content
-    html += '</div>'; // auth-tabs
-    html += '</div>'; // auth-section
-    html += '</div>'; // config-header
-
-    // Endpoints
-    html += '<div id="endpoint" class="endpoints">';
-    html += '<h2>Endpoints</h2>';
-
-    //html += '<button id="addEndpointBtn" class="discord-button">Add an Endpoint</button>';
-
-    config.endpoints.forEach(endpoint => {
-        html += `<div class="endpoint">`;
-        html += `<h3 class="endpoint-header">
-        ${makeEditable(endpoint.path)}
-            <span class="isAlreadyAskedToFillExpectedOutput">${endpoint.IsAlreadyAskedToFillExpectedOutPut}</span>
-            <span class="endpoints-controls">
-                <button class="play-endpoint play-button"">▶</button>
-                <button class="delete-endpoint delete-button" onclick="removeElement(this)">🗑️</button>
-            </span>
-        </h3>`;
-
-        html += `<div class="endpoint-content">`;
-
-        endpoint.tests.forEach(test => {
-            html += `<div class="test-method">`;
-            html += `<h4 class="method-header">${makeEditable(test.method)}<button class="delete-method  delete-button" onclick="removeElement(this)">🗑️</button></h4>`;
-            html += `<div class="method-content">`;
-
-            html += '<div class="input-section">';
-            html += '<h5>Input:</h5>';
-            if (test.input) {
-                html += makeEditablePre(test.input);
-            } else {
-                html += makeEditablePre({});
-            }
-            html += '</div>';
-
-            html += '<div class="output-section">';
-            html += '<h5>Expected Output:</h5>';
-            html += makeEditablePre(test.expectedOutput);
-            html += '</div>';
-
-            html += '<div class="http-state-section">';
-            html += '<h5>Expected HTTP State:</h5>';
-            html += makeEditable(test.expectedHttpState || "Not Provided");
-            html += '</div>';
-
-            html += '</div>'; // method-content
-            html += '</div>'; // test-method
-        });
-
-        html += '</div>'; // endpoint-content
-        html += '</div>'; // endpoint
+    ["apikey", "oauth2", "basicAuth", "noauth"].forEach((tab) => {
+        const tabItem = document.createElement("li");
+        tabItem.className = `tab-item ${config.authentication.type === tab ? "active" : ""}`;
+        tabItem.dataset.tab = tab;
+        tabItem.textContent = tab.charAt(0).toUpperCase() + tab.slice(1); // Capitalize first letter
+        tabList.appendChild(tabItem);
     });
 
-    html += '</div>'; // endpoints
+    authTabs.appendChild(tabList);
 
-    return html;
+    // Contenu des onglets
+    const tabContent = document.createElement("div");
+    tabContent.className = "tab-content";
+
+    // API Key
+    const apiKeyPane = document.createElement("div");
+    apiKeyPane.className = `tab-pane ${config.authentication.type === "apikey" ? "active" : ""}`;
+    apiKeyPane.id = "apikey";
+
+    const keyNameParagraph = document.createElement("p");
+    keyNameParagraph.innerHTML = `<strong>Key Name: </strong>`;
+    keyNameParagraph.appendChild(makeEditable(config.authentication.apikey.keyname || 'Not provided'));
+    apiKeyPane.appendChild(keyNameParagraph);
+
+    const apiKeyParagraph = document.createElement("p");
+    apiKeyParagraph.innerHTML = `<strong>API Key: </strong>`;
+    apiKeyParagraph.appendChild(makeEditable(config.authentication.apikey.apikeyvalue || 'Not provided'));
+    apiKeyPane.appendChild(apiKeyParagraph);
+
+    tabContent.appendChild(apiKeyPane);
+    
+    // OAuth2
+    const oauth2Pane = document.createElement("div");
+    oauth2Pane.className = `tab-pane ${config.authentication.type === "oauth2" ? "active" : ""}`;
+    oauth2Pane.id = "oauth2";
+
+    const clientIdParagraph = document.createElement("p");
+    clientIdParagraph.innerHTML = `<strong>Client ID: </strong>`;
+    clientIdParagraph.appendChild(makeEditable(config.authentication.oauth2.clientId || 'Not provided'));
+    oauth2Pane.appendChild(clientIdParagraph);
+
+    const clientSecretParagraph = document.createElement("p");
+    clientSecretParagraph.innerHTML = `<strong>Client Secret: </strong>`;
+    clientSecretParagraph.appendChild(makeEditable(config.authentication.oauth2.clientSecret ? '********' : 'Not provided'));
+    oauth2Pane.appendChild(clientSecretParagraph);
+
+    const tokenUrlParagraph = document.createElement("p");
+    tokenUrlParagraph.innerHTML = `<strong>Token URL: </strong>`;
+    tokenUrlParagraph.appendChild(makeEditable(config.authentication.oauth2.tokenUrl || 'Not provided'));
+    oauth2Pane.appendChild(tokenUrlParagraph);
+
+    tabContent.appendChild(oauth2Pane);
+    
+    // Basic Auth
+    const basicAuthPane = document.createElement("div");
+    basicAuthPane.className = `tab-pane ${config.authentication.type === "basicAuth" ? "active" : ""}`;
+    basicAuthPane.id = "basicAuth";
+
+    const usernameParagraph = document.createElement("p");
+    usernameParagraph.innerHTML = `<strong>Username: </strong>`;
+    usernameParagraph.appendChild(makeEditable(config.authentication.basicAuth.username || 'Not provided'));
+    basicAuthPane.appendChild(usernameParagraph);
+
+    const passwordParagraph = document.createElement("p");
+    passwordParagraph.innerHTML = `<strong>Password: </strong>`;
+    passwordParagraph.appendChild(makeEditable(config.authentication.basicAuth.password ? '********' : 'Not provided'));
+    basicAuthPane.appendChild(passwordParagraph);
+
+    tabContent.appendChild(basicAuthPane);
+    
+
+    authTabs.appendChild(tabContent);
+    authSection.appendChild(authTabs);
+    container.appendChild(authSection);
+
+    // Endpoints
+    const endpointsDiv = document.createElement("div");
+    endpointsDiv.id = "endpoint";
+    endpointsDiv.className = "endpoints";
+
+    const endpointsTitle = document.createElement("h2");
+    endpointsTitle.textContent = "Endpoints";
+    endpointsDiv.appendChild(endpointsTitle);
+
+    config.endpoints.forEach((endpoint) => {
+        const endpointDiv = document.createElement("div");
+        endpointDiv.className = "endpoint";
+    
+        // En-tête de l'endpoint
+        const endpointHeader = document.createElement("h3");
+        endpointHeader.className = "endpoint-header";
+    
+        // Utilisation du nouveau makeEditable pour le chemin de l'endpoint
+        const editablePath = makeEditable(endpoint.path);
+        endpointHeader.appendChild(editablePath);
+    
+        // Ajout du span pour IsAlreadyAskedToFillExpectedOutPut
+        const isAlreadyAskedSpan = document.createElement("span");
+        isAlreadyAskedSpan.className = "isAlreadyAskedToFillExpectedOutput";
+        isAlreadyAskedSpan.textContent = endpoint.IsAlreadyAskedToFillExpectedOutPut;
+        endpointHeader.appendChild(isAlreadyAskedSpan);
+    
+        // Ajout des contrôles (boutons)
+        const controlsSpan = document.createElement("span");
+        controlsSpan.className = "endpoints-controls";
+    
+        const playButton = document.createElement("button");
+        playButton.className = "play-endpoint play-button";
+        playButton.textContent = "▶";
+
+        playButton.addEventListener("click", async function () {
+            // Masquer le contenu suivant après un délai
+            setTimeout(() => {
+                const nextSibling = this.closest('.endpoint-header').nextElementSibling;
+                if (nextSibling) {
+                    nextSibling.style.display = 'none';
+                }
+            }, 0);
+        
+            // Afficher une animation de chargement
+            playButton.innerHTML = `<img src="${loadingImage}" alt="Loading"/>`;
+        
+            // Vérification si une configuration est déjà en cours d'exécution
+            if (window.runningConf) {
+                alert("Already running conf");
+                return;
+            }
+        
+            window.runningConf = true;
+        
+            try {
+                // Appeler la fonction `playEndpoint` avec le bouton comme paramètre
+                await playEndpoint(playButton);
+            } catch (e) {
+                console.error(e);
+            }
+        
+            // Réinitialiser l'état après l'exécution
+            window.runningConf = false;
+            playButton.textContent = '▶'; // Remettre le texte du bouton à son état initial
+        });
+
+
+        controlsSpan.appendChild(playButton);
+    
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "delete-endpoint delete-button";
+        deleteButton.textContent = "🗑️";
+        deleteButton.addEventListener("click", function () {
+            removeElement(this);
+        });
+        controlsSpan.appendChild(deleteButton);
+    
+        endpointHeader.appendChild(controlsSpan);
+    
+        // Contenu de l'endpoint
+        const endpointContentDiv = document.createElement("div");
+        endpointContentDiv.className = "endpoint-content";
+    
+        endpoint.tests.forEach((test) => {
+            const testMethodDiv = document.createElement("div");
+            testMethodDiv.className = "test-method";
+    
+            // En-tête de la méthode
+            const methodHeader = document.createElement("h4");
+            methodHeader.className = "method-header";
+    
+            // Utilisation du nouveau makeEditable pour la méthode
+            const editableMethod = makeEditable(test.method);
+            methodHeader.appendChild(editableMethod);
+    
+            const deleteMethodButton = document.createElement("button");
+            deleteMethodButton.className = "delete-method delete-button";
+            deleteMethodButton.textContent = "🗑️";
+            deleteMethodButton.addEventListener("click", function () {
+                removeElement(this);
+            });
+            methodHeader.appendChild(deleteMethodButton);
+    
+            // Contenu de la méthode
+            const methodContentDiv = document.createElement("div");
+            methodContentDiv.className = "method-content";
+    
+            // Section Input
+            const inputSectionDiv = document.createElement("div");
+            inputSectionDiv.className = "input-section";
+            const inputTitle = document.createElement("h5");
+            inputTitle.textContent = "Input:";
+            inputSectionDiv.appendChild(inputTitle);
+            inputSectionDiv.appendChild(test.input ? makeEditablePre(test.input) : makeEditablePre({}));
+            methodContentDiv.appendChild(inputSectionDiv);
+    
+            // Section Expected Output
+            const outputSectionDiv = document.createElement("div");
+            outputSectionDiv.className = "output-section";
+            const outputTitle = document.createElement("h5");
+            outputTitle.textContent = "Expected Output:";
+            outputSectionDiv.appendChild(outputTitle);
+            outputSectionDiv.appendChild(makeEditablePre(test.expectedOutput));
+            methodContentDiv.appendChild(outputSectionDiv);
+    
+            // Section HTTP State
+            const httpStateSectionDiv = document.createElement("div");
+            httpStateSectionDiv.className = "http-state-section";
+            const httpStateTitle = document.createElement("h5");
+            httpStateTitle.textContent = "Expected HTTP State:";
+            httpStateSectionDiv.appendChild(httpStateTitle);
+            httpStateSectionDiv.appendChild(makeEditablePre(test.expectedHttpState || "Not Provided"));
+            methodContentDiv.appendChild(httpStateSectionDiv);
+            
+            methodContentDiv.style.display = "none"
+            methodHeader.addEventListener('click', function(event) {
+                openMethod(event, methodContentDiv)
+            });
+
+            testMethodDiv.appendChild(methodHeader);
+            testMethodDiv.appendChild(methodContentDiv);
+            endpointContentDiv.appendChild(testMethodDiv);
+            endpointContentDiv.appendChild(createAddMethodButton())
+        });
+
+
+        endpointContentDiv.style.display = "none"
+        endpointHeader.addEventListener("click", function(event){
+            openMethod(event, endpointContentDiv)
+        })
+
+        endpointDiv.appendChild(endpointHeader);
+        endpointDiv.appendChild(endpointContentDiv);
+        endpointsDiv.appendChild(endpointDiv);
+    });
+    container.appendChild(endpointsDiv);
+    return container;
 }
+
 
 function openMethod(event, content){
     if (!event.target.closest('.editable')) {
@@ -166,30 +384,7 @@ function openMethod(event, content){
 
 // Fonction pour ajouter les écouteurs d'événements après la création du HTML
 // Used when seeing a config file
-function addEventListeners() {
-
-    document.querySelectorAll('#configuration-management .endpoint-header').forEach(header => {
-        const content = header.nextElementSibling;
-        content.style.display = 'none';
-
-        if(!header.hasClickListener){
-            header.addEventListener('click', function(event) {
-                openMethod(event, content)
-            });
-            header.hasClickListener = true;
-        }
-    });
-
-    document.querySelectorAll('#configuration-management .method-header').forEach(header => {
-        const content = header.nextElementSibling;
-        content.style.display = 'none';
-        header.addEventListener('click', function(event) {
-            // Vérifiez si le clic n'est pas sur un élément éditable
-            if (!event.target.closest('.editable')) {
-                content.style.display = content.style.display === 'none' ? 'block' : 'none';
-            }
-        });
-    })
+function enableEditableField() {
 
     document.body.addEventListener('click', function(event) {
         if (event.target.classList.contains('display-value')) {
@@ -235,37 +430,6 @@ function addEventListeners() {
         }
     }, true);
 
-    const endpointPlayEvent = document.getElementsByClassName("play-endpoint")
-    Array.from(endpointPlayEvent).forEach(button => {
-        // Supprimer l'écouteur d'événements existant s'il y en a un
-        button.removeEventListener('click', playEndpoint);
-        // Ajouter un nouvel écouteur d'événements pour la fonction playEndpoint
-        button.addEventListener('click', async function() {
-
-            setTimeout(()=>{
-                const nextSibling = this.closest('.endpoint-header').nextElementSibling;
-                if (nextSibling) {
-                    nextSibling.style.display = 'none';
-                }
-            }, 0)
-
-            button.innerHTML = `<img src="${loadingImage}" alt="Loading"/>`
-            if (window.runningConf){
-                alert("Already running conf")
-                return
-            }
-            window.runningConf = true
-            try{
-                await playEndpoint(button);
-            } catch (e) {
-                console.log(e)
-            }
-            window.runningConf = false
-            button.innerHTML = `▶`
-
-        });
-    });
-
     setupAuthTabs();
 }
 
@@ -310,60 +474,134 @@ function adjustInputSize(input) {
 // ------------------------------------------------------------ //
 
 function createConfigurationSection() {
-    let html = '';
+    // Création du conteneur principal
+    const configHeader = document.createElement('div');
+    configHeader.classList.add('config-header');
 
-    html += '<div class="config-header">';
-    html += `<h2>Configuration : <span id="fileNameConfiguration">\`${makeEditable('File_name.json')}\`</span></h2>`
-    html += `<p><strong>Basic URL:</strong> ${makeEditable('Not Provided')}</p>`;
-    html += `<span class="globalAskedToFillExpectedOutPut">false</span>`;
+    // Titre principal
+    const h2 = document.createElement('h2');
+    h2.innerHTML = 'Configuration : ';
+    const fileNameSpan = document.createElement('span');
+    fileNameSpan.id = 'fileNameConfiguration';
+    fileNameSpan.appendChild(makeEditable('File_name.json'));
+    h2.appendChild(fileNameSpan);
+    configHeader.appendChild(h2);
 
-    html += '<div class="auth-section">';
-    html += '<h3>Authentication</h3>';
-    html += `<p><strong>Type:</strong> <span id="authType"></span></p>`;
+    // Basic URL
+    const basicUrlP = document.createElement('p');
+    basicUrlP.innerHTML = `<strong>Basic URL:</strong> `;
+    basicUrlP.appendChild(makeEditable('Not Provided'));
+    configHeader.appendChild(basicUrlP);
 
-    html += '<div class="auth-tabs">';
-    html += '<ul class="tab-list">';
-    html += '<li class="tab-item" data-tab="apikey">API Key</li>';
-    html += '<li class="tab-item" data-tab="oauth2">OAuth2</li>';
-    html += '<li class="tab-item" data-tab="basicAuth">Basic Auth</li>';
-    html += '<li class="tab-item active" data-tab="noauth">No Auth</li>';
-    html += '</ul>';
+    // Global asked to fill expected output
+    const globalSpan = document.createElement('span');
+    globalSpan.classList.add('globalAskedToFillExpectedOutPut');
+    globalSpan.textContent = 'false';
+    configHeader.appendChild(globalSpan);
 
-    html += '<div class="tab-content">';
+    // Auth section
+    const authSection = document.createElement('div');
+    authSection.classList.add('auth-section');
 
-    html += '<div class="tab-pane" id="apikey">';
-    html += `<p><strong>Key Name:</strong> ${makeEditable('Not provided')}</p>`;
-    html += `<p><strong>API Key:</strong> ${makeEditable('Not provided')}</p>`;
-    html += '</div>';
+    const authTitle = document.createElement('h3');
+    authTitle.textContent = 'Authentication';
+    authSection.appendChild(authTitle);
 
-    html += '<div class="tab-pane" id="oauth2">';
-    html += `<p><strong>Client ID:</strong> ${makeEditable('Not provided')}</p>`;
-    html += `<p><strong>Client Secret:</strong> ${makeEditable('Not provided')}</p>`;
-    html += `<p><strong>Token URL:</strong> ${makeEditable('Not provided')}</p>`;
-    html += '</div>';
+    const authTypeP = document.createElement('p');
+    authTypeP.innerHTML = `<strong>Type:</strong> `;
+    const authTypeSpan = document.createElement('span');
+    authTypeSpan.id = 'authType';
+    authTypeP.appendChild(authTypeSpan);
+    authSection.appendChild(authTypeP);
 
-    html += '<div class="tab-pane" id="basicAuth">';
-    html += `<p><strong>Username:</strong> ${makeEditable('Not provided')}</p>`;
-    html += `<p><strong>Password:</strong> ${makeEditable('Not provided')}</p>`;
-    html += '</div>';
+    // Auth tabs
+    const authTabs = document.createElement('div');
+    authTabs.classList.add('auth-tabs');
 
-    html += '</div>'; // tab-content
-    html += '</div>'; // auth-tabs
-    html += '</div>'; // auth-section
-    html += '</div>'; // config-header
+    const tabList = document.createElement('ul');
+    tabList.classList.add('tab-list');
 
-    return html;
+    const tabs = [
+        { text: 'API Key', tab: 'apikey' },
+        { text: 'OAuth2', tab: 'oauth2' },
+        { text: 'Basic Auth', tab: 'basicAuth' },
+        { text: 'No Auth', tab: 'noauth', active: true }
+    ];
+
+    tabs.forEach(({ text, tab, active }) => {
+        const tabItem = document.createElement('li');
+        tabItem.classList.add('tab-item');
+        if (active) tabItem.classList.add('active');
+        tabItem.setAttribute('data-tab', tab);
+        tabItem.textContent = text;
+        tabList.appendChild(tabItem);
+    });
+
+    authTabs.appendChild(tabList);
+
+    // Tab content
+    const tabContent = document.createElement('div');
+    tabContent.classList.add('tab-content');
+
+    const panes = [
+        {
+            id: 'apikey',
+            content: [
+                { label: 'Key Name:', value: 'Not provided' },
+                { label: 'API Key:', value: 'Not provided' }
+            ]
+        },
+        {
+            id: 'oauth2',
+            content: [
+                { label: 'Client ID:', value: 'Not provided' },
+                { label: 'Client Secret:', value: 'Not provided' },
+                { label: 'Token URL:', value: 'Not provided' }
+            ]
+        },
+        {
+            id: 'basicAuth',
+            content: [
+                { label: 'Username:', value: 'Not provided' },
+                { label: 'Password:', value: 'Not provided' }
+            ]
+        }
+    ];
+
+    panes.forEach(({ id, content }) => {
+        const tabPane = document.createElement('div');
+        tabPane.classList.add('tab-pane');
+        tabPane.id = id;
+
+        content.forEach(({ label, value }) => {
+            const p = document.createElement('p');
+            p.innerHTML = `<strong>${label}</strong> `;
+            p.appendChild(makeEditable(value));
+            tabPane.appendChild(p);
+        });
+
+        tabContent.appendChild(tabPane);
+    });
+
+    authTabs.appendChild(tabContent);
+    authSection.appendChild(authTabs);
+    
+    configHeader.appendChild(authSection);
+
+    return configHeader;
 }
 
+
 function createEndpointSection() {
-    let html = '';
+    const endpointDiv = document.createElement('div');
+    endpointDiv.id = 'endpoint';
+    endpointDiv.classList.add('endpoints');
 
-    html += '<div id="endpoint" class="endpoints">';
-    html += '<h2>Endpoints</h2>';
+    const h2 = document.createElement('h2');
+    h2.textContent = 'Endpoints';
+    endpointDiv.appendChild(h2);
 
-    html += '</div>'; // endpoints
-
-    return html;
+    return endpointDiv;
 }
 
 export function createMethodElement(method = 'GET') {
@@ -373,10 +611,8 @@ export function createMethodElement(method = 'GET') {
     const header = document.createElement('h3');
     header.classList.add('endpoint-header');
 
-    header.classList.add('endpoint-header');
-
     // Création de l'élément éditable pour "/endpoint"
-    const editableEndpoint = makeEditableNode("/endpoint");
+    const editableEndpoint = makeEditable("/endpoint");
     header.appendChild(editableEndpoint);
 
     // Création du span "isAlreadyAskedToFillExpectedOutput"
@@ -472,46 +708,74 @@ function createAddMethodButton(){
     return button
 }
 
-function createTestMethodElement(method){
+function createTestMethodElement(method) {
+    // Crée le conteneur principal pour la méthode de test
     const testMethodDiv = document.createElement('div');
     testMethodDiv.classList.add('test-method');
 
+    // Crée l'en-tête de la méthode
     const methodHeader = document.createElement('h4');
     methodHeader.classList.add('method-header');
-    
-    methodHeader.innerHTML = `
-        ${makeEditable(method)}
-        <button class="delete-method delete-button" onclick="removeElement(this)">🗑️</button>
-    `;
 
+    // Utilise le nouveau makeEditable pour créer l'élément éditable
+    const editableMethod = makeEditable(method); // Retourne un élément DOM
+    methodHeader.appendChild(editableMethod);
+
+    // Ajoute le bouton de suppression à l'en-tête
+    const deleteButton = document.createElement('button');
+    deleteButton.classList.add('delete-method', 'delete-button');
+    deleteButton.textContent = '🗑️';
+    deleteButton.addEventListener('click', function () {
+        removeElement(this); // Appelle la fonction pour supprimer l'élément
+    });
+    methodHeader.appendChild(deleteButton);
+
+    // Crée le conteneur pour le contenu de la méthode
     const methodContentDiv = document.createElement('div');
     methodContentDiv.classList.add('method-content');
 
-    methodContentDiv.innerHTML = `
-        <div class="input-section">
-            <h5>Input:</h5>
-            ${makeEditablePre({})}
-        </div>
-        <div class="output-section">
-            <h5>Expected Output:</h5>
-            ${makeEditablePre({})}
-        </div>
-        <div class="http-state-section">
-            <h5>Expected HTTP State:</h5>
-            ${makeEditable('Not provided')}
-        </div>
-    `;
+    // Section Input
+    const inputSectionDiv = document.createElement('div');
+    inputSectionDiv.classList.add('input-section');
+    const inputTitle = document.createElement('h5');
+    inputTitle.textContent = 'Input:';
+    inputSectionDiv.appendChild(inputTitle);
+    inputSectionDiv.appendChild(makeEditablePre({})); // Utilise le nouveau makeEditablePre
 
-    methodContentDiv.style.display = "none"
+    // Section Expected Output
+    const outputSectionDiv = document.createElement('div');
+    outputSectionDiv.classList.add('output-section');
+    const outputTitle = document.createElement('h5');
+    outputTitle.textContent = 'Expected Output:';
+    outputSectionDiv.appendChild(outputTitle);
+    outputSectionDiv.appendChild(makeEditablePre({})); // Utilise le nouveau makeEditablePre
+
+    // Section HTTP State
+    const httpStateSectionDiv = document.createElement('div');
+    httpStateSectionDiv.classList.add('http-state-section');
+    const httpStateTitle = document.createElement('h5');
+    httpStateTitle.textContent = 'Expected HTTP State:';
+    httpStateSectionDiv.appendChild(httpStateTitle);
+    httpStateSectionDiv.appendChild(makeEditablePre('Not provided')); // Utilise le nouveau makeEditablePre
+
+    // Ajoute les sections au contenu de la méthodeenableEditableField
+    methodContentDiv.appendChild(inputSectionDiv);
+    methodContentDiv.appendChild(outputSectionDiv);
+    methodContentDiv.appendChild(httpStateSectionDiv);
+
+    // Masque le contenu par défaut et ajoute un événement pour l'afficher/masquer
+    methodContentDiv.style.display = "none";
     methodHeader.addEventListener("click", function (event) {
-        openMethod(event, methodContentDiv)
+        openMethod(event, methodContentDiv);
     });
 
+    // Assemble les éléments dans le conteneur principal
     testMethodDiv.appendChild(methodHeader);
-
     testMethodDiv.appendChild(methodContentDiv);
-    return testMethodDiv
+
+    return testMethodDiv;
 }
+
 
 // ------------------------------------------------------------ //
 
@@ -520,15 +784,20 @@ export async function printJsonToEditTab(path){
         path = path.replace(/^root[/\\]/, "");
     }
     const jsonString = await PrintJsonFile(path); // Votre JSON ici
-    document.getElementById('output').innerHTML = jsonToHtml(jsonString, path);
-    addEventListeners();
+    document.getElementById('output').innerHTML = ""
+    document.getElementById('output').appendChild(jsonToHtml(jsonString, path));
+    enableEditableField();
+    setupAuthTabs();
 }
 
 export function createEmptyConf(){
     const output = document.getElementById("output")
-    output.innerHTML = createConfigurationSection()
-    output.innerHTML += createEndpointSection()
-    addEventListeners();
+    output.innerHTML = ""
+    output.appendChild(createConfigurationSection())
+    output.appendChild(createEndpointSection())
+    //output.innerHTML = createConfigurationSection()
+    //output.innerHTML += createEndpointSection()
+    //enableEditableField();
     setupAuthTabs();
 }
 
