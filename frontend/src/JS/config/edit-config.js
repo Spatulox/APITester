@@ -62,33 +62,37 @@ export function jsonToHtml(jsonData, filename) {
     html += '<h3>Authentication</h3>';
     html += `<p><strong>Type:</strong> <span id="authType">${config.authentication.type}</span></p>`;
 
+    
+    
+    
+    
     // Système d'onglets pour l'authentification
     html += '<div class="auth-tabs">';
     html += '<ul class="tab-list">';
-    html += '<li class="tab-item active" data-tab="apikey">API Key</li>';
-    html += '<li class="tab-item" data-tab="oauth2">OAuth2</li>';
-    html += '<li class="tab-item" data-tab="basicAuth">Basic Auth</li>';
-    html += '<li class="tab-item" data-tab="noauth">No Auth</li>';
+    html += `<li class="tab-item ${config.authentication.type === "apikey" ? "active"  : ""}" data-tab="apikey">API Key</li>`;
+    html += `<li class="tab-item ${config.authentication.type === "oauth2" ? "active"  : ""}" data-tab="oauth2">OAuth2</li>`;
+    html += `<li class="tab-item ${config.authentication.type === "basicAuth" ? "active"  : ""}" data-tab="basicAuth">Basic Auth</li>`;
+    html += `<li class="tab-item ${config.authentication.type === "noauth" ? "active"  : ""}" data-tab="noauth">No Auth</li>`;
     html += '</ul>';
 
     // Contenu des onglets
     html += '<div class="tab-content">';
 
     // API Key
-    html += '<div class="tab-pane active" id="apikey">';
+    html += `<div class="tab-pane ${config.authentication.type === "apikey" ? "active"  : ""}" id="apikey">`;
     html += `<p><strong>Key Name:</strong> ${makeEditable(config.authentication.apikey.keyname || 'Not provided')}</p>`;
     html += `<p><strong>API Key:</strong> ${makeEditable(config.authentication.apikey.apikeyvalue || 'Not provided')}</p>`;
     html += '</div>';
 
     // OAuth2
-    html += '<div class="tab-pane" id="oauth2">';
+    html += `<div class="tab-pane ${config.authentication.type === "oauth2" ? "active"  : ""}" id="oauth2">`;
     html += `<p><strong>Client ID:</strong> ${makeEditable(config.authentication.oauth2.clientId || 'Not provided')}</p>`;
     html += `<p><strong>Client Secret:</strong> ${makeEditable(config.authentication.oauth2.clientSecret ? '********' : 'Not provided')}</p>`;
     html += `<p><strong>Token URL:</strong> ${makeEditable(config.authentication.oauth2.tokenUrl || 'Not provided')}</p>`;
     html += '</div>';
 
     // Basic Auth
-    html += '<div class="tab-pane" id="basicAuth">';
+    html += `<div class="tab-pane ${config.authentication.type === "basicAuth" ? "active"  : ""}" id="basicAuth">`;
     html += `<p><strong>Username:</strong> ${makeEditable(config.authentication.basicAuth.username || 'Not provided')}</p>`;
     html += `<p><strong>Password:</strong> ${makeEditable(config.authentication.basicAuth.password ? '********' : 'Not provided')}</p>`;
     html += '</div>';
@@ -266,15 +270,15 @@ function createConfigurationSection() {
 
     html += '<div class="auth-tabs">';
     html += '<ul class="tab-list">';
-    html += '<li class="tab-item active" data-tab="apikey">API Key</li>';
+    html += '<li class="tab-item" data-tab="apikey">API Key</li>';
     html += '<li class="tab-item" data-tab="oauth2">OAuth2</li>';
     html += '<li class="tab-item" data-tab="basicAuth">Basic Auth</li>';
-    html += '<li class="tab-item" data-tab="noauth">No Auth</li>';
+    html += '<li class="tab-item active" data-tab="noauth">No Auth</li>';
     html += '</ul>';
 
     html += '<div class="tab-content">';
 
-    html += '<div class="tab-pane active" id="apikey">';
+    html += '<div class="tab-pane" id="apikey">';
     html += `<p><strong>Key Name:</strong> ${makeEditable('Not provided')}</p>`;
     html += `<p><strong>API Key:</strong> ${makeEditable('Not provided')}</p>`;
     html += '</div>';
