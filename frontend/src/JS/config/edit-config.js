@@ -167,6 +167,35 @@ function openMethod(event, content){
 // Fonction pour ajouter les écouteurs d'événements après la création du HTML
 function addEventListeners() {
 
+    document.querySelectorAll('#configuration-management .endpoint-header').forEach(header => {
+        const content = header.nextElementSibling;
+        content.style.display = 'none';
+
+        if(!header.hasClickListener){
+            header.addEventListener('click', function(event) {
+                openMethod(event, content)
+            });
+            header.hasClickListener = true;
+        }
+        // header.removeEventListener('click', function(event) {
+        //     openMethod(event, content)
+        // });
+        // header.addEventListener('click', function(event) {
+        //     openMethod(event, content)
+        // });
+    });
+
+    document.querySelectorAll('#configuration-management .method-header').forEach(header => {
+        const content = header.nextElementSibling;
+        content.style.display = 'none';
+        header.addEventListener('click', function(event) {
+            // Vérifiez si le clic n'est pas sur un élément éditable
+            if (!event.target.closest('.editable')) {
+                content.style.display = content.style.display === 'none' ? 'block' : 'none';
+            }
+        });
+    })
+
     document.body.addEventListener('click', function(event) {
         if (event.target.classList.contains('display-value')) {
             event.stopPropagation(); // Arrêtez la propagation de l'événement
@@ -211,6 +240,37 @@ function addEventListeners() {
         }
     }, true);
 
+    const endpointPlayEvent = document.getElementsByClassName("play-endpoint")
+    Array.from(endpointPlayEvent).forEach(button => {
+        // Supprimer l'écouteur d'événements existant s'il y en a un
+        button.removeEventListener('click', playEndpoint);
+        // Ajouter un nouvel écouteur d'événements pour la fonction playEndpoint
+        button.addEventListener('click', async function() {
+
+            setTimeout(()=>{
+                const nextSibling = this.closest('.endpoint-header').nextElementSibling;
+                if (nextSibling) {
+                    nextSibling.style.display = 'none';
+                }
+            }, 0)
+
+            button.innerHTML = `<img src="${loadingImage}" alt="Loading"/>`
+            if (window.runningConf){
+                alert("Already running conf")
+                return
+            }
+            window.runningConf = true
+            try{
+                await playEndpoint(button);
+            } catch (e) {
+                console.log(e)
+            }
+            window.runningConf = false
+            button.innerHTML = `▶`
+
+        });
+    });
+
     setupAuthTabs();
 }
 
@@ -218,8 +278,6 @@ export function clickButton(){
     const elementWhereAppend = document.getElementById("endpoint");
     if (elementWhereAppend) {
         elementWhereAppend.appendChild(createMethodElement())
-        addEventListeners();
-        setupAuthTabs();
     } else {
         console.error("L'élément 'endpoint' n'a pas été trouvé.");
     }
@@ -307,8 +365,6 @@ function createEndpointSection() {
 
     html += '<div id="endpoint" class="endpoints">';
     html += '<h2>Endpoints</h2>';
-
-    //html += '<button id="addEndpointBtn" class="discord-button">Add an Endpoint</button>';
 
     html += '</div>'; // endpoints
 
