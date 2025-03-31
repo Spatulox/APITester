@@ -6,6 +6,37 @@ function makeEditable(value, type = 'text') {
     return `<span class="editable" data-type="${type}"><span class="display-value">${value}</span><input type="text" class="edit-input" style="display:none;" value="${value}" onblur="updateEditableContent(this)"></span>`;
 }
 
+function makeEditableNode(value, type = 'text') {
+    // Création de l'élément conteneur principal
+    const editableSpan = document.createElement('span');
+    editableSpan.classList.add('editable');
+    editableSpan.setAttribute('data-type', type);
+
+    // Création du sous-élément pour afficher la valeur
+    const displayValueSpan = document.createElement('span');
+    displayValueSpan.classList.add('display-value');
+    displayValueSpan.textContent = value;
+
+    // Création de l'input pour l'édition
+    const editInput = document.createElement('input');
+    editInput.type = 'text';
+    editInput.classList.add('edit-input');
+    editInput.style.display = 'none'; // Masqué par défaut
+    editInput.value = value;
+
+    // Ajout d'un événement onblur à l'input
+    editInput.addEventListener('blur', function () {
+        updateEditableContent(this); // Appel de la fonction `updateEditableContent`
+    });
+
+    // Ajout des sous-éléments au conteneur principal
+    editableSpan.appendChild(displayValueSpan);
+    editableSpan.appendChild(editInput);
+
+    return editableSpan;
+}
+
+
 function makeEditablePre(value, type = 'json') {
     return `<pre class="editable" data-type="${type}"><span class="display-value">${JSON.stringify(value, null, 2)}</span><textarea class="edit-input" style="display:none;" onblur="updateEditableContent(this)">${JSON.stringify(value, null, 2)}</textarea></pre>`;
 }
@@ -71,7 +102,7 @@ export function jsonToHtml(jsonData, filename) {
     html += '<div id="endpoint" class="endpoints">';
     html += '<h2>Endpoints</h2>';
 
-    html += '<button id="addEndpointBtn" class="discord-button">Add an Endpoint</button>';
+    //html += '<button id="addEndpointBtn" class="discord-button">Add an Endpoint</button>';
 
     config.endpoints.forEach(endpoint => {
         html += `<div class="endpoint">`;
@@ -131,34 +162,6 @@ function openMethod(event, content){
 
 // Fonction pour ajouter les écouteurs d'événements après la création du HTML
 function addEventListeners() {
-    document.querySelectorAll('#configuration-management .endpoint-header').forEach(header => {
-        const content = header.nextElementSibling;
-        content.style.display = 'none';
-
-        if(!header.hasClickListener){
-            header.addEventListener('click', function(event) {
-                openMethod(event, content)
-            });
-            header.hasClickListener = true;
-        }
-        // header.removeEventListener('click', function(event) {
-        //     openMethod(event, content)
-        // });
-        // header.addEventListener('click', function(event) {
-        //     openMethod(event, content)
-        // });
-    });
-
-    document.querySelectorAll('#configuration-management .method-header').forEach(header => {
-        const content = header.nextElementSibling;
-        content.style.display = 'none';
-        header.addEventListener('click', function(event) {
-            // Vérifiez si le clic n'est pas sur un élément éditable
-            if (!event.target.closest('.editable')) {
-                content.style.display = content.style.display === 'none' ? 'block' : 'none';
-            }
-        });
-    });
 
     document.body.addEventListener('click', function(event) {
         if (event.target.classList.contains('display-value')) {
@@ -194,7 +197,6 @@ function addEventListeners() {
                     editableSpan.classList.remove('invalid');
                 } catch (e) {
                     editableSpan.classList.add('invalid');
-                    // Optionally, you can show an error message here
                 }
             } else {
                 displayValue.textContent = editInput.value;
@@ -205,57 +207,21 @@ function addEventListeners() {
         }
     }, true);
 
-    const endpointPlayEvent = document.getElementsByClassName("play-endpoint")
-    Array.from(endpointPlayEvent).forEach(button => {
-        // Supprimer l'écouteur d'événements existant s'il y en a un
-        button.removeEventListener('click', playEndpoint);
-        // Ajouter un nouvel écouteur d'événements pour la fonction playEndpoint
-        button.addEventListener('click', async function() {
-
-            setTimeout(()=>{
-                const nextSibling = this.closest('.endpoint-header').nextElementSibling;
-                if (nextSibling) {
-                    nextSibling.style.display = 'none';
-                }
-            }, 0)
-
-            button.innerHTML = `<img src="${loadingImage}" alt="Loading"/>`
-            if (window.runningConf){
-                alert("Already running conf")
-                return
-            }
-            window.runningConf = true
-            try{
-                await playEndpoint(button);
-            } catch (e) {
-                console.log(e)
-            }
-            window.runningConf = false
-            button.innerHTML = `▶`
-
-        });
-    });
-
-    // Ajout d'un écouteur d'événements au bouton "Add Endpoint"
-    const addEndpointBtn = document.getElementById("addEndpointBtn");
-    if (addEndpointBtn) {
-        addEndpointBtn.removeEventListener("click", clickButton)
-        addEndpointBtn.addEventListener('click', clickButton);
-    }
     setupAuthTabs();
 }
 
-function clickButton(){
+export function clickButton(){
     const elementWhereAppend = document.getElementById("endpoint");
     if (elementWhereAppend) {
-        elementWhereAppend.insertAdjacentHTML('beforeend', createMethodElement());
-        addEventListeners(); // Réattache les écouteurs aux nouveaux éléments
+        elementWhereAppend.appendChild(createMethodElement())
+        addEventListeners();
         setupAuthTabs();
     } else {
         console.error("L'élément 'endpoint' n'a pas été trouvé.");
     }
 }
 
+// Mandatory to keep it, because it's to heavy to change (line of x.innerHTML = "[some HTML]")
 function setupAuthTabs() {
     const tabItems = document.querySelectorAll('.tab-item');
     const tabPanes = document.querySelectorAll('.tab-pane');
@@ -338,7 +304,7 @@ function createEndpointSection() {
     html += '<div id="endpoint" class="endpoints">';
     html += '<h2>Endpoints</h2>';
 
-    html += '<button id="addEndpointBtn" class="discord-button">Add an Endpoint</button>';
+    //html += '<button id="addEndpointBtn" class="discord-button">Add an Endpoint</button>';
 
     html += '</div>'; // endpoints
 
@@ -346,64 +312,144 @@ function createEndpointSection() {
 }
 
 export function createMethodElement(method = 'GET') {
-    let html = '';
+    const endpointDiv = document.createElement('div');
+    endpointDiv.classList.add('endpoint');
 
-    html += `<div class="endpoint">`;
-    html += `<h3 class="endpoint-header">
-        ${makeEditable("/endpoint")}
-        <span class="isAlreadyAskedToFillExpectedOutput">false</span>
-        <span class="endpoints-controls">
-        <button class="play-endpoint play-button">▶</button>
-        <button class="delete-endpoint delete-button" onclick="removeElement(this)">🗑️</button>
-        </span>
-    </h3>`;
+    const header = document.createElement('h3');
+    header.classList.add('endpoint-header');
+
+    header.classList.add('endpoint-header');
+
+    // Création de l'élément éditable pour "/endpoint"
+    const editableEndpoint = makeEditableNode("/endpoint");
+    header.appendChild(editableEndpoint);
+
+    // Création du span "isAlreadyAskedToFillExpectedOutput"
+    const isAlreadyAskedSpan = document.createElement('span');
+    isAlreadyAskedSpan.classList.add('isAlreadyAskedToFillExpectedOutput');
+    isAlreadyAskedSpan.textContent = 'false';
+    header.appendChild(isAlreadyAskedSpan);
+
+    // Création du conteneur des contrôles
+    const endpointsControls = document.createElement('span');
+    endpointsControls.classList.add('endpoints-controls');
+
+    // Bouton "Play"
+    const playButton = document.createElement('button');
+    playButton.classList.add('play-endpoint', 'play-button');
+    playButton.textContent = '▶';
+    endpointsControls.appendChild(playButton);
+
+    playButton.addEventListener("click", async function () {
+        // Masquer le contenu suivant après un délai
+        setTimeout(() => {
+            const nextSibling = this.closest('.endpoint-header').nextElementSibling;
+            if (nextSibling) {
+                nextSibling.style.display = 'none';
+            }
+        }, 0);
     
-    html += `<div id="endpoint-content" class="endpoint-content">`;
+        // Afficher une animation de chargement
+        playButton.innerHTML = `<img src="${loadingImage}" alt="Loading"/>`;
+    
+        // Vérification si une configuration est déjà en cours d'exécution
+        if (window.runningConf) {
+            alert("Already running conf");
+            return;
+        }
+    
+        window.runningConf = true;
+    
+        try {
+            // Appeler la fonction `playEndpoint` avec le bouton comme paramètre
+            await playEndpoint(playButton);
+        } catch (e) {
+            console.error(e);
+        }
+    
+        // Réinitialiser l'état après l'exécution
+        window.runningConf = false;
+        playButton.textContent = '▶'; // Remettre le texte du bouton à son état initial
+    });
 
-    html += `<div class="test-method">`;
-    html += `<h4 class="method-header">${makeEditable(method)}<button class="delete-method  delete-button" onclick="removeElement(this)">🗑️</button></h4>`;
-    html += `<div class="method-content">`;
+    // Bouton "Delete"
+    const deleteButton = document.createElement('button');
+    deleteButton.classList.add('delete-endpoint', 'delete-button');
+    deleteButton.textContent = '🗑️';
+    deleteButton.setAttribute('onclick', 'removeElement(this)');
+    endpointsControls.appendChild(deleteButton);
 
-    html += '<div class="input-section">';
-    html += '<h5>Input:</h5>';
-    html += makeEditablePre({});
-    html += '</div>';
+    // Ajout des contrôles au header
+    header.appendChild(endpointsControls);
 
-    html += '<div class="output-section">';
-    html += '<h5>Expected Output:</h5>';
-    html += makeEditablePre({});
-    html += '</div>';
+    const contentDiv = document.createElement('div');
+    contentDiv.classList.add('endpoint-content');
 
-    html += '<div class="http-state-section">';
-    html += '<h5>Expected HTTP State:</h5>';
-    html += makeEditable('Not provided');
-    html += '</div>';
+    const testMethodDiv = document.createElement('div');
+    testMethodDiv.classList.add('test-method');
 
-    html += '</div>'; // method-content
-    html += '</div>'; // test-method
+    const methodHeader = document.createElement('h4');
+    methodHeader.classList.add('method-header');
+    
+    methodHeader.innerHTML = `
+        ${makeEditable(method)}
+        <button class="delete-method delete-button" onclick="removeElement(this)">🗑️</button>
+    `;
 
-    html += '</div>'; // endpoint-content
-    html += '</div>'; // endpoint*/
+    const methodContentDiv = document.createElement('div');
+    methodContentDiv.classList.add('method-content');
 
-    return html;
+    methodContentDiv.innerHTML = `
+        <div class="input-section">
+            <h5>Input:</h5>
+            ${makeEditablePre({})}
+        </div>
+        <div class="output-section">
+            <h5>Expected Output:</h5>
+            ${makeEditablePre({})}
+        </div>
+        <div class="http-state-section">
+            <h5>Expected HTTP State:</h5>
+            ${makeEditable('Not provided')}
+        </div>
+    `;
+
+    methodContentDiv.style.display = "none"
+    methodHeader.addEventListener("click", function (event) {
+        openMethod(event, methodContentDiv)
+    });
+
+    testMethodDiv.appendChild(methodHeader);
+
+    testMethodDiv.appendChild(methodContentDiv);
+    
+    contentDiv.appendChild(testMethodDiv);
+
+    // Ajouter le bouton dynamiquement
+    const addMethodButton = createAddMethodButton();
+    
+    contentDiv.appendChild(addMethodButton);
+
+    contentDiv.style.display = 'none';
+    header.addEventListener("click", function(event){
+        openMethod(event, contentDiv)
+    })
+
+    endpointDiv.appendChild(header);
+    endpointDiv.appendChild(contentDiv);
+
+    return endpointDiv; // Retourner l'HTML complet
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+function createAddMethodButton(){
+    const button = document.createElement("button")
+    button.classList.add("discord-button")
+    button.innerText = "Add a method"
+    button.addEventListener("click", ()=>{
+        alert("coucou")
+    })
+    return button
+}
 
 // ------------------------------------------------------------ //
 

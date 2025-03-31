@@ -1,6 +1,6 @@
 import {ParseExtractionJsonToGoFunction, UpdateConfig} from "../../wailsjs/go/main/App";
 import { refreshFile } from "../main";
-import {createEmptyConf} from "./config/edit-config";
+import {clickButton, createEmptyConf} from "./config/edit-config";
 import {htmlToJson} from "./config/save-config";
 
 const element1 = document.getElementById('ok-tab');
@@ -102,6 +102,9 @@ document.getElementById("save-config").addEventListener("click", async ()=>{
     alert("Saved")
 })
 
+document.getElementById("addEndpointBtn").addEventListener("click", () => {
+    clickButton()
+});
 
 
 
