@@ -165,6 +165,7 @@ function openMethod(event, content){
 }
 
 // Fonction pour ajouter les écouteurs d'événements après la création du HTML
+// Used when seeing a config file
 function addEventListeners() {
 
     document.querySelectorAll('#configuration-management .endpoint-header').forEach(header => {
@@ -177,12 +178,6 @@ function addEventListeners() {
             });
             header.hasClickListener = true;
         }
-        // header.removeEventListener('click', function(event) {
-        //     openMethod(event, content)
-        // });
-        // header.addEventListener('click', function(event) {
-        //     openMethod(event, content)
-        // });
     });
 
     document.querySelectorAll('#configuration-management .method-header').forEach(header => {
@@ -445,6 +440,39 @@ export function createMethodElement(method = 'GET') {
     const contentDiv = document.createElement('div');
     contentDiv.classList.add('endpoint-content');
 
+   const testMethodDiv = createTestMethodElement(method)
+    
+    contentDiv.appendChild(testMethodDiv);
+
+    // Ajouter le bouton dynamiquement
+    const addMethodButton = createAddMethodButton();
+    
+    contentDiv.appendChild(addMethodButton);
+
+    contentDiv.style.display = 'none';
+    header.addEventListener("click", function(event){
+        openMethod(event, contentDiv)
+    })
+
+    endpointDiv.appendChild(header);
+    endpointDiv.appendChild(contentDiv);
+
+    return endpointDiv; // Retourner l'HTML complet
+}
+
+function createAddMethodButton(){
+    const button = document.createElement("button")
+    button.classList.add("discord-button")
+    button.id="add-method"
+    button.innerText = "Add a method"
+    button.addEventListener("click", ()=>{
+        const testMethodDiv = createTestMethodElement("GET")
+        button.insertAdjacentElement('beforebegin', testMethodDiv)
+    })
+    return button
+}
+
+function createTestMethodElement(method){
     const testMethodDiv = document.createElement('div');
     testMethodDiv.classList.add('test-method');
 
@@ -482,33 +510,7 @@ export function createMethodElement(method = 'GET') {
     testMethodDiv.appendChild(methodHeader);
 
     testMethodDiv.appendChild(methodContentDiv);
-    
-    contentDiv.appendChild(testMethodDiv);
-
-    // Ajouter le bouton dynamiquement
-    const addMethodButton = createAddMethodButton();
-    
-    contentDiv.appendChild(addMethodButton);
-
-    contentDiv.style.display = 'none';
-    header.addEventListener("click", function(event){
-        openMethod(event, contentDiv)
-    })
-
-    endpointDiv.appendChild(header);
-    endpointDiv.appendChild(contentDiv);
-
-    return endpointDiv; // Retourner l'HTML complet
-}
-
-function createAddMethodButton(){
-    const button = document.createElement("button")
-    button.classList.add("discord-button")
-    button.innerText = "Add a method"
-    button.addEventListener("click", ()=>{
-        alert("coucou")
-    })
-    return button
+    return testMethodDiv
 }
 
 // ------------------------------------------------------------ //
