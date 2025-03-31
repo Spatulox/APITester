@@ -475,26 +475,21 @@ export async function playEndpoint(button) {
 
     // Récupérer le chemin de l'endpoint
     const endpointPath = endpointElement.querySelector('.endpoint-header .display-value').textContent;
-    const isAlreadyAsked = endpointElement.querySelector('.endpoint-header .isAlreadyAskedToFillExpectedOutput').textContent;
 
     // Préparer l'objet endpoint
     let endpoint = {
         path: endpointPath,
         tests: [],
-        isAlreadyAsked
     };
 
     // Récupérer toutes les méthodes de test pour cet endpoint
     const testMethods = endpointElement.querySelectorAll('.test-method');
-    let isExpectedOutputFilled = false
 
     testMethods.forEach(method => {
         const methodName = method.querySelector('.method-header .display-value').textContent;
         const input = JSON.parse(method.querySelector('.input-section pre .display-value').textContent);
         const expectedOutput = JSON.parse(method.querySelector('.output-section pre .display-value').textContent);
-        if ((expectedOutput && Object.keys(expectedOutput).length > 0) || isAlreadyAsked == "true") {
-            isExpectedOutputFilled = true;
-        }        
+
         const expectedHttpState = method.querySelector('.http-state-section .display-value').textContent;
 
         endpoint.tests.push({
@@ -508,13 +503,7 @@ export async function playEndpoint(button) {
     config.endpoints.push(endpoint);
 
     try{
-        let automaticFillExpectedOutput = false
-        if(!isExpectedOutputFilled){
-            automaticFillExpectedOutput = confirm("This endpoint don't have any ExpectedOutput.\nDo you want to automatically fill the expected output with the actual output ?\nConsider adding '_@empty' if the endpoint send back nothing")
-            endpointElement.querySelector('.endpoint-header .isAlreadyAskedToFillExpectedOutput').textContent = automaticFillExpectedOutput
-            document.getElementById("save-config").click()
-        }
-        const res = await CheckEndpoint(config, automaticFillExpectedOutput)
+        const res = await CheckEndpoint(config)
         printResult("welp", res)
     } catch (e) {
         console.log(e)

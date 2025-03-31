@@ -115,8 +115,8 @@ func (a *App) DetectIfOneOreMoreConfFileHaveEmptyExpectedOutputInAConfDir(folder
 }
 
 // Only Front call
-func (a *App) CheckEndpoint(config Config, fillExpectedOutput bool) ([]RequestResult, error) {
-	return ExecuteConfig(&config, fillExpectedOutput)
+func (a *App) CheckEndpoint(config Config) ([]RequestResult, error) {
+	return ExecuteConfig(&config, false)
 }
 
 func (a *App) ParseExtractionJsonToGoFunction(data map[string]interface{}, path string, filename string) error {
