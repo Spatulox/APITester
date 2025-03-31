@@ -341,9 +341,14 @@ func saveResult(resultError ResultError, resultWarning ResultWarning, returnResu
 // - @A ResultError indicating any errors related to HTTP status comparison.
 // - @A ResultWarning indicating any warnings related to HTTP status comparison.
 func compareHttpStatus(expectedStatus string, actualStatus int) (ResultError, ResultWarning) {
-	if expectedStatus == "Not Provided" {
+
+	_, errStr := strconv.Atoi(expectedStatus)
+
+	Log.Debug(fmt.Sprint("%v", expectedStatus))
+	if errStr != nil {
 		return 0, WarningUnknownHttpStatusExpected
 	}
+
 	expectedStatusInt, err := strconv.Atoi(expectedStatus)
 	if err != nil {
 		return Error, 0
