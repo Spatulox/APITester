@@ -32,7 +32,7 @@ export function htmlToJson() {
 
         endpointElement.querySelectorAll('.test-method').forEach(testElement => {
             let test = {
-                method: testElement.querySelector('.method-header')?.childNodes[0].textContent.trim() || '', // Ignore le bouton
+                method: testElement.querySelector('.method-header .editable .display-value').textContent.trim() || '', // Ignore le bouton
                 input: parseJsonSafely(testElement.querySelector('.input-section pre')),
                 expectedOutput: parseJsonSafely(testElement.querySelector('.output-section pre')),
                 expectedHttpState: testElement.querySelector('.http-state-section span')?.textContent.trim() || ''
