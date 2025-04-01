@@ -2,6 +2,7 @@ import {ParseExtractionJsonToGoFunction, UpdateConfig} from "../../wailsjs/go/ma
 import { refreshFile } from "../main";
 import {clickButton, createEmptyConf} from "./config/edit-config";
 import {htmlToJson} from "./config/save-config";
+import { alert, confirm } from "./popup";
 
 const element1 = document.getElementById('ok-tab');
 const element2 = document.getElementById('warning-tab');

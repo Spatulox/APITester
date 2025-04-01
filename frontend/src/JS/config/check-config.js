@@ -1,5 +1,6 @@
 
 import { CheckSoloConfig, CheckGroupConfig, PrintJsonFile, DetectIfOneOreMoreConfFileHaveEmptyExpectedOutputInAConfDir } from '../../../wailsjs/go/main/App'
+import { alert, confirm } from '../popup';
 import {printResult} from "../print-test-result";
 import { clearEditConfig, jsonToHtml} from './edit-config';
 

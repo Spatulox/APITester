@@ -3,8 +3,8 @@ import {checkConfig} from "../config/check-config"
 import {DeleteConfig} from "../../../wailsjs/go/main/App";
 import {showSection} from "../event-listener";
 import {printJsonToEditTab} from "../config/edit-config";
-
 import loadingImage from "../../assets/images/circle-loading.gif"
+import { alert, confirm } from "../popup";
 
 export function createFileList(folderFiles) {
     const fileListContainer = document.getElementById('file-list');
