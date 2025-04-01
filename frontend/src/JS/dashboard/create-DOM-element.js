@@ -64,7 +64,7 @@ function createControlsDiv(name) {
         window.runningConf = true
         try{
             playButton.innerHTML = `<img src="${loadingImage}" alt="Loading" />`
-            await checkConfig(event, `${name}/`)
+            await checkConfig(event, `${name}/`, false)
         } catch (e) {
             console.log(e)
         }
@@ -75,7 +75,6 @@ function createControlsDiv(name) {
     const editButton = document.createElement('button');
     editButton.className = 'edit-button';
     editButton.style.visibility = "hidden"
-    //editButton.style.onclick = null
     editButton.innerHTML = '🔧';
 
     const deleteButton = document.createElement('button'); // Create the delete button
@@ -151,7 +150,7 @@ function addPlayButton(element, name) {
         window.runningConf = true
         try{
             playButton.innerHTML = `<img src="${loadingImage}" alt="Loading" />`
-            await checkConfig(event, `${parentFolder}/${name}`)
+            await checkConfig(event, `${parentFolder}/${name}`, false)
         } catch (e) {
             console.log(e)
         }

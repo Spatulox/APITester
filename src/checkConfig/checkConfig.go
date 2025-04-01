@@ -18,7 +18,7 @@ const maxConcurrentChecks = 2
 
 // ----------------------------------------------------------- //
 
-func ExecuteConfig(config *Config, fillExpectedOutput bool) ([]RequestResult, error) {
+func ExecuteConfig(config *Config, fillExpectedOutput bool, forcedUpdate bool) ([]RequestResult, error) {
 	apiApiKey := NewApi(config.BasicURL)
 
 	switch config.Authentication.Type {
@@ -61,7 +61,7 @@ func ExecuteConfig(config *Config, fillExpectedOutput bool) ([]RequestResult, er
 				Log.Debug(fmt.Sprintf("ExpectedOutput : %s", ep.Tests[testIndex].ExpectedOutput))
 
 				// Validation des conditions
-				if fillExpectedOutput && ep.IsAlreadyAskedToFillExpectedOutPut == "false" {
+				if (fillExpectedOutput && ep.IsAlreadyAskedToFillExpectedOutPut == "false") || forcedUpdate {
 					isEmpty := false
 
 					if ep.Tests[testIndex].ExpectedOutput == nil {
@@ -89,7 +89,8 @@ func ExecuteConfig(config *Config, fillExpectedOutput bool) ([]RequestResult, er
 						}
 					}
 
-					if isEmpty {
+					// The Expected output is empty or we need to force the refresh
+					if isEmpty || forcedUpdate {
 						Log.Infos(fmt.Sprintf("Filling the Expected Output for %s/%v", input.Method, ep.Path))
 
 						mu.Lock()
@@ -135,7 +136,7 @@ func ExecuteConfig(config *Config, fillExpectedOutput bool) ([]RequestResult, er
 //   - @An error if there is an issue reading the JSON file or if any other error occurs
 //     during the validation process.
 
-func CheckConfig(filePath string, fillExpectedOutput bool) ([]RequestResult, error) {
+func CheckConfig(filePath string, fillExpectedOutput bool, forcedUpdate bool) ([]RequestResult, error) {
 	Log.Debug("--------CheckConfig------")
 
 	var config Config
@@ -147,7 +148,7 @@ func CheckConfig(filePath string, fillExpectedOutput bool) ([]RequestResult, err
 	}
 
 	var requestResult []RequestResult
-	requestResult, err = ExecuteConfig(&config, fillExpectedOutput)
+	requestResult, err = ExecuteConfig(&config, fillExpectedOutput, forcedUpdate)
 	if err != nil {
 		Log.Infos("WTF, c'est impossible lol")
 		return requestResult, err
@@ -183,7 +184,7 @@ func CheckConfig(filePath string, fillExpectedOutput bool) ([]RequestResult, err
 //     all configurations found in the folder.
 //   - @An error if there is an issue listing the JSON files or if any other error occurs
 //     during the validation process.
-func CheckFolderConfig(folderPath string, fillExpectedOutput bool) ([]RequestResult, error) {
+func CheckFolderConfig(folderPath string, fillExpectedOutput bool, forcedUpdate bool) ([]RequestResult, error) {
 
 	Log.Debug("--------CheckFolder------")
 
@@ -210,7 +211,7 @@ func CheckFolderConfig(folderPath string, fillExpectedOutput bool) ([]RequestRes
 					defer wg.Done()                // Décrémenter le compteur de goroutines
 					defer func() { <-semaphore }() // Libérer un slot dans le sémaphore
 
-					results, err := CheckConfig(filePath, fillExpectedOutput)
+					results, err := CheckConfig(filePath, fillExpectedOutput, forcedUpdate)
 					if err != nil {
 						Log.Error(fmt.Sprintf("Error checking config for file %s: %v", fileName, err))
 						return

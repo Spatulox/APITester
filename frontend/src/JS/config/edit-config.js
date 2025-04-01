@@ -2,6 +2,7 @@ import {CheckEndpoint, PrintJsonFile} from "../../../wailsjs/go/main/App";
 import {printResult} from "../print-test-result";
 import loadingImage from "../../assets/images/circle-loading.gif"
 import { alert, confirm } from "../popup";
+import { checkConfig } from "./check-config";
 
 function makeEditableOld(value, type = 'text') {
     return `<span class="editable" data-type="${type}"><span class="display-value">${value}</span><input type="text" class="edit-input" style="display:none;" value="${value}" onblur="updateEditableContent(this)"></span>`;
@@ -249,13 +250,7 @@ export function jsonToHtml(jsonData, filename) {
     container.appendChild(authSection);
 
     // Endpoints
-    const endpointsDiv = document.createElement("div");
-    endpointsDiv.id = "endpoint";
-    endpointsDiv.className = "endpoints";
-
-    const endpointsTitle = document.createElement("h2");
-    endpointsTitle.textContent = "Endpoints";
-    endpointsDiv.appendChild(endpointsTitle);
+    const endpointsDiv = createEndpointSection("▶", "▶")
 
     config.endpoints.forEach((endpoint) => {
         const endpointDiv = document.createElement("div");
@@ -279,48 +274,39 @@ export function jsonToHtml(jsonData, filename) {
         const controlsSpan = document.createElement("span");
         controlsSpan.className = "endpoints-controls";
     
-        const playButton = document.createElement("button");
+        const playButton = createPlayButton()
         playButton.className = "play-endpoint play-button";
-        playButton.textContent = "▶";
 
         playButton.addEventListener("click", async function () {
-            // Masquer le contenu suivant après un délai
             setTimeout(() => {
                 const nextSibling = this.closest('.endpoint-header').nextElementSibling;
                 if (nextSibling) {
                     nextSibling.style.display = 'none';
                 }
             }, 0);
-        
-            // Afficher une animation de chargement
             playButton.innerHTML = `<img src="${loadingImage}" alt="Loading"/>`;
-        
-            // Vérification si une configuration est déjà en cours d'exécution
+
             if (window.runningConf) {
                 alert("Already running conf");
+                playButton.textContent = '▶';
                 return;
             }
-        
             window.runningConf = true;
         
             try {
-                // Appeler la fonction `playEndpoint` avec le bouton comme paramètre
                 await playEndpoint(playButton);
             } catch (e) {
                 console.error(e);
             }
-        
-            // Réinitialiser l'état après l'exécution
             window.runningConf = false;
-            playButton.textContent = '▶'; // Remettre le texte du bouton à son état initial
+            playButton.textContent = '▶';
         });
 
 
         controlsSpan.appendChild(playButton);
     
-        const deleteButton = document.createElement("button");
+        const deleteButton = createDeleteButton()
         deleteButton.className = "delete-endpoint delete-button";
-        deleteButton.textContent = "🗑️";
         deleteButton.addEventListener("click", function () {
             removeElement(this);
         });
@@ -462,8 +448,6 @@ function enableEditableField() {
             editInput.style.display = 'none';
         }
     }, true);
-
-    setupAuthTabs();
 }
 
 export function clickButton(){
@@ -625,17 +609,89 @@ function createConfigurationSection() {
 }
 
 
-function createEndpointSection() {
+function createEndpointSection(playInner = "▶", deleteInner = "🗑️") {
     const endpointDiv = document.createElement('div');
     endpointDiv.id = 'endpoint';
     endpointDiv.classList.add('endpoints');
 
     const h2 = document.createElement('h2');
+    h2.style.display = "flex"
+    h2.style.justifyContent ="space-between"
     h2.textContent = 'Endpoints';
+
+    // Création du span contenant les boutons
+    const span = document.createElement('span');
+    span.classList.add("endpoints-controls")
+    span.style.marginRight = "15px"
+
+    // Bouton play
+    const playButton = createPlayButton(playInner)
+    playButton.addEventListener("click", async function(event){
+        playButton.innerHTML = `<img src="${loadingImage}" alt="Loading"/>`;
+
+        if (window.runningConf) {
+            alert("Already running conf");
+            playButton.textContent = '▶';
+            return;
+        }
+        window.runningConf = true;
+        try {
+            document.getElementById("save-config").click()
+            const filePath = document.querySelector("#fileNameConfiguration .display-value").innerText.trim()
+            await checkConfig(event, filePath, false)
+        } catch (e) {
+            console.error(e);
+        }
+        window.runningConf = false;
+        playButton.textContent = '▶';
+    })
+    span.appendChild(playButton);
+    const deleteButton = createDeleteButton(deleteInner)
+    deleteButton.addEventListener("click", async function(event){
+        const forcedUpdate = await confirm("Do you want to run the conf file and update the expected outputs ?")
+        deleteButton.innerHTML = `<img src="${loadingImage}" alt="Loading"/>`;
+
+        if (window.runningConf) {
+            alert("Already running conf");
+            deleteButton.textContent = '▶';
+            return;
+        }
+        window.runningConf = true;
+        try {
+            document.getElementById("save-config").click()
+            const filePath = document.querySelector("#fileNameConfiguration .display-value").innerText.trim()
+            await checkConfig(event, filePath, forcedUpdate)
+
+        } catch (e) {
+            console.error(e);
+        }
+        window.runningConf = false;
+        deleteButton.textContent = '▶';
+
+    })
+    span.appendChild(deleteButton);
+
+    // Ajout du span au titre (h2)
+    h2.appendChild(span);
+
     endpointDiv.appendChild(h2);
 
     return endpointDiv;
 }
+
+function createPlayButton(playInner = "▶"){
+    const playButton = document.createElement('button');
+    playButton.className = "play-button";
+    playButton.textContent = playInner;
+    return playButton
+}
+function createDeleteButton(deleteInner = "🗑️"){
+    const deleteButton = document.createElement('button');
+    deleteButton.className = "delete-button";
+    deleteButton.textContent = deleteInner;
+    return deleteButton
+}
+
 
 export function createMethodElement(method = 'GET') {
     const endpointDiv = document.createElement('div');
@@ -659,47 +715,37 @@ export function createMethodElement(method = 'GET') {
     endpointsControls.classList.add('endpoints-controls');
 
     // Bouton "Play"
-    const playButton = document.createElement('button');
+    const playButton = createPlayButton()
     playButton.classList.add('play-endpoint', 'play-button');
-    playButton.textContent = '▶';
     endpointsControls.appendChild(playButton);
 
     playButton.addEventListener("click", async function () {
-        // Masquer le contenu suivant après un délai
         setTimeout(() => {
             const nextSibling = this.closest('.endpoint-header').nextElementSibling;
             if (nextSibling) {
                 nextSibling.style.display = 'none';
             }
         }, 0);
-    
-        // Afficher une animation de chargement
         playButton.innerHTML = `<img src="${loadingImage}" alt="Loading"/>`;
-    
-        // Vérification si une configuration est déjà en cours d'exécution
+
         if (window.runningConf) {
             alert("Already running conf");
+            playButton.textContent = '▶';
             return;
         }
-    
         window.runningConf = true;
-    
         try {
-            // Appeler la fonction `playEndpoint` avec le bouton comme paramètre
             await playEndpoint(playButton);
         } catch (e) {
             console.error(e);
         }
-    
-        // Réinitialiser l'état après l'exécution
         window.runningConf = false;
-        playButton.textContent = '▶'; // Remettre le texte du bouton à son état initial
+        playButton.textContent = '▶';
     });
 
     // Bouton "Delete"
-    const deleteButton = document.createElement('button');
+    const deleteButton = createDeleteButton()
     deleteButton.classList.add('delete-endpoint', 'delete-button');
-    deleteButton.textContent = '🗑️';
     deleteButton.addEventListener("click", function(){
         removeElement(this)
     })
@@ -757,9 +803,8 @@ function createTestMethodElement(method) {
     methodHeader.appendChild(editableMethod);
 
     // Ajoute le bouton de suppression à l'en-tête
-    const deleteButton = document.createElement('button');
+    const deleteButton = createDeleteButton()
     deleteButton.classList.add('delete-method', 'delete-button');
-    deleteButton.textContent = '🗑️';
     deleteButton.addEventListener('click', function () {
         removeElement(this); // Appelle la fonction pour supprimer l'élément
     });
@@ -829,10 +874,7 @@ export function createEmptyConf(){
     const output = document.getElementById("output")
     output.innerHTML = ""
     output.appendChild(createConfigurationSection())
-    output.appendChild(createEndpointSection())
-    //output.innerHTML = createConfigurationSection()
-    //output.innerHTML += createEndpointSection()
-    //enableEditableField();
+    output.appendChild(createEndpointSection("▶", "▶"))
     setupAuthTabs();
 }
 

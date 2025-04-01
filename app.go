@@ -65,9 +65,9 @@ func (a *App) OpenFileExplorer() error {
 	}
 }
 
-func (a *App) CheckSoloConfig(filename string, fillExpectedOutput bool) ([]RequestResult, error) {
+func (a *App) CheckSoloConfig(filename string, fillExpectedOutput bool, forcedUpdate bool) ([]RequestResult, error) {
 
-	res, err := CheckConfig(filename, fillExpectedOutput)
+	res, err := CheckConfig(filename, fillExpectedOutput, forcedUpdate)
 	if err != nil {
 		Log.Error(fmt.Sprintf("Error when checking config : %v", err))
 		return nil, err
@@ -76,8 +76,8 @@ func (a *App) CheckSoloConfig(filename string, fillExpectedOutput bool) ([]Reque
 	return res, nil
 }
 
-func (a *App) CheckGroupConfig(pathFilename string, fillExpectedOutput bool) ([]RequestResult, error) {
-	res, err := CheckFolderConfig(pathFilename, fillExpectedOutput)
+func (a *App) CheckGroupConfig(pathFilename string, fillExpectedOutput bool, forcedUpdate bool) ([]RequestResult, error) {
+	res, err := CheckFolderConfig(pathFilename, fillExpectedOutput, forcedUpdate)
 	if err != nil {
 		Log.Error(fmt.Sprintf("Error when checking config : %v", err))
 		return nil, err
@@ -116,7 +116,7 @@ func (a *App) DetectIfOneOreMoreConfFileHaveEmptyExpectedOutputInAConfDir(folder
 
 // Only Front call
 func (a *App) CheckEndpoint(config Config) ([]RequestResult, error) {
-	return ExecuteConfig(&config, false)
+	return ExecuteConfig(&config, false, false)
 }
 
 func (a *App) ParseExtractionJsonToGoFunction(data map[string]interface{}, path string, filename string) error {
