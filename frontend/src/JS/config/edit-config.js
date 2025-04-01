@@ -95,7 +95,7 @@ function updateEditableContent(input) {
             displayValue.textContent = input.value; // Affiche tel quel en cas d'erreur
         }
     } else {
-        displayValue.textContent = input.value || ""; // Sinon, affiche simplement la valeur
+        displayValue.textContent = input.value || "_@empty"; // Sinon, affiche simplement la valeur
     }
     displayValue.style.display = '';
     input.style.display = 'none';
