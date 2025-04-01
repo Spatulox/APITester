@@ -1,12 +1,18 @@
 import {CheckEndpoint, PrintJsonFile} from "../../../wailsjs/go/main/App";
 import {printResult} from "../print-test-result";
 import loadingImage from "../../assets/images/circle-loading.gif"
+import { alert, confirm } from "../popup";
 
 function makeEditableOld(value, type = 'text') {
     return `<span class="editable" data-type="${type}"><span class="display-value">${value}</span><input type="text" class="edit-input" style="display:none;" value="${value}" onblur="updateEditableContent(this)"></span>`;
 }
 
-function makeEditable(value, type = 'text') {
+export function makeEditable(value, type = 'text') {
+
+    if (typeof value === 'string' && value.startsWith('"') && value.endsWith('"')) {
+        value = value.slice(1, -1); // Retire les premiers et derniers caractères (les guillemets)
+    }
+
     // Création de l'élément conteneur principal
     const editableSpan = document.createElement('span');
     editableSpan.classList.add('editable');
@@ -41,32 +47,59 @@ function makeEditablePreOld(value, type = 'json') {
     return `<pre class="editable" data-type="${type}"><span class="display-value">${JSON.stringify(value, null, 2)}</span><textarea class="edit-input" style="display:none;" onblur="updateEditableContent(this)">${JSON.stringify(value, null, 2)}</textarea></pre>`;
 }
 
-function makeEditablePre(value, type = 'json') {
-    // Crée l'élément <pre>
+export function makeEditablePre(value, type = 'json') {
+    if (typeof value === 'string' && value.startsWith('"') && value.endsWith('"')) {
+        value = value.slice(1, -1); // Retire les premiers et derniers caractères (les guillemets)
+    }
+
     const preElement = document.createElement('pre');
     preElement.className = 'editable';
     preElement.dataset.type = type;
 
-    // Crée l'élément <span> pour afficher la valeur
     const displayValueSpan = document.createElement('span');
     displayValueSpan.className = 'display-value';
-    displayValueSpan.textContent = JSON.stringify(value, null, 2);
+    if (typeof value === 'string') {
+        displayValueSpan.textContent = value;
+    } else {
+        displayValueSpan.textContent = JSON.stringify(value, null, 2);
+    }
     preElement.appendChild(displayValueSpan);
 
-    // Crée l'élément <textarea> pour l'édition
     const editInputTextarea = document.createElement('textarea');
     editInputTextarea.className = 'edit-input';
     editInputTextarea.style.display = 'none';
     editInputTextarea.onblur = function () {
-        updateEditableContent(this); // Appelle la fonction pour mettre à jour le contenu
+        updateEditableContent(this);
     };
-    editInputTextarea.textContent = JSON.stringify(value, null, 2);
+    if (typeof value === 'string') {
+        editInputTextarea.textContent = value;
+    } else {
+        editInputTextarea.textContent = JSON.stringify(value, null, 2);
+    }
     preElement.appendChild(editInputTextarea);
 
     return preElement;
 }
 
-
+function updateEditableContent(input) {
+    const editable = input.closest('.editable');
+    const displayValue = editable.querySelector('.display-value');
+    //displayValue.textContent = input.value ? input.value : "";
+    const type = editable.dataset.type;
+    if (type === 'json') {
+        try {
+            const parsedValue = JSON.parse(input.value); // Tente de parser en JSON
+            displayValue.textContent = JSON.stringify(parsedValue, null, 2); // Reformate proprement
+        } catch (error) {
+            console.error("Invalid JSON:", error);
+            displayValue.textContent = input.value; // Affiche tel quel en cas d'erreur
+        }
+    } else {
+        displayValue.textContent = input.value || ""; // Sinon, affiche simplement la valeur
+    }
+    displayValue.style.display = '';
+    input.style.display = 'none';
+}
 
 export function clearEditConfig(){
     document.getElementById("output").innerHTML = ""
@@ -667,7 +700,9 @@ export function createMethodElement(method = 'GET') {
     const deleteButton = document.createElement('button');
     deleteButton.classList.add('delete-endpoint', 'delete-button');
     deleteButton.textContent = '🗑️';
-    deleteButton.setAttribute('onclick', 'removeElement(this)');
+    deleteButton.addEventListener("click", function(){
+        removeElement(this)
+    })
     endpointsControls.appendChild(deleteButton);
 
     // Ajout des contrôles au header
@@ -884,5 +919,19 @@ export async function playEndpoint(button) {
         printResult("welp", res)
     } catch (e) {
         console.log(e)
+    }
+}
+
+async function removeElement(button) {
+    if (await confirm("Are you sure ?")) {
+        const testMethodDiv = button.closest('.test-method');
+        if (testMethodDiv) {
+            testMethodDiv.remove();
+        } else {
+            const endpointDiv = button.closest('.endpoint');
+            if (endpointDiv) {
+                endpointDiv.remove();
+            }
+        }
     }
 }

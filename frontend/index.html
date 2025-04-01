@@ -81,29 +81,6 @@
 
     <script src="./src/main.js" type="module"></script>
     <script src="./src/JS/event-listener.js" type="module"></script>
-    <script type="application/javascript">
-        function removeElement(button) {
-            if (confirm("Are you sure ?")) {
-                const testMethodDiv = button.closest('.test-method');
-                if (testMethodDiv) {
-                    testMethodDiv.remove();
-                } else {
-                    const endpointDiv = button.closest('.endpoint');
-                    if (endpointDiv) {
-                        endpointDiv.remove();
-                    }
-                }
-            }
-        }
-
-        function updateEditableContent(input) {
-            const editable = input.closest('.editable');
-            const displayValue = editable.querySelector('.display-value');
-            displayValue.textContent = input.value ? input.value : "{}";
-            displayValue.style.display = '';
-            input.style.display = 'none';
-        }
-    </script>
 </body>
 
 </html>
