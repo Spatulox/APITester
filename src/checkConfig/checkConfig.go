@@ -58,34 +58,28 @@ func ExecuteConfig(config *Config, fillExpectedOutput bool, forcedUpdate bool) (
 
 				result, _ := checkEndpoint(*ep, input, *apiApiKey, i, testIndex)
 
-				Log.Debug(fmt.Sprintf("ExpectedOutput : %s", ep.Tests[testIndex].ExpectedOutput))
-
 				// Validation des conditions
 				if (fillExpectedOutput && ep.IsAlreadyAskedToFillExpectedOutPut == "false") || forcedUpdate {
 					isEmpty := false
 
 					if ep.Tests[testIndex].ExpectedOutput == nil {
-						Log.Debug("ExpectedOutput is nil")
 						isEmpty = true
 					} else {
 						switch expected := ep.Tests[testIndex].ExpectedOutput.(type) {
 						case map[string]interface{}:
 							if len(expected) == 0 {
-								Log.Debug("ExpectedOutput is an empty map")
 								isEmpty = true
 							}
 						case string:
 							if expected == "" {
-								Log.Debug("ExpectedOutput is an empty string")
 								isEmpty = true
 							}
 						case []interface{}:
 							if len(expected) == 0 {
-								Log.Debug("ExpectedOutput is an empty slice")
 								isEmpty = true
 							}
 						default:
-							Log.Debug(fmt.Sprintf("ExpectedOutput has an unexpected type: %T", expected))
+							Log.Error(fmt.Sprintf("ExpectedOutput has an unexpected type: %T", expected))
 						}
 					}
 
@@ -95,12 +89,10 @@ func ExecuteConfig(config *Config, fillExpectedOutput bool, forcedUpdate bool) (
 
 						mu.Lock()
 						if result.ActualOutput != nil {
-							Log.Debug("DEBUG 12")
 							fmt.Sprintf("%v", result.ActualOutput...)
 							ep.Tests[testIndex].ExpectedOutput = result.ActualOutput
 							result.OriginalData.ExpectedOutput = result.ActualOutput
 						} else if result.ActualOutputString != "" {
-							Log.Debug("DEBUG 34")
 							ep.Tests[testIndex].ExpectedOutput = result.ActualOutputString
 							result.OriginalData.ExpectedOutput = result.ActualOutputString
 							fmt.Sprintf("%v", result.ActualOutputString)
@@ -178,11 +170,11 @@ func ExecuteConfig(config *Config, fillExpectedOutput bool, forcedUpdate bool) (
 //     during the validation process.
 
 func CheckConfig(filePath string, fillExpectedOutput bool, forcedUpdate bool) ([]RequestResult, error) {
-	Log.Debug("--------CheckConfig------")
+	//Log.Debug("--------CheckConfig------")
 
 	var config Config
 	err := ReadJsonFile(filePath, &config)
-	Log.Debug(fmt.Sprintf("Reading %s", filePath))
+	//Log.Debug(fmt.Sprintf("Reading %s", filePath))
 	if err != nil {
 		Log.Error(fmt.Sprintf("Impossible to read the json file : %v", err))
 		return []RequestResult{}, fmt.Errorf("Impossible to read the json file")
@@ -227,7 +219,7 @@ func CheckConfig(filePath string, fillExpectedOutput bool, forcedUpdate bool) ([
 //     during the validation process.
 func CheckFolderConfig(folderPath string, fillExpectedOutput bool, forcedUpdate bool) ([]RequestResult, error) {
 
-	Log.Debug("--------CheckFolder------")
+	//Log.Debug("--------CheckFolder------")
 
 	folderFiles, err := ListJsonFile(&folderPath)
 	if err != nil {
@@ -422,7 +414,7 @@ func compareHttpStatus(expectedStatus string, actualStatus int) (ResultError, Re
 
 	_, errStr := strconv.Atoi(expectedStatus)
 
-	Log.Debug(fmt.Sprint("%v", expectedStatus))
+	//Log.Debug(fmt.Sprint("%v", expectedStatus))
 	if errStr != nil {
 		return 0, WarningUnknownHttpStatusExpected
 	}

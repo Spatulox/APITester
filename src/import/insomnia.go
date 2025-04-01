@@ -220,7 +220,6 @@ func detectBaseURL(urls []string) string {
 
 	baseURL := strings.Join(commonParts, "/")
 
-	Log.Debug(baseURL)
 	return baseURL
 }
 
