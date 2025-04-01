@@ -58,30 +58,60 @@ func ExecuteConfig(config *Config, fillExpectedOutput bool) ([]RequestResult, er
 
 				result, _ := checkEndpoint(*ep, input, *apiApiKey, i, testIndex)
 
-				if fillExpectedOutput { // && ep.IsAlreadyAskedToFillExpectedOutPut == "false" {
-					Log.Infos(fmt.Sprintf("Filling the Expected Output for %s/%v", input.Method, ep.Path))
+				Log.Debug(fmt.Sprintf("ExpectedOutput : %s", ep.Tests[testIndex].ExpectedOutput))
 
-					mu.Lock()
-					//ep.IsAlreadyAskedToFillExpectedOutPut = "true"
-					// cé pété ici, problème de type
-					if result.ActualOutput != nil {
-						Log.Debug("DEBUG 12")
-						fmt.Sprintf("%v", result.ActualOutput...)
-						ep.Tests[testIndex].ExpectedOutput = result.ActualOutput
-					} else if result.ActualOutputString != "" {
-						Log.Debug("DEBUG 34")
-						ep.Tests[testIndex].ExpectedOutput = result.ActualOutputString
-						fmt.Sprintf("%v", result.ActualOutputString)
+				// Validation des conditions
+				if fillExpectedOutput && ep.IsAlreadyAskedToFillExpectedOutPut == "false" {
+					isEmpty := false
+
+					if ep.Tests[testIndex].ExpectedOutput == nil {
+						Log.Debug("ExpectedOutput is nil")
+						isEmpty = true
+					} else {
+						switch expected := ep.Tests[testIndex].ExpectedOutput.(type) {
+						case map[string]interface{}:
+							if len(expected) == 0 {
+								Log.Debug("ExpectedOutput is an empty map")
+								isEmpty = true
+							}
+						case string:
+							if expected == "" {
+								Log.Debug("ExpectedOutput is an empty string")
+								isEmpty = true
+							}
+						case []interface{}:
+							if len(expected) == 0 {
+								Log.Debug("ExpectedOutput is an empty slice")
+								isEmpty = true
+							}
+						default:
+							Log.Debug(fmt.Sprintf("ExpectedOutput has an unexpected type: %T", expected))
+						}
 					}
-					mu.Unlock()
 
-					if containsWarning(result.Warning, WarningUnknownExpectedOutput) {
-						Log.Debug("COUCOU")
-						removeWarning(&result, WarningUnknownExpectedOutput)
+					if isEmpty {
+						Log.Infos(fmt.Sprintf("Filling the Expected Output for %s/%v", input.Method, ep.Path))
+
+						mu.Lock()
+						if result.ActualOutput != nil {
+							Log.Debug("DEBUG 12")
+							fmt.Sprintf("%v", result.ActualOutput...)
+							ep.Tests[testIndex].ExpectedOutput = result.ActualOutput
+						} else if result.ActualOutputString != "" {
+							Log.Debug("DEBUG 34")
+							ep.Tests[testIndex].ExpectedOutput = result.ActualOutputString
+							fmt.Sprintf("%v", result.ActualOutputString)
+						}
+						mu.Unlock()
+
+						if containsWarning(result.Warning, WarningUnknownExpectedOutput) {
+							Log.Debug("COUCOU")
+							removeWarning(&result, WarningUnknownExpectedOutput)
+						}
 					}
 				}
-
 				mu.Lock()
+				ep.IsAlreadyAskedToFillExpectedOutPut = "true"
 				configTestResult = append(configTestResult, result)
 				mu.Unlock()
 			}(endpoint, i2, inputData)
@@ -127,7 +157,7 @@ func CheckConfig(filePath string, fillExpectedOutput bool) ([]RequestResult, err
 	dirPath := filepath.Dir(filePath)
 
 	if fillExpectedOutput {
-		config.GlobalAskedToFillExpectedOutPut = "false"
+		config.GlobalAskedToFillExpectedOutPut = "true"
 	}
 
 	err = SaveConfigToJson(config, dirPath, fileName)
