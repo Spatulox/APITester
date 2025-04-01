@@ -455,6 +455,12 @@ strong {
     display: block;
 }
 
+.display-value {
+    padding: 10px;
+    padding-left: 0px;
+    cursor: pointer;
+}
+
 .editable .edit-input {
     min-width: 100%;
     padding: 2px 5px;
@@ -470,7 +476,8 @@ strong {
 }
 
 .editable textarea.edit-input {
-    min-height: 100px;
+    /*min-height: 300px;*/
+    min-height: 500px;
     white-space: pre-wrap;
     word-wrap: break-word;
     resize: both;
