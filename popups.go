@@ -32,9 +32,9 @@ func (a *App) ConfirmDialog(message string) (bool, error) {
 	}
 
 	switch result {
-	case "Confirm", "Yes", "Ok", "Continue": // Boutons positifs
+	case "Confirm", "Yes", "Ok", "OK", "Continue": // Boutons positifs
 		return true, nil
-	case "Cancel", "No", "Abort", "Ignore": // Boutons négatifs
+	case "Cancel", "No", "NO", "Abort", "Ignore": // Boutons négatifs
 		return false, nil
 	default:
 		return false, fmt.Errorf("unexpected button result: %s", result)
