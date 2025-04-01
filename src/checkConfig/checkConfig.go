@@ -98,16 +98,57 @@ func ExecuteConfig(config *Config, fillExpectedOutput bool, forcedUpdate bool) (
 							Log.Debug("DEBUG 12")
 							fmt.Sprintf("%v", result.ActualOutput...)
 							ep.Tests[testIndex].ExpectedOutput = result.ActualOutput
+							result.OriginalData.ExpectedOutput = result.ActualOutput
 						} else if result.ActualOutputString != "" {
 							Log.Debug("DEBUG 34")
 							ep.Tests[testIndex].ExpectedOutput = result.ActualOutputString
+							result.OriginalData.ExpectedOutput = result.ActualOutputString
 							fmt.Sprintf("%v", result.ActualOutputString)
 						}
+
+						if forcedUpdate {
+							ep.Tests[testIndex].ExpectedHttpState = fmt.Sprintf("%v", result.ActualHttpState)
+							result.OriginalData.ExpectedHttpState = fmt.Sprintf("%v", result.ActualHttpState)
+						}
+
 						mu.Unlock()
 
 						if containsWarning(result.Warning, WarningUnknownExpectedOutput) {
-							Log.Debug("COUCOU")
 							removeWarning(&result, WarningUnknownExpectedOutput)
+						}
+
+						if forcedUpdate {
+							// Warnings
+							if containsWarning(result.Warning, WarningDeprecatedField) {
+								removeWarning(&result, WarningDeprecatedField)
+							}
+							if containsWarning(result.Warning, WarningExtraKeyValue) {
+								removeWarning(&result, WarningExtraKeyValue)
+							}
+							if containsWarning(result.Warning, WarningHttpStatusNotSame) {
+								removeWarning(&result, WarningHttpStatusNotSame)
+							}
+							if containsWarning(result.Warning, WarningInconsistentDataTypes) {
+								removeWarning(&result, WarningInconsistentDataTypes)
+							}
+							if containsWarning(result.Warning, WarningNotSameValue) {
+								removeWarning(&result, WarningNotSameValue)
+							}
+							if containsWarning(result.Warning, WarningUnknownHttpStatusExpected) {
+								removeWarning(&result, WarningUnknownHttpStatusExpected)
+							}
+
+							// Remove the errors when it "comes from" the software
+							switch result.Error {
+							case ErrorExpectedOrActualOuputNotMatch:
+								result.Error = ErrorNoError
+							case ErrorIncorrectKeyValue:
+								result.Error = ErrorNoError
+							case ErrorMissingKeyValue:
+								result.Error = ErrorNoError
+							case ErrorWrongHttpStatusRange:
+								result.Error = ErrorNoError
+							}
 						}
 					}
 				}

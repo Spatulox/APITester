@@ -63,6 +63,7 @@ export async function checkConfig(event, filepath, forcedUpdate = false){
             alert("Impossible to show the file conf")
         }
 
+        // update the edit config tab
         if(fillExpectedOutput || forcedUpdate){
             try{
                 await printJsonToEditTab(`${filepath}`)
