@@ -44,7 +44,7 @@ func (a *App) ConfirmDialog(message string) (bool, error) {
 func (a *App) WarningDialog(message string) (string, error) {
 	result, err := runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
 		Type:          runtime.WarningDialog,
-		Title:         "Question",
+		Title:         "Warning",
 		Message:       message,
 		DefaultButton: "Ok",
 		Buttons:       []string{"Ok"},
@@ -56,7 +56,7 @@ func (a *App) WarningDialog(message string) (string, error) {
 func (a *App) ErrorDialog(message string) (string, error) {
 	result, err := runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
 		Type:          runtime.ErrorDialog,
-		Title:         "Question",
+		Title:         "Error",
 		Message:       message,
 		DefaultButton: "Ok",
 		Buttons:       []string{"Ok"},
