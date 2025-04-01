@@ -83,7 +83,7 @@ function createControlsDiv(name) {
     deleteButton.innerHTML = '🗑️';
     deleteButton.onclick = async function(event) {
         event.stopPropagation();
-        const confirmDelete = confirm(`Are you sure you want to delete ${name}?`);
+        const confirmDelete = await confirm(`Are you sure you want to delete ${name}?`);
         if (confirmDelete) {
             try{
                 await DeleteConfig(`${name}`)
@@ -172,7 +172,7 @@ function addPlayButton(element, name) {
 
     deleteButton.onclick = async function(event) {
         event.stopPropagation();
-        const confirmDelete = confirm(`Are you sure you want to delete ${name}?`);
+        const confirmDelete = await confirm(`Are you sure you want to delete ${name}?`);
         if (confirmDelete) {
             try{
                 console.log(`Deleting ${parentFolder}/${name}`)

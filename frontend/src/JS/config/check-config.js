@@ -18,7 +18,7 @@ export async function checkConfig(event, filepath){
         console.log(jsonString.globalAskedToFillExpectedOutPut)
 
         if(jsonString.globalAskedToFillExpectedOutPut.includes("false")){
-            fillExpectedOutput = confirm("This endpoint don't have any ExpectedOutput.\nDo you want to automatically fill the expected output with the actual output ?\nConsider adding '_@empty' if the endpoint send back nothing")
+            fillExpectedOutput = await confirm("This endpoint don't have any ExpectedOutput.\nDo you want to automatically fill the expected output with the actual output ?\nConsider adding '_@empty' if the endpoint send back nothing")
             jsonString.globalAskedToFillExpectedOutPut = "true"
 
             document.getElementById('output').innerHTML = ""
@@ -34,7 +34,7 @@ export async function checkConfig(event, filepath){
         try{
             console.log(await DetectIfOneOreMoreConfFileHaveEmptyExpectedOutputInAConfDir(`${filepath}`))
             if(await DetectIfOneOreMoreConfFileHaveEmptyExpectedOutputInAConfDir(`${filepath}`)){
-                fillExpectedOutput = confirm("Do you want to automatically fill the expected output ?\nThis will not overwrite the existing ExpectedOutput.")
+                fillExpectedOutput = await confirm("Do you want to automatically fill the expected output ?\nThis will not overwrite the existing ExpectedOutput.")
             }
         } catch (e){
             console.log(e)
@@ -46,6 +46,7 @@ export async function checkConfig(event, filepath){
         // If it's a file
         if(filepath.endsWith(".json")){
             console.log("Checking file")
+            console.log(filepath, fillExpectedOutput)
             result = await CheckSoloConfig(filepath, fillExpectedOutput)
         }
         // If not a file
