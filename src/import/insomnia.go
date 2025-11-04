@@ -1,7 +1,7 @@
 package insomnia
 
 import (
-	. "ApiTester/src/log"
+	//. "ApiTester/src/log"
 	. "ApiTester/src/struct"
 	"encoding/json"
 	"fmt"
