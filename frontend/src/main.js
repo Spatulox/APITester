@@ -1,3 +1,4 @@
+import "./style.css";
 import "./JS/event-listener";
 import { initTree } from "./JS/explorer/tree";
 import { refreshTree } from "./JS/explorer/actions";
