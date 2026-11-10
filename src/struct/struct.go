@@ -32,7 +32,7 @@ type BasicAuth struct {
 
 type Endpoint struct {
 	Path                               string `json:"path"`
-	IsAlreadyAskedToFillExpectedOutPut string `json:isAlreadyAskedToFillExpectedOutput`
+	IsAlreadyAskedToFillExpectedOutPut string `json:"isAlreadyAskedToFillExpectedOutput"`
 	Tests                              []Test `json:"tests"`
 }
 

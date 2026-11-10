@@ -267,7 +267,7 @@ export function jsonToHtml(jsonData, filename) {
         // Ajout du span pour IsAlreadyAskedToFillExpectedOutPut
         const isAlreadyAskedSpan = document.createElement("span");
         isAlreadyAskedSpan.className = "isAlreadyAskedToFillExpectedOutput";
-        isAlreadyAskedSpan.textContent = endpoint.IsAlreadyAskedToFillExpectedOutPut;
+        isAlreadyAskedSpan.textContent = endpoint.isAlreadyAskedToFillExpectedOutput;
         endpointHeader.appendChild(isAlreadyAskedSpan);
     
         // Ajout des contrôles (boutons)

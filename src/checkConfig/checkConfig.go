@@ -651,15 +651,15 @@ func containsWarning(warningsArray []ResultWarning, warningCode ResultWarning) b
 	return false
 }
 
-func removeWarning(result *RequestResult, warning ResultWarning) {
+func removeWarning(result *RequestResult, toRemove ResultWarning) {
 	if result == nil {
 		return
 	}
 
 	newWarnings := make([]ResultWarning, 0, len(result.Warning))
-	for _, warning := range result.Warning {
-		if warning != warning {
-			newWarnings = append(newWarnings, warning)
+	for _, w := range result.Warning {
+		if w != toRemove {
+			newWarnings = append(newWarnings, w)
 		}
 	}
 	result.Warning = newWarnings
