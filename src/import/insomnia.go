@@ -28,6 +28,7 @@ func ParseInsomniaExport(export map[string]interface{}) (Config, error) {
 	config := Config{}
 	var urls []string
 	endpointMap := make(map[string]*Endpoint)
+	profiles := newProfileSet()
 
 	resources, ok := export["resources"].([]interface{})
 	if !ok {
@@ -108,6 +109,7 @@ func ParseInsomniaExport(export map[string]interface{}) (Config, error) {
 				Input:             input,
 				ExpectedOutput:    make(map[string]interface{}),
 				ExpectedHttpState: "",
+				AuthProfile:       profiles.add(insomniaAuthToProfile(res["authentication"]), "default"),
 			}
 
 			// Vérifier si l'endpoint existe déjà
@@ -134,43 +136,10 @@ func ParseInsomniaExport(export map[string]interface{}) (Config, error) {
 		return config.Endpoint[i].Path < config.Endpoint[j].Path
 	})
 
+	// Profil par défaut = l'authentification la plus utilisée
+	profiles.apply(&config, "")
+
 	return config, nil
-}
-
-// ----------------------------------------------------------- //
-
-// parseAuthentication extracts authentication details from a given authentication
-// map and returns an Authentication object populated with the relevant credentials.
-//
-// Parameters:
-//   - @auth: A map containing authentication details, including type and associated
-//     credentials (API key, OAuth2 details, or basic authentication).
-//
-// Returns:
-// - @An Authentication object containing the parsed authentication information.
-func parseAuthentication(auth map[string]interface{}) Authentication {
-	authType, _ := auth["type"].(string)
-	authentication := Authentication{
-		Type: authType,
-	}
-
-	switch authType {
-	case "apikey":
-		authentication.APIKey.ApiKey, _ = auth["value"].(string)
-	case "oauth2":
-		oauth2 := OAuth2{}
-		oauth2.ClientID, _ = auth["clientId"].(string)
-		oauth2.ClientSecret, _ = auth["clientSecret"].(string)
-		oauth2.TokenURL, _ = auth["accessTokenUrl"].(string)
-		authentication.OAuth2 = oauth2
-	case "basic":
-		basicAuth := BasicAuth{}
-		basicAuth.Username, _ = auth["username"].(string)
-		basicAuth.Password, _ = auth["password"].(string)
-		authentication.BasicAuth = basicAuth
-	}
-
-	return authentication
 }
 
 // ----------------------------------------------------------- //

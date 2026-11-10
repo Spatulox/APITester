@@ -31,12 +31,19 @@ func ParsePostmanExport(export map[string]interface{}) (Config, error) {
 		return config, fmt.Errorf("invalid or missing 'item' field in Postman collection")
 	}
 
+	// Authentification : celle de la collection devient le profil par défaut,
+	// celles des dossiers / requêtes deviennent des profils supplémentaires.
+	profiles := newProfileSet()
+	collectionProfile := profiles.add(postmanAuthToProfile(export["auth"]), "default")
+
 	// Extraire la baseURL et les endpoints
-	config.BasicURL, config.Endpoint = extractEndpoints(items)
+	config.BasicURL, config.Endpoint = extractEndpoints(items, profiles, collectionProfile)
 
 	sort.Slice(config.Endpoint, func(i, j int) bool {
 		return config.Endpoint[i].Path < config.Endpoint[j].Path
 	})
+
+	profiles.apply(&config, collectionProfile)
 
 	return config, nil
 }
@@ -54,14 +61,23 @@ func ParsePostmanExport(export map[string]interface{}) (Config, error) {
 // Returns:
 // - @A string representing the detected base URL extracted from the first request.
 // - @A slice of Endpoint containing all extracted endpoints with their associated tests.
-func extractEndpoints(items []interface{}) (string, []Endpoint) {
+func extractEndpoints(items []interface{}, profiles *profileSet, inheritedProfile string) (string, []Endpoint) {
 	var baseURL string
 	endpointMap := make(map[string]*Endpoint)
 	unknownCount := 0
 
-	var extractItem func(item map[string]interface{})
-	extractItem = func(item map[string]interface{}) {
+	var extractItem func(item map[string]interface{}, inherited string)
+	extractItem = func(item map[string]interface{}, inherited string) {
+		// Un dossier peut définir sa propre auth, héritée par ses requêtes
+		if name := profiles.add(postmanAuthToProfile(item["auth"]), ""); name != "" {
+			inherited = name
+		}
 		if request, ok := item["request"].(map[string]interface{}); ok {
+			profile := inherited
+			if name := profiles.add(postmanAuthToProfile(request["auth"]), ""); name != "" {
+				profile = name
+			}
+
 			var path string
 
 			// Extraire l'URL
@@ -110,6 +126,7 @@ func extractEndpoints(items []interface{}) (string, []Endpoint) {
 				Input:             input,
 				ExpectedOutput:    make(map[string]interface{}),
 				ExpectedHttpState: "",
+				AuthProfile:       profile,
 			}
 
 			// Ajouter ou mettre à jour l'endpoint
@@ -127,7 +144,7 @@ func extractEndpoints(items []interface{}) (string, []Endpoint) {
 		if subitems, ok := item["item"].([]interface{}); ok {
 			for _, subitem := range subitems {
 				if subitemMap, ok := subitem.(map[string]interface{}); ok {
-					extractItem(subitemMap)
+					extractItem(subitemMap, inherited)
 				}
 			}
 		}
@@ -135,7 +152,7 @@ func extractEndpoints(items []interface{}) (string, []Endpoint) {
 
 	for _, item := range items {
 		if itemMap, ok := item.(map[string]interface{}); ok {
-			extractItem(itemMap)
+			extractItem(itemMap, inheritedProfile)
 		}
 	}
 
