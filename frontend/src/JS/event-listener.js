@@ -111,17 +111,44 @@ function uniqueFileName(group, fileName) {
     return candidate;
 }
 
+const importModal = document.getElementById("groupSelectionModal");
+
+function span(className, text) {
+    const s = document.createElement("span");
+    s.className = className;
+    s.textContent = text;
+    return s;
+}
+
+function closeImportModal() {
+    importModal.hidden = true;
+}
+
 function showGroupSelectionModal(jsonData, fileName) {
-    const modal = document.getElementById("groupSelectionModal");
     const groupList = document.getElementById("groupList");
     groupList.innerHTML = "";
+    groupList.classList.remove("busy");
+    document.getElementById("importFileName").textContent = fileName;
 
     const groups = state.tree.length ? state.tree : [{ name: ROOT, files: [] }];
-    for (const { name } of groups) {
+    let focusTarget = null;
+    for (const { name, files } of groups) {
+        const root = name === ROOT;
         const li = document.createElement("li");
-        li.textContent = groupLabel(name);
-        if (state.current?.group === name) li.classList.add("suggested");
-        li.onclick = async () => {
+        li.className = "tree-row tree-group-header";
+        if (root) li.classList.add("tree-group-root");
+        li.tabIndex = 0;
+        li.appendChild(span("tree-icon", root ? "🗂️" : "📁"));
+        li.appendChild(span("tree-name", groupLabel(name)));
+        if (state.current?.group === name) {
+            li.classList.add("suggested");
+            li.appendChild(span("current-tag", "current"));
+            focusTarget = li;
+        }
+        li.appendChild(span("tree-count", String(files?.length ?? 0)));
+
+        const choose = async () => {
+            groupList.classList.add("busy");
             const newFileName = uniqueFileName(name, fileName);
             try {
                 await ParseExtractionJsonToGoFunction(jsonData, name, newFileName);
@@ -129,14 +156,24 @@ function showGroupSelectionModal(jsonData, fileName) {
             } catch (e) {
                 alert("Import failed: " + e);
             }
-            modal.style.display = "none";
+            closeImportModal();
             await refreshTree(true);
+        };
+        li.onclick = choose;
+        li.onkeydown = (e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(); }
         };
         groupList.appendChild(li);
     }
-    modal.style.display = "block";
+    importModal.hidden = false;
+    (focusTarget || groupList.firstElementChild)?.focus();
 }
 
-document.getElementById("closeModal").onclick = () => {
-    document.getElementById("groupSelectionModal").style.display = "none";
-};
+document.getElementById("closeModal").onclick = closeImportModal;
+document.getElementById("closeModalX").onclick = closeImportModal;
+importModal.addEventListener("mousedown", (e) => {
+    if (e.target === importModal) closeImportModal();
+});
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !importModal.hidden) closeImportModal();
+});

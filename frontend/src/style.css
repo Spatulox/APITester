@@ -153,57 +153,130 @@ footer {
 
 
 
-/* Modal Background */
-#groupSelectionModal {
+/* ---------------- Modale (import) ---------------- */
+
+.modal-backdrop {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
-    z-index: 1000; /* High z-index to overlay above other content */
-    
-    display: block;
-    padding: 20%;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.6);
 }
 
-/* Modal Content */
-#groupSelectionModal > h3 {
-    color: #ffffff; /* White text for header */
-    margin-bottom: 20px; /* Space below header */
+.modal-backdrop[hidden] {
+    display: none;
+}
+
+.modal {
+    display: flex;
+    flex-direction: column;
+    width: 420px;
+    max-width: 100%;
+    max-height: 80vh;
+    background-color: #23272a;
+    border: 1px solid #40444b;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid #40444b;
+}
+
+.modal-titles {
+    flex: 1;
+    min-width: 0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 16px;
+}
+
+.modal-subtitle {
+    display: block;
+    margin-top: 4px;
+    color: #b9bbbe;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    border-radius: 4px;
+    color: #b9bbbe;
+    cursor: pointer;
+    font-size: 14px;
+    width: 26px;
+    height: 26px;
+}
+
+.modal-close:hover {
+    background-color: #40444b;
+    color: #ffffff;
 }
 
 #groupList {
-    list-style-type: none; /* Remove bullet points from list */
-    padding: 0; /* Remove default padding */
+    list-style: none;
+    margin: 0;
+    padding: 8px;
+    overflow-y: auto;
 }
 
-#groupList li {
-    background-color: #2c2f33; /* Dark background for list items */
-    color: #ffffff; /* White text for list items */
-    padding: 10px 15px; /* Padding for list items */
-    margin-bottom: 10px; /* Space between items */
-    border-radius: 5px; /* Rounded corners */
-    cursor: pointer; /* Pointer cursor on hover */
-    transition: background-color 0.3s; /* Smooth transition for hover effect */
+#groupList .tree-row:focus-visible {
+    outline: 2px solid #7289da;
+    outline-offset: -2px;
 }
 
-#groupList li:hover {
-    background-color: #7289da; /* Lighten background on hover (Discord blue) */
+#groupList .tree-row.suggested {
+    border-left-color: #7289da;
+    background-color: #2c2f33;
 }
 
-/* Close Button */
-#closeModal {
-    background-color: #ff4757; /* Red color for close button */
-    color: white; /* White text */
-    border: none; /* No border */
-    padding: 10px 20px; /* Padding around button text */
-    border-radius: 5px; /* Rounded corners */
-    cursor: pointer; /* Pointer cursor on hover */
+#groupList .tree-row.suggested:hover {
+    background-color: #40444b;
 }
 
-#closeModal:hover {
-    background-color: #ff6b81; /* Lighter red on hover */
+#groupList.busy {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.current-tag {
+    font-size: 11px;
+    color: #7289da;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 10px 16px;
+    border-top: 1px solid #40444b;
+}
+
+.modal-footer .discord-button {
+    padding: 7px 14px;
+    font-size: 13px;
+}
+
+.secondary-button {
+    background-color: #40444b;
+}
+
+.secondary-button:hover {
+    background-color: #5e6e82;
 }
 
 
@@ -860,10 +933,6 @@ footer {
     gap: 8px;
 }
 
-#groupList li.suggested {
-    border-left: 3px solid #7289da;
-}
-
 /* ---------------- Profils d'authentification ---------------- */
 
 .auth-hint {
@@ -1013,4 +1082,9 @@ footer {
 .auth-error-reason {
     border-left: 4px solid #f04747;
     white-space: pre-wrap;
+}
+
+#groupList .tree-group-root {
+    color: #b9bbbe;
+    font-style: italic;
 }

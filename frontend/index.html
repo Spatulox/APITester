@@ -11,10 +11,20 @@
     </header>
     <main id="app">
         <!-- Modal for Group Selection (import) -->
-        <div id="groupSelectionModal" style="display: none;">
-            <h3>Import into which group?</h3>
-            <ul id="groupList"></ul>
-            <button id="closeModal">Close</button>
+        <div id="groupSelectionModal" class="modal-backdrop" hidden>
+            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="groupSelectionTitle">
+                <div class="modal-header">
+                    <div class="modal-titles">
+                        <h3 id="groupSelectionTitle">Import into which group?</h3>
+                        <span id="importFileName" class="modal-subtitle"></span>
+                    </div>
+                    <button id="closeModalX" class="modal-close" title="Close (Esc)">✕</button>
+                </div>
+                <ul id="groupList"></ul>
+                <div class="modal-footer">
+                    <button id="closeModal" class="discord-button secondary-button">Cancel</button>
+                </div>
+            </div>
         </div>
 
         <aside id="explorer">
