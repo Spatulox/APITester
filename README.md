@@ -42,31 +42,41 @@ The results are presented in a clear, tabbed interface for easy analysis:
 
     Support for various HTTP methods (GET, POST, PUT, PATCH, DELETE).
     Customizable expected outputs and HTTP status codes.
-    Multiple authentication methods (API Key, OAuth2, Basic Auth).
+    Named authentication profiles (one per role), chosen per test.
+    Auth types: noauth, bearer, apikey (header / query / cookie), basicAuth,
+    oauth2 (client credentials), login (call a login endpoint and reuse its token).
+    Extra headers can be added to any profile.
 
     ```json
     {
 	  "basicUrl": "https://api.example.com",
-	  "authentication": {
-	    "type": "apikey",
-	    "apikey": "your-api-key"
-	  },
+	  "defaultAuthProfile": "admin",
+	  "authProfiles": [
+	    { "name": "anon", "type": "noauth" },
+	    { "name": "admin", "type": "bearer", "bearer": { "token": "eyJ..." } },
+	    { "name": "user", "type": "login",
+	      "login": {
+	        "url": "/auth/login",
+	        "body": { "email": "user@example.com", "password": "..." },
+	        "extractFrom": "json", "extractPath": "data.access_token",
+	        "injectAs": "bearer"
+	      } }
+	  ],
 	  "endpoints": [
 	    {
 	      "path": "/users",
 	      "tests": [
-	        {
-	          "method": "GET",
-	          "expectedOutput": {"id": 1, "name": "John Doe"},
-	          "expectedHttpState": "200"
-	        },
-	        // More tests...
+	        { "method": "GET", "expectedHttpState": "200", "expectedOutput": [{"id": 1}] },
+	        { "method": "GET", "authProfile": "user", "expectedHttpState": "403" },
+	        { "method": "GET", "authProfile": "anon", "expectedHttpState": "401" }
 	      ]
-	    },
-	    // More endpoints...
+	    }
 	  ]
 	}
 	```
+
+    Older files with a single `"authentication"` block still work: it is used as a
+    profile named `default` until the config is saved from the editor.
 
 ## License
 [MIT LICENSE](./LICENSE)
@@ -84,7 +94,6 @@ The results are presented in a clear, tabbed interface for easy analysis:
 > - Can add an endpoint, but can't add a method (lol)
 
 # Futur adding
-> - Rework how we move the file between different config group
 > - Adding yaml support for API return ?
 > - Stop a config execution
 > - Add a tab system per timestamp to run multiple config at the same time
