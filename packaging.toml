@@ -1,0 +1,34 @@
+# APITester packaging with CompileOnLinux. From this repo root:
+#   python3 -m compileonlinux build -c packaging.toml      (CompileOnLinux on PYTHONPATH / installed)
+#   compileonlinux build -c packaging.toml [-f deb,rpm]
+# The [build] command runs `wails build` first, so wails, go and npm must be installed.
+
+[app]
+id = "io.github.spatulox.APITester"
+name = "APITester"
+version = "1.0.0"
+summary = "Test web API endpoints per role and spot data leaks"
+description = """
+Run predefined JSON test configs against a web API to check that each role
+(user, admin...) gets the expected status codes and payloads, and spot
+endpoints that leak data. Results are sorted into OK / WARNING / ERROR."""
+license = "GPL-3.0-only"
+maintainer = "Spatulox"
+homepage = "https://github.com/Spatulox/APITester"
+categories = ["Development"]
+
+[files]
+binary = "build/bin/ApiTester"
+icon = "build/appicon.png"
+
+[build]
+# webkit2_41: link WebKitGTK 4.1 (4.0 is no longer shipped by current Fedora/Ubuntu).
+command = "wails build -clean -tags webkit2_41"
+
+[deps]
+# Wails binary: libs detected automatically (dpkg-shlibdeps / rpm AutoReq).
+auto = true
+
+[output]
+formats = ["deb", "rpm", "tarball"]
+dir = "build/bin/packages"
