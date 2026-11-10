@@ -9,64 +9,81 @@
 <body>
     <header>
         <h1>APITester</h1>
-        <nav>
-            <ul>
-                <li><a href="#test-execution" id="section1">Tests Dashboard</a></li>
-                <li><a href="#configuration-management" id="section2">Edit Configurations</a></li>
-                <li><a href="#results-dashboard" id="section3">Result Dashboard</a></li>
-            </ul>
-        </nav>
     </header>
-    <main>
-        <!-- Modal for Group Selection -->
+    <main id="app">
+        <!-- Modal for Group Selection (import) -->
         <div id="groupSelectionModal" style="display: none;">
-            <h3>Select a Group/Folder</h3>
+            <h3>Import into which group?</h3>
             <ul id="groupList"></ul>
             <button id="closeModal">Close</button>
         </div>
-        <section id="test-execution">
-            <h2>Tests Dashbord</h2>
-            <div id="file-list"></div>
-            <div>
-                <input type="button" id="viewTestFilesButton" value="View test files" class="custom-file-upload">
-                <input type="button" id="add_test_config" value="Add a test" class="custom-file-upload">
-                <label for="fileInput" class="custom-file-upload" id="fileNameDisplay">
-                    Import Insomnia/Postman extract
-                    <input type="file" id="fileInput" style="display: none;" />
-                </label>
+
+        <aside id="explorer">
+            <div class="explorer-header">
+                <h2>Configs</h2>
+                <input type="search" id="tree-filter" placeholder="Filter…" autocomplete="off" spellcheck="false">
             </div>
-        </section>
+            <div id="config-tree"></div>
+            <div class="explorer-footer">
+                <button id="new-config" class="discord-button" title="Create a config in the current group">+ Config</button>
+                <button id="new-group" class="discord-button" title="Create a group">+ Group</button>
+                <label for="fileInput" class="discord-button" title="Import an Insomnia / Postman export">
+                    Import
+                    <input type="file" id="fileInput" accept=".json,application/json" hidden />
+                </label>
+                <button id="open-folder" class="discord-button" title="Open the config folder">📂</button>
+            </div>
+        </aside>
 
-        <section id="configuration-management">
-            <h2>Edit Configurations</h2>
-            <div id="output"></div>
-            <button id="save-config" class="custom-file-upload discord-button">Save Config</button>
-            <button id="addEndpointBtn" class="discord-button">Add an Endpoint</button>
-            <!--<button id="add-configuration">Ajouter Configuration</button>-->
-        </section>
+        <section id="workspace">
+            <div class="ws-tabs">
+                <button class="ws-tab active" data-tab="editor">Editor</button>
+                <button class="ws-tab" data-tab="results">Results</button>
+            </div>
 
-        <section id="results-dashboard">
-            <h2>Result Dashboard</h2>
-            <div id="results-dashboard-child">
-                <div class="tabs">
-                    <button class="tablink" id="ok-tab">OK
-                        <span class="notification" id="ok-count">0</span></button>
-                    <button class="tablink" id="warning-tab">WARNING
-                        <span class="notification" id="warning-count">0</span></button>
-                    <button class="tablink" id="error-tab">ERROR
-                        <span class="notification" id="error-count">0</span></button>
+            <div id="editor-pane" class="ws-pane active">
+                <div id="editor-empty" class="empty-state">
+                    <p>Select a config in the list on the left, or create one with <strong>+ Config</strong>.</p>
+                    <p class="hint">Double-click (or F2) to rename · drag a config onto a group to move it · right-click for more actions</p>
                 </div>
-
-                <div id="ok" class="tabcontent" style="display: block;">
-                    <p>Aucun test réussi pour le moment.</p>
+                <div id="editor-content" hidden>
+                    <div class="editor-toolbar">
+                        <div class="editor-title">
+                            <span id="editor-file-name"></span>
+                            <span id="editor-group-badge" class="group-badge"></span>
+                            <span id="dirty-indicator" title="Unsaved changes" hidden>●</span>
+                        </div>
+                        <div class="editor-actions">
+                            <button id="addEndpointBtn" class="discord-button">Add an Endpoint</button>
+                            <button id="save-config" class="discord-button" title="Ctrl+S">Save</button>
+                        </div>
+                    </div>
+                    <div id="output"></div>
                 </div>
+            </div>
 
-                <div id="warning" class="tabcontent">
-                    <p>Aucun avertissement pour le moment.</p>
-                </div>
+            <div id="results-pane" class="ws-pane">
+                <div id="results-dashboard-child">
+                    <div class="tabs">
+                        <button class="tablink" id="ok-tab">OK
+                            <span class="notification" id="ok-count">0</span></button>
+                        <button class="tablink" id="warning-tab">WARNING
+                            <span class="notification" id="warning-count">0</span></button>
+                        <button class="tablink" id="error-tab">ERROR
+                            <span class="notification" id="error-count">0</span></button>
+                    </div>
 
-                <div id="error" class="tabcontent">
-                    <p>Aucune erreur pour le moment.</p>
+                    <div id="ok" class="tabcontent" style="display: block;">
+                        <p>Aucun test réussi pour le moment.</p>
+                    </div>
+
+                    <div id="warning" class="tabcontent">
+                        <p>Aucun avertissement pour le moment.</p>
+                    </div>
+
+                    <div id="error" class="tabcontent">
+                        <p>Aucune erreur pour le moment.</p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -74,13 +91,12 @@
 
     <footer>
         <p>
-            Copyright &copy; 2024 APITester. 
+            Copyright &copy; 2024 APITester.
             GNU General Public License v3.
         </p>
     </footer>
 
     <script src="./src/main.js" type="module"></script>
-    <script src="./src/JS/event-listener.js" type="module"></script>
 </body>
 
 </html>

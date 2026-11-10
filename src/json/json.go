@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -182,4 +183,138 @@ func SaveConfigToJson(config Config, path string, filename string) error {
 	}
 	Log.Infos(fmt.Sprintf("Save successful in %s", pathDir))
 	return nil
+}
+
+// -------------------------------------------- //
+// Gestion de l'arborescence des configs (groupes = un seul niveau de sous-dossiers)
+
+// RootGroup est le nom utilisé côté front pour les fichiers à la racine de ApiTester.
+const RootGroup = "root"
+
+// ConfigGroup représente un groupe (dossier) et ses fichiers de config.
+type ConfigGroup struct {
+	Name  string   `json:"name"`
+	Files []string `json:"files"`
+}
+
+// ConfigRoot renvoie le dossier racine des configs (UserConfigDir/ApiTester) et le crée si besoin.
+func ConfigRoot() (string, error) {
+	appDataPath, err := os.UserConfigDir()
+	if err != nil {
+		return "", fmt.Errorf("error obtaining AppData/conf folder: %v", err)
+	}
+	root := filepath.Join(appDataPath, "ApiTester")
+	if err := os.MkdirAll(root, os.ModePerm); err != nil {
+		return "", fmt.Errorf("error creating directory %s: %v", root, err)
+	}
+	return root, nil
+}
+
+// ValidateName vérifie qu'un nom de fichier ou de groupe est un simple nom (pas de chemin).
+func ValidateName(name string) error {
+	if strings.TrimSpace(name) == "" {
+		return fmt.Errorf("name cannot be empty")
+	}
+	if name == "." || name == ".." || strings.ContainsAny(name, `/\`) || strings.ContainsRune(name, 0) {
+		return fmt.Errorf("invalid name %q", name)
+	}
+	return nil
+}
+
+// IsRootGroup indique si le groupe désigne la racine.
+func IsRootGroup(group string) bool {
+	return group == "" || group == RootGroup
+}
+
+// ResolveConfigPath renvoie le chemin absolu de group/file (file peut être vide pour le dossier du groupe).
+// Refuse tout chemin qui sortirait du dossier racine.
+func ResolveConfigPath(group, file string) (string, error) {
+	root, err := ConfigRoot()
+	if err != nil {
+		return "", err
+	}
+	parts := []string{root}
+	if !IsRootGroup(group) {
+		if err := ValidateName(group); err != nil {
+			return "", fmt.Errorf("group: %v", err)
+		}
+		parts = append(parts, group)
+	}
+	if file != "" {
+		if err := ValidateName(file); err != nil {
+			return "", fmt.Errorf("file: %v", err)
+		}
+		parts = append(parts, file)
+	}
+	full := filepath.Clean(filepath.Join(parts...))
+	rel, err := filepath.Rel(root, full)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("path outside of config directory")
+	}
+	return full, nil
+}
+
+// EnsureJsonExt ajoute l'extension .json si absente.
+func EnsureJsonExt(name string) string {
+	name = strings.TrimSpace(name)
+	if !strings.HasSuffix(strings.ToLower(name), ".json") {
+		name += ".json"
+	}
+	return name
+}
+
+// PathExists indique si un chemin existe.
+func PathExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
+
+func listJsonIn(dir string) ([]string, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	files := []string{}
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(strings.ToLower(e.Name()), ".json") {
+			files = append(files, e.Name())
+		}
+	}
+	sort.Strings(files)
+	return files, nil
+}
+
+// ListConfigTree liste les groupes (y compris vides), triés, avec "root" en dernier.
+func ListConfigTree() ([]ConfigGroup, error) {
+	root, err := ConfigRoot()
+	if err != nil {
+		return nil, err
+	}
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		return nil, fmt.Errorf("error reading %s: %v", root, err)
+	}
+
+	groups := []ConfigGroup{}
+	for _, e := range entries {
+		if !e.IsDir() || strings.HasPrefix(e.Name(), ".") {
+			continue
+		}
+		files, err := listJsonIn(filepath.Join(root, e.Name()))
+		if err != nil {
+			Log.Error(fmt.Sprintf("error reading group %s: %v", e.Name(), err))
+			continue
+		}
+		groups = append(groups, ConfigGroup{Name: e.Name(), Files: files})
+	}
+	sort.Slice(groups, func(i, j int) bool {
+		return strings.ToLower(groups[i].Name) < strings.ToLower(groups[j].Name)
+	})
+
+	rootFiles, err := listJsonIn(root)
+	if err != nil {
+		return nil, err
+	}
+	groups = append(groups, ConfigGroup{Name: RootGroup, Files: rootFiles})
+	return groups, nil
 }

@@ -2,7 +2,10 @@ import {CheckEndpoint, PrintJsonFile} from "../../../wailsjs/go/main/App";
 import {printResult} from "../print-test-result";
 import loadingImage from "../../assets/images/circle-loading.gif"
 import { alert, confirm } from "../popup";
-import { checkConfig } from "./check-config";
+import { runConfig } from "./check-config";
+import { saveCurrentConfig } from "./save-config";
+import { state, setDirty, groupLabel, isRoot, pathOf } from "../explorer/state";
+import { showWorkspaceTab } from "../workspace";
 
 function makeEditableOld(value, type = 'text') {
     return `<span class="editable" data-type="${type}"><span class="display-value">${value}</span><input type="text" class="edit-input" style="display:none;" value="${value}" onblur="updateEditableContent(this)"></span>`;
@@ -106,8 +109,9 @@ export function clearEditConfig(){
     document.getElementById("output").innerHTML = ""
 }
 
-export function jsonToHtml(jsonData, filename) {
-    console.log(filename);
+// Le nom du fichier n'est plus éditable ici : il est affiché (lecture seule) dans la barre de l'éditeur.
+// Renommer / déplacer se fait uniquement depuis l'explorateur.
+export function jsonToHtml(jsonData) {
     const config = jsonData;
 
     // Conteneur principal
@@ -116,22 +120,6 @@ export function jsonToHtml(jsonData, filename) {
     // En-tête
     const header = document.createElement("div");
     header.className = "config-header";
-
-    // Création du titre principal
-    const title = document.createElement('h2');
-    title.textContent = 'Configuration : ';
-
-    // Création du span avec l'ID "fileNameConfiguration"
-    const fileNameSpan = document.createElement('span');
-    fileNameSpan.id = 'fileNameConfiguration';
-
-    // Ajout du contenu éditable dans le span
-    fileNameSpan.appendChild(makeEditable(filename));
-
-    // Ajout du span au titre
-    title.appendChild(fileNameSpan);
-
-    header.appendChild(title);
 
     // Création de l'élément <p> pour Basic URL
     const basicUrl = document.createElement('p');
@@ -395,6 +383,7 @@ export function jsonToHtml(jsonData, filename) {
 }
 
 
+
 function openMethod(event, content){
     if (!event.target.closest('.editable')) {
         content.style.display = content.style.display === 'none' ? 'block' : 'none';
@@ -490,125 +479,6 @@ function adjustInputSize(input) {
 
 // ------------------------------------------------------------ //
 
-function createConfigurationSection() {
-    // Création du conteneur principal
-    const configHeader = document.createElement('div');
-    configHeader.classList.add('config-header');
-
-    // Titre principal
-    const h2 = document.createElement('h2');
-    h2.innerHTML = 'Configuration : ';
-    const fileNameSpan = document.createElement('span');
-    fileNameSpan.id = 'fileNameConfiguration';
-    fileNameSpan.appendChild(makeEditable('File_name.json'));
-    h2.appendChild(fileNameSpan);
-    configHeader.appendChild(h2);
-
-    // Basic URL
-    const basicUrlP = document.createElement('p');
-    basicUrlP.innerHTML = `<strong>Basic URL:</strong> `;
-    basicUrlP.appendChild(makeEditable('Not Provided'));
-    configHeader.appendChild(basicUrlP);
-
-    // Global asked to fill expected output
-    const globalSpan = document.createElement('span');
-    globalSpan.classList.add('globalAskedToFillExpectedOutPut');
-    globalSpan.textContent = 'false';
-    configHeader.appendChild(globalSpan);
-
-    // Auth section
-    const authSection = document.createElement('div');
-    authSection.classList.add('auth-section');
-
-    const authTitle = document.createElement('h3');
-    authTitle.textContent = 'Authentication';
-    authSection.appendChild(authTitle);
-
-    const authTypeP = document.createElement('p');
-    authTypeP.innerHTML = `<strong>Type:</strong> `;
-    const authTypeSpan = document.createElement('span');
-    authTypeSpan.id = 'authType';
-    authTypeP.appendChild(authTypeSpan);
-    authSection.appendChild(authTypeP);
-
-    // Auth tabs
-    const authTabs = document.createElement('div');
-    authTabs.classList.add('auth-tabs');
-
-    const tabList = document.createElement('ul');
-    tabList.classList.add('tab-list');
-
-    const tabs = [
-        { text: 'API Key', tab: 'apikey' },
-        { text: 'OAuth2', tab: 'oauth2' },
-        { text: 'Basic Auth', tab: 'basicAuth' },
-        { text: 'No Auth', tab: 'noauth', active: true }
-    ];
-
-    tabs.forEach(({ text, tab, active }) => {
-        const tabItem = document.createElement('li');
-        tabItem.classList.add('tab-item');
-        if (active) tabItem.classList.add('active');
-        tabItem.setAttribute('data-tab', tab);
-        tabItem.textContent = text;
-        tabList.appendChild(tabItem);
-    });
-
-    authTabs.appendChild(tabList);
-
-    // Tab content
-    const tabContent = document.createElement('div');
-    tabContent.classList.add('tab-content');
-
-    const panes = [
-        {
-            id: 'apikey',
-            content: [
-                { label: 'Key Name:', value: 'Not provided' },
-                { label: 'API Key:', value: 'Not provided' }
-            ]
-        },
-        {
-            id: 'oauth2',
-            content: [
-                { label: 'Client ID:', value: 'Not provided' },
-                { label: 'Client Secret:', value: 'Not provided' },
-                { label: 'Token URL:', value: 'Not provided' }
-            ]
-        },
-        {
-            id: 'basicAuth',
-            content: [
-                { label: 'Username:', value: 'Not provided' },
-                { label: 'Password:', value: 'Not provided' }
-            ]
-        }
-    ];
-
-    panes.forEach(({ id, content }) => {
-        const tabPane = document.createElement('div');
-        tabPane.classList.add('tab-pane');
-        tabPane.id = id;
-
-        content.forEach(({ label, value }) => {
-            const p = document.createElement('p');
-            p.innerHTML = `<strong>${label}</strong> `;
-            p.appendChild(makeEditable(value));
-            tabPane.appendChild(p);
-        });
-
-        tabContent.appendChild(tabPane);
-    });
-
-    authTabs.appendChild(tabContent);
-    authSection.appendChild(authTabs);
-    
-    configHeader.appendChild(authSection);
-
-    return configHeader;
-}
-
-
 function createEndpointSection(playInner = "▶", deleteInner = "🗑️") {
     const endpointDiv = document.createElement('div');
     endpointDiv.id = 'endpoint';
@@ -626,48 +496,15 @@ function createEndpointSection(playInner = "▶", deleteInner = "🗑️") {
 
     // Bouton play
     const playButton = createPlayButton(playInner)
-    playButton.addEventListener("click", async function(event){
-        playButton.innerHTML = `<img src="${loadingImage}" alt="Loading"/>`;
-
-        if (window.runningConf) {
-            alert("Already running conf");
-            playButton.textContent = '▶';
-            return;
-        }
-        window.runningConf = true;
-        try {
-            document.getElementById("save-config").click()
-            const filePath = document.querySelector("#fileNameConfiguration .display-value").innerText.trim()
-            await checkConfig(event, filePath, false)
-        } catch (e) {
-            console.error(e);
-        }
-        window.runningConf = false;
-        playButton.textContent = '▶';
-    })
+    playButton.title = "Save and run this config"
+    playButton.addEventListener("click", () => runCurrentConfig(false, playButton))
     span.appendChild(playButton);
+
     const deleteButton = createDeleteButton(deleteInner)
-    deleteButton.addEventListener("click", async function(event){
+    deleteButton.title = "Save, run and update the expected outputs"
+    deleteButton.addEventListener("click", async () => {
         const forcedUpdate = await confirm("Do you want to run the conf file and update the expected outputs ?")
-        deleteButton.innerHTML = `<img src="${loadingImage}" alt="Loading"/>`;
-
-        if (window.runningConf) {
-            alert("Already running conf");
-            deleteButton.textContent = '▶';
-            return;
-        }
-        window.runningConf = true;
-        try {
-            document.getElementById("save-config").click()
-            const filePath = document.querySelector("#fileNameConfiguration .display-value").innerText.trim()
-            await checkConfig(event, filePath, forcedUpdate)
-
-        } catch (e) {
-            console.error(e);
-        }
-        window.runningConf = false;
-        deleteButton.textContent = '▶';
-
+        await runCurrentConfig(forcedUpdate, deleteButton)
     })
     span.appendChild(deleteButton);
 
@@ -859,26 +696,78 @@ function createTestMethodElement(method) {
 
 // ------------------------------------------------------------ //
 
-export async function printJsonToEditTab(path){
-    if (path.includes("root")) {
-        path = path.replace(/^root[/\\]/, "");
+// Sauvegarde puis lance la config ouverte dans l'éditeur
+async function runCurrentConfig(forcedUpdate, button) {
+    if (!state.current) return
+    if (window.runningConf) {
+        alert("Already running conf")
+        return
     }
-    const jsonString = await PrintJsonFile(path); // Votre JSON ici
-    document.getElementById('output').innerHTML = ""
-    document.getElementById('output').appendChild(jsonToHtml(jsonString, path));
-    enableEditableField();
-    setupAuthTabs();
+    try {
+        await saveCurrentConfig()
+    } catch (e) {
+        alert("Save failed: " + e)
+        return
+    }
+    await runConfig({ ...state.current }, forcedUpdate, button)
 }
 
-export function createEmptyConf(){
-    const output = document.getElementById("output")
+let editableFieldsReady = false
+
+// Ouvre group/file dans l'éditeur (le nom affiché est en lecture seule)
+export async function openConfigInEditor(group, file) {
+    const conf = await PrintJsonFile(pathOf(group, file));
+    const output = document.getElementById('output')
     output.innerHTML = ""
-    output.appendChild(createConfigurationSection())
-    output.appendChild(createEndpointSection("▶", "▶"))
+    output.appendChild(jsonToHtml(conf));
+    if (!editableFieldsReady) {
+        enableEditableField();
+        editableFieldsReady = true
+    }
     setupAuthTabs();
+
+    state.current = { group, file }
+    setDirty(false)
+    updateEditorTitle()
+    document.getElementById("editor-empty").hidden = true
+    document.getElementById("editor-content").hidden = false
+    showWorkspaceTab("editor")
 }
 
+export function closeEditor() {
+    state.current = null
+    setDirty(false)
+    clearEditConfig()
+    document.getElementById("editor-empty").hidden = false
+    document.getElementById("editor-content").hidden = true
+}
 
+export function updateEditorTitle() {
+    if (!state.current) return
+    const { group, file } = state.current
+    document.getElementById("editor-file-name").textContent = file
+    const badge = document.getElementById("editor-group-badge")
+    badge.textContent = groupLabel(group)
+    badge.classList.toggle("root", isRoot(group))
+}
+
+// Recharge l'éditeur si la config ouverte a été réécrite par un run (sauf modifications non sauvegardées)
+export async function reloadCurrentIfAffected({ group, file = null }) {
+    if (!state.current || state.dirty) return
+    const affected = file
+        ? state.current.group === group && state.current.file === file
+        : state.current.group === group
+    if (!affected) return
+    try {
+        const { group: g, file: f } = state.current
+        state.current = null // force le rechargement
+        await openConfigInEditor(g, f)
+    } catch (e) {
+        closeEditor()
+        alert("Impossible to display the file")
+        console.log(e)
+    }
+}
 
 export async function playEndpoint(button) {
 

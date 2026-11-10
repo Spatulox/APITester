@@ -1,236 +1,142 @@
-import {ParseExtractionJsonToGoFunction, UpdateConfig} from "../../wailsjs/go/main/App";
-import { refreshFile } from "../main";
-import {clickButton, createEmptyConf} from "./config/edit-config";
-import {htmlToJson} from "./config/save-config";
-import { alert, confirm } from "./popup";
+import { ParseExtractionJsonToGoFunction, OpenFileExplorer } from "../../wailsjs/go/main/App";
+import { clickButton } from "./config/edit-config";
+import { saveCurrentConfig } from "./config/save-config";
+import { alert } from "./popup";
+import { showWorkspaceTab } from "./workspace";
+import { state, setDirty, groupLabel, ROOT, expand } from "./explorer/state";
+import { refreshTree, newConfig, newGroup } from "./explorer/actions";
 
-const element1 = document.getElementById('ok-tab');
-const element2 = document.getElementById('warning-tab');
-const element3 = document.getElementById('error-tab');
+// ------------------------------------------------------------ //
+// Onglets OK / WARNING / ERROR du panneau Résultats
 
-const element4 = document.getElementById('section1');
-const element5 = document.getElementById('section2');
-const element6 = document.getElementById('section3');
-
-// Fonction pour ouvrir un onglet
-function openTab(evt, tabName) {
-    var tabcontent = document.getElementsByClassName("tabcontent");
-    for (var i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
-    }
-
-    var tablinks = document.getElementsByClassName("tablink");
-    for (var i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-
+function openResultTab(tabName) {
+    document.querySelectorAll("#results-pane .tabcontent").forEach(c => c.style.display = "none");
+    document.querySelectorAll("#results-pane .tablink").forEach(b => b.classList.remove("active"));
     document.getElementById(tabName).style.display = "block";
-    evt.currentTarget.className += " active";
+    document.getElementById(`${tabName}-tab`).classList.add("active");
 }
-element1.addEventListener('mousedown', (evt) => openTab(evt, 'ok'));
-element2.addEventListener('mousedown', (evt) => openTab(evt, 'warning'));
-element3.addEventListener('mousedown', (evt) => openTab(evt, 'error'));
+["ok", "warning", "error"].forEach(name => {
+    document.getElementById(`${name}-tab`).addEventListener("click", () => openResultTab(name));
+});
+openResultTab("ok");
 
-export function showSection(evt, sectionId) {
-    // Masquer toutes les sections
-    var sections = document.querySelectorAll('main > section');
-    sections.forEach(function(section) {
-        section.style.display = 'none'; // Masquer complètement
-        section.style.height = '0'; // Réinitialiser la hauteur
-        section.style.marginBottom = '0'; // Réinitialiser les marges
-        section.classList.remove("active")
-    });
+// ------------------------------------------------------------ //
+// Onglets du workspace (Éditeur / Résultats)
 
-    // Afficher la section sélectionnée
-    const selectedSection = document.getElementById(sectionId);
-    selectedSection.style.display = 'block'; // Afficher avec display
-    selectedSection.style.height = 'auto';
-    selectedSection.style.marginBottom = '30px';
-    selectedSection.classList.add("active")
-
-
-    // Gérer l'affichage du tableau de résultats
-    const resultsDashboard = document.getElementById("results-dashboard-child");
-    if (!sectionId.includes("results-dashboard")) {
-        resultsDashboard.style.display = 'none';
-        resultsDashboard.style.height = '0';
-    } else {
-        resultsDashboard.style.display = 'block';
-        resultsDashboard.style.height = 'auto';
-    }
-
-
-    // Ajouter une classe active au lien sélectionné
-    if(evt){
-        try {
-            evt.currentTarget.classList.add('active');
-        } catch (e) {
-            console.error("Error adding active class:", e);
-        }
-    }
-}
-
-
-element4.addEventListener('mousedown', (evt) => showSection(evt, 'test-execution'));
-element5.addEventListener('mousedown', (evt) => showSection(evt, 'configuration-management'));
-element6.addEventListener('mousedown', (evt) => showSection(evt, 'results-dashboard'));
-
-// Initialiser l'onglet par défaut au chargement de la page
-document.addEventListener("DOMContentLoaded", function() {
-    // Ouvrir la section par défaut
-    showSection({currentTarget: {classList: {add: function() {}}}}, 'test-execution'); // Simuler l'événement pour afficher la section par défaut
-    document.querySelector('.tablink').click(); // Ouvrir le premier onglet par défaut dans le tableau de bord
+document.querySelectorAll(".ws-tab").forEach(b => {
+    b.addEventListener("click", () => showWorkspaceTab(b.dataset.tab));
 });
 
-const element7 = document.getElementById("add_test_config")
-element7.addEventListener('click', (event)=>{
-    createEmptyConf()
-    showSection(event, 'configuration-management')
-})
+// ------------------------------------------------------------ //
+// Explorateur : boutons du pied
 
+document.getElementById("new-config").addEventListener("click", () => newConfig());
+document.getElementById("new-group").addEventListener("click", () => newGroup());
+document.getElementById("open-folder").addEventListener("click", async () => {
+    try {
+        await OpenFileExplorer();
+    } catch (error) {
+        console.error("Erreur lors de l'ouverture de l'explorateur de fichiers:", error);
+        alert("Erreur: " + error.toString());
+    }
+});
 
-document.getElementById('closeModal').onclick = function() {
-    document.getElementById('groupSelectionModal').style.display = 'none';
-};
+// ------------------------------------------------------------ //
+// Éditeur
 
+async function save() {
+    if (!state.current) return;
+    try {
+        await saveCurrentConfig();
+    } catch (e) {
+        alert("Save failed: " + e);
+    }
+}
 
-document.getElementById("save-config").addEventListener("click", async ()=>{
-    const fileNameElement = document.getElementById("fileNameConfiguration")
-    const displayValue = fileNameElement.querySelector('.editable .display-value').textContent
-
-    const jsonData = htmlToJson()
-    await UpdateConfig(jsonData, displayValue)
-    alert("Saved")
-})
+document.getElementById("save-config").addEventListener("click", save);
+document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        save();
+    }
+});
 
 document.getElementById("addEndpointBtn").addEventListener("click", () => {
-    clickButton()
+    clickButton();
+    setDirty(true);
 });
 
+// Indicateur "modifié" : toute saisie ou action structurelle dans l'éditeur
+const output = document.getElementById("output");
+output.addEventListener("input", () => setDirty(true));
+output.addEventListener("click", (e) => {
+    if (e.target.closest(".tab-item, #add-method, .delete-button")) setDirty(true);
+});
 
+// ------------------------------------------------------------ //
+// Import Insomnia / Postman
 
-document.getElementById('fileInput').addEventListener('change', async function(event) {
+const fileInput = document.getElementById("fileInput");
+fileInput.addEventListener("change", function (event) {
     const file = event.target.files[0];
-    if (!file) {
-        return;
-    }
-
-    console.log(file)
+    fileInput.value = ""; // permettre de ré-importer le même fichier
+    if (!file) return;
 
     const reader = new FileReader();
-    
-    reader.onload = async function(e) {
-        const content = e.target.result;
-
-        // Vérifiez si le contenu est un JSON valide
+    reader.onload = (e) => {
         try {
-            const jsonData = JSON.parse(content);
-            showGroupSelectionModal(jsonData, file.name)
-            refreshFile()
+            const jsonData = JSON.parse(e.target.result);
+            showGroupSelectionModal(jsonData, file.name);
         } catch (error) {
             console.error("Invalid JSON:", error);
             alert("Error : " + error.toString());
         }
     };
-
-    reader.onerror = function() {
+    reader.onerror = () => {
         console.error("Error reading file:", reader.error);
         alert("Error reading file.");
     };
-
-    // Lire le contenu du fichier
     reader.readAsText(file);
 });
 
-
-
-async function showGroupSelectionModal(jsonData, fileName) {
-    const modal = document.getElementById('groupSelectionModal');
-    const groupList = document.getElementById('groupList');
-    
-    // Clear previous groups
-    groupList.innerHTML = '';
-
-    // Populate groups from window.folderFiles
-    for (let group in window.folderFiles) {
-        const listItem = document.createElement('li');
-        
-        // Display "No Group" for the root group
-        if (group === "root") {
-            listItem.textContent = "No Group";
-        } else {
-            listItem.textContent = group;
-        }
-
-        listItem.onclick = async () => {
-            // Check if the file already exists in the selected group
-            const existingFiles = window.folderFiles[group] || [];
-            let newFileName = fileName;
-
-            // Rename the file if it already exists
-            let counter = 1;
-            while (existingFiles.includes(newFileName)) {
-                const fileParts = fileName.split('.');
-                const baseName = fileParts.slice(0, -1).join('.');
-                const extension = fileParts.pop();
-                newFileName = `${baseName} (${counter}).${extension}`; // Append counter to the base name
-                counter++;
-            }
-
-            console.log(`Sending JSON with filename: ${newFileName}`);
-            await ParseExtractionJsonToGoFunction(jsonData, group, newFileName); // Send with potentially renamed file name
-            modal.style.display = 'none'; // Close the modal
-            refreshFile(); // Refresh the file list after saving
-        };
-
-        groupList.appendChild(listItem);
+function uniqueFileName(group, fileName) {
+    const existing = state.tree.find(g => g.name === group)?.files || [];
+    const dot = fileName.lastIndexOf(".");
+    const base = dot > 0 ? fileName.slice(0, dot) : fileName;
+    const ext = dot > 0 ? fileName.slice(dot) : ".json";
+    let candidate = fileName;
+    for (let i = 1; existing.includes(candidate); i++) {
+        candidate = `${base} (${i})${ext}`;
     }
-
-    modal.style.display = 'block'; // Show the modal
+    return candidate;
 }
 
+function showGroupSelectionModal(jsonData, fileName) {
+    const modal = document.getElementById("groupSelectionModal");
+    const groupList = document.getElementById("groupList");
+    groupList.innerHTML = "";
 
-export async function showGroupSelection(jsonData, fileName) {
-    const modal = document.getElementById('groupSelectionModal');
-    const groupList = document.getElementById('groupList');
-    
-    // Clear previous groups
-    groupList.innerHTML = '';
-
-    // Populate groups from window.folderFiles
-    for (let group in window.folderFiles) {
-        const listItem = document.createElement('li');
-        
-        // Display "No Group" for the root group
-        if (group === "root") {
-            listItem.textContent = "No Group";
-        } else {
-            listItem.textContent = group;
-        }
-
-        listItem.onclick = async () => {
-            // Check if the file already exists in the selected group
-            const existingFiles = window.folderFiles[group] || [];
-            let newFileName = fileName;
-
-            // Rename the file if it already exists
-            let counter = 1;
-            while (existingFiles.includes(newFileName)) {
-                const fileParts = fileName.split('.');
-                const baseName = fileParts.slice(0, -1).join('.');
-                const extension = fileParts.pop();
-                newFileName = `${baseName} (${counter}).${extension}`; // Append counter to the base name
-                counter++;
+    const groups = state.tree.length ? state.tree : [{ name: ROOT, files: [] }];
+    for (const { name } of groups) {
+        const li = document.createElement("li");
+        li.textContent = groupLabel(name);
+        if (state.current?.group === name) li.classList.add("suggested");
+        li.onclick = async () => {
+            const newFileName = uniqueFileName(name, fileName);
+            try {
+                await ParseExtractionJsonToGoFunction(jsonData, name, newFileName);
+                expand(name);
+            } catch (e) {
+                alert("Import failed: " + e);
             }
-
-            console.log(`Sending JSON with filename: ${newFileName}`);
-            await ParseExtractionJsonToGoFunction(jsonData, group, newFileName); // Send with potentially renamed file name
-            modal.style.display = 'none'; // Close the modal
-            refreshFile(); // Refresh the file list after saving
+            modal.style.display = "none";
+            await refreshTree(true);
         };
-
-        groupList.appendChild(listItem);
+        groupList.appendChild(li);
     }
-
-    modal.style.display = 'block'; // Show the modal
+    modal.style.display = "block";
 }
+
+document.getElementById("closeModal").onclick = () => {
+    document.getElementById("groupSelectionModal").style.display = "none";
+};

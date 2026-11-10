@@ -1,3 +1,16 @@
+import { SaveConfig } from "../../../wailsjs/go/main/App";
+import { state, setDirty } from "../explorer/state";
+
+// Sauvegarde la config ouverte dans l'éditeur, toujours sur son fichier d'origine.
+export async function saveCurrentConfig() {
+    if (!state.current) {
+        throw new Error("No config opened");
+    }
+    const { group, file } = state.current;
+    await SaveConfig(group, file, htmlToJson());
+    setDirty(false);
+}
+
 export function htmlToJson() {
     let config = {
         basicUrl: document.querySelector('.config-header p strong + span').textContent,

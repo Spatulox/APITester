@@ -1,4 +1,4 @@
-import {showSection} from "./event-listener";
+import { showWorkspaceTab } from "./workspace";
 import {getErrorCode, getErrorName, getWarningName} from "./enum";
 import { makeEditablePre } from "./config/edit-config";
 
@@ -210,6 +210,6 @@ export function printResult(event, result) {
     }
 
     // Afficher la section des résultats
-    showSection(null, 'results-dashboard');
+    showWorkspaceTab('results');
 }
             

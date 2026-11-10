@@ -149,110 +149,204 @@ func (a *App) ParseExtractionJsonToGoFunction(data map[string]interface{}, path 
 	return nil
 }
 
-func (a *App) RenameFolder(oldName string, newName string) error {
+// -------------------------------------------- //
+// Gestion des fichiers de config (arborescence, renommage, déplacement, création, suppression)
+// Toutes les méthodes prennent (group, file) séparément ; group == "root" (ou "") désigne la racine.
 
-	appDataPath, err := os.UserConfigDir()
-	if err != nil {
-		return fmt.Errorf("error obtaining AppData/conf folder: %v", err)
-	}
-
-	pathDir := filepath.Join(appDataPath, "ApiTester")
-
-	oldPath := filepath.Join(pathDir, oldName)
-	newPath := filepath.Join(pathDir, newName)
-
-	// Vérifier si l'ancien chemin existe (fichier ou dossier)
-	oldInfo, err := os.Stat(oldPath)
-	if os.IsNotExist(err) {
-		return fmt.Errorf("the path %s does not exist", oldName)
-	} else if err != nil {
-		return fmt.Errorf("error checking old path: %v", err)
-	}
-
-	// Vérifier si le nouveau chemin existe déjà
-	if _, err := os.Stat(newPath); !os.IsNotExist(err) {
-		return fmt.Errorf("a file or folder with the name %s already exists", newName)
-	}
-
-	// Si c'est un dossier, s'assurer que le dossier parent du nouveau chemin existe
-	if oldInfo.IsDir() {
-		newParentDir := filepath.Dir(newPath)
-		if err := os.MkdirAll(newParentDir, os.ModePerm); err != nil {
-			return fmt.Errorf("error creating parent directories: %v", err)
-		}
-	}
-
-	// Renommer le fichier ou le dossier
-	err = os.Rename(oldPath, newPath)
-	if err != nil {
-		return fmt.Errorf("error renaming: %v", err)
-	}
-
-	return nil
+// ListConfigTree renvoie les groupes (y compris vides) et leurs fichiers ; "root" est toujours le dernier.
+func (a *App) ListConfigTree() ([]ConfigGroup, error) {
+	return ListConfigTree()
 }
 
-func (a *App) UpdateConfig(jsonData interface{}, filename string) error {
-	// Marshal the JSON data
-	jsonBytes, err := json.Marshal(jsonData)
+// RenameConfig renomme un fichier de config sans changer de groupe. Renvoie le nom final.
+func (a *App) RenameConfig(group string, oldName string, newName string) (string, error) {
+	newName = EnsureJsonExt(newName)
+	oldPath, err := ResolveConfigPath(group, oldName)
 	if err != nil {
-		return fmt.Errorf("error marshaling JSON: %v", err)
+		return "", err
 	}
-
-	appDataPath, err := os.UserConfigDir()
+	newPath, err := ResolveConfigPath(group, newName)
 	if err != nil {
-		return fmt.Errorf("error obtaining AppData/conf folder: %v", err)
+		return "", err
 	}
-
-	// Create the full path for the file
-	pathDir := filepath.Join(appDataPath, "ApiTester", filename)
-
-	// Create the directory if it doesn't exist
-	dir := filepath.Dir(pathDir) // Get the directory part of the path
-	err = os.MkdirAll(dir, 0755) // Create the directory and all parents if necessary
-	if err != nil {
-		return fmt.Errorf("error creating directory: %v", err)
+	if !PathExists(oldPath) {
+		return "", fmt.Errorf("the file %s does not exist", oldName)
 	}
-
-	// Write to the specified file
-	err = os.WriteFile(pathDir, jsonBytes, 0644) // 0644 sets permissions for the file
-	if err != nil {
-		return fmt.Errorf("error writing to file: %v", err)
+	if oldName == newName {
+		return newName, nil
 	}
-
-	return nil
+	// Sur un FS insensible à la casse, "a.json" -> "A.json" pointe vers le même fichier
+	if PathExists(newPath) && !strings.EqualFold(oldName, newName) {
+		return "", fmt.Errorf("a config named %s already exists in this group", newName)
+	}
+	if err := os.Rename(oldPath, newPath); err != nil {
+		return "", fmt.Errorf("error renaming: %v", err)
+	}
+	return newName, nil
 }
 
-func (a *App) DeleteConfig(path *string) error {
-
-	if path == nil {
-		return fmt.Errorf("le chemin est nul")
+// MoveConfig déplace un fichier de config vers un autre groupe (le nom est conservé).
+func (a *App) MoveConfig(fromGroup string, fileName string, toGroup string) error {
+	if IsRootGroup(fromGroup) && IsRootGroup(toGroup) || fromGroup == toGroup {
+		return nil
 	}
-
-	if strings.HasPrefix(*path, "root") {
-		*path = strings.TrimPrefix(*path, "root/")
-		*path = strings.TrimPrefix(*path, "root\\")
-	}
-
-	appDataPath, err := os.UserConfigDir()
-	if err != nil {
-		return fmt.Errorf("error obtaining AppData/conf folder: %v", err)
-	}
-
-	pathDir := filepath.Join(appDataPath, "ApiTester")
-	pathDir = filepath.Join(pathDir, *path)
-
-	fullPath := filepath.Clean(pathDir)
-
-	fileInfo, err := os.Stat(fullPath)
+	oldPath, err := ResolveConfigPath(fromGroup, fileName)
 	if err != nil {
 		return err
 	}
-
-	if fileInfo.IsDir() {
-		return os.RemoveAll(fullPath)
-	} else {
-		return os.Remove(fullPath)
+	groupDir, err := ResolveConfigPath(toGroup, "")
+	if err != nil {
+		return err
 	}
+	if !PathExists(groupDir) {
+		return fmt.Errorf("the group %s does not exist", toGroup)
+	}
+	newPath, err := ResolveConfigPath(toGroup, fileName)
+	if err != nil {
+		return err
+	}
+	if !PathExists(oldPath) {
+		return fmt.Errorf("the file %s does not exist", fileName)
+	}
+	if PathExists(newPath) {
+		return fmt.Errorf("a config named %s already exists in the destination group", fileName)
+	}
+	if err := os.Rename(oldPath, newPath); err != nil {
+		return fmt.Errorf("error moving: %v", err)
+	}
+	return nil
+}
+
+// CreateConfig crée une config vide dans un groupe. Si le nom existe déjà, ajoute " (n)". Renvoie le nom final.
+func (a *App) CreateConfig(group string, name string) (string, error) {
+	name = EnsureJsonExt(name)
+	if _, err := ResolveConfigPath(group, name); err != nil {
+		return "", err
+	}
+	base := strings.TrimSuffix(name, ".json")
+	finalName := name
+	for i := 1; ; i++ {
+		p, err := ResolveConfigPath(group, finalName)
+		if err != nil {
+			return "", err
+		}
+		if !PathExists(p) {
+			break
+		}
+		finalName = fmt.Sprintf("%s (%d).json", base, i)
+	}
+
+	conf := Config{
+		Authentication:                  Authentication{Type: "noauth"},
+		Endpoint:                        []Endpoint{},
+		GlobalAskedToFillExpectedOutPut: "false",
+	}
+	dir := ""
+	if !IsRootGroup(group) {
+		dir = group
+	}
+	if err := SaveConfigToJson(conf, dir, finalName); err != nil {
+		return "", err
+	}
+	return finalName, nil
+}
+
+// SaveConfig écrase une config existante (jamais de création/déplacement implicite).
+func (a *App) SaveConfig(group string, file string, jsonData interface{}) error {
+	path, err := ResolveConfigPath(group, file)
+	if err != nil {
+		return err
+	}
+	if !PathExists(path) {
+		return fmt.Errorf("the file %s does not exist anymore", file)
+	}
+	jsonBytes, err := json.MarshalIndent(jsonData, "", "  ")
+	if err != nil {
+		return fmt.Errorf("error marshaling JSON: %v", err)
+	}
+	if err := os.WriteFile(path, jsonBytes, 0644); err != nil {
+		return fmt.Errorf("error writing to file: %v", err)
+	}
+	return nil
+}
+
+// DeleteConfig supprime un fichier de config.
+func (a *App) DeleteConfig(group string, file string) error {
+	if file == "" {
+		return fmt.Errorf("file name is empty")
+	}
+	path, err := ResolveConfigPath(group, file)
+	if err != nil {
+		return err
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	if info.IsDir() {
+		return fmt.Errorf("%s is not a config file", file)
+	}
+	return os.Remove(path)
+}
+
+// CreateGroup crée un groupe (dossier) vide.
+func (a *App) CreateGroup(name string) error {
+	name = strings.TrimSpace(name)
+	if IsRootGroup(name) {
+		return fmt.Errorf("invalid group name %q", name)
+	}
+	path, err := ResolveConfigPath(name, "")
+	if err != nil {
+		return err
+	}
+	if PathExists(path) {
+		return fmt.Errorf("a group named %s already exists", name)
+	}
+	return os.Mkdir(path, os.ModePerm)
+}
+
+// RenameGroup renomme un groupe.
+func (a *App) RenameGroup(oldName string, newName string) error {
+	newName = strings.TrimSpace(newName)
+	if IsRootGroup(oldName) || IsRootGroup(newName) {
+		return fmt.Errorf("the root group cannot be renamed")
+	}
+	if oldName == newName {
+		return nil
+	}
+	oldPath, err := ResolveConfigPath(oldName, "")
+	if err != nil {
+		return err
+	}
+	newPath, err := ResolveConfigPath(newName, "")
+	if err != nil {
+		return err
+	}
+	if !PathExists(oldPath) {
+		return fmt.Errorf("the group %s does not exist", oldName)
+	}
+	if PathExists(newPath) && !strings.EqualFold(oldName, newName) {
+		return fmt.Errorf("a group named %s already exists", newName)
+	}
+	if err := os.Rename(oldPath, newPath); err != nil {
+		return fmt.Errorf("error renaming: %v", err)
+	}
+	return nil
+}
+
+// DeleteGroup supprime un groupe et toutes ses configs.
+func (a *App) DeleteGroup(name string) error {
+	if IsRootGroup(name) {
+		return fmt.Errorf("the root group cannot be deleted")
+	}
+	path, err := ResolveConfigPath(name, "")
+	if err != nil {
+		return err
+	}
+	if !PathExists(path) {
+		return fmt.Errorf("the group %s does not exist", name)
+	}
+	return os.RemoveAll(path)
 }
 
 func (a *App) PrintJsonFile(path string) (Config, error) {
