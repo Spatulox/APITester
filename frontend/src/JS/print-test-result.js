@@ -53,8 +53,8 @@ export function printResult(event, result) {
         }
         resultDiv.appendChild(methodHeader);
 
-        // Échec d'authentification : afficher la raison (login refusé, token introuvable…)
-        if (getErrorName(Error) === "ErrorAuthFailed" && ActualOutputString) {
+        // Test non exécuté (auth en échec, méthode inconnue) : afficher la raison
+        if (["ErrorAuthFailed", "ErrorUnknownMethod"].includes(getErrorName(Error)) && ActualOutputString) {
             const reason = document.createElement("pre");
             reason.className = "auth-error-reason";
             reason.textContent = ActualOutputString;

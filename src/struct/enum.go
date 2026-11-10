@@ -19,6 +19,7 @@ const (
 	ErrorConnectionRefused
 	ErrorExpectedOrActualOuputNotMatch
 	ErrorAuthFailed                    // 15 : authentification impossible (login / token / profil inconnu)
+	ErrorUnknownMethod                 // 16 : méthode HTTP non supportée dans le test
 	ErrorBadRequest                    = 400
 	ErrorUnauthorized                  = 401
 	ErrorPayementRequired              = 402

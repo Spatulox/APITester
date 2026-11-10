@@ -106,7 +106,7 @@ func ExecuteConfig(config *Config, fillExpectedOutput bool, forcedUpdate bool) (
 				}
 
 				// Validation des conditions (jamais de remplissage si l'authentification a échoué)
-				if result.Error != ErrorAuthFailed && ((fillExpectedOutput && ep.IsAlreadyAskedToFillExpectedOutPut == "false") || forcedUpdate) {
+				if result.Error != ErrorAuthFailed && result.Error != ErrorUnknownMethod && ((fillExpectedOutput && ep.IsAlreadyAskedToFillExpectedOutPut == "false") || forcedUpdate) {
 					isEmpty := false
 
 					if ep.Tests[testIndex].ExpectedOutput == nil {
@@ -227,6 +227,9 @@ func CheckConfig(filePath string, fillExpectedOutput bool, forcedUpdate bool) ([
 		return []RequestResult{}, fmt.Errorf("Impossible to read the json file")
 	}
 
+	// Instantané pour ne réécrire le fichier que si le run l'a réellement modifié
+	before, _ := json.Marshal(config)
+
 	var requestResult []RequestResult
 	requestResult, err = ExecuteConfig(&config, fillExpectedOutput, forcedUpdate)
 	if err != nil {
@@ -239,6 +242,11 @@ func CheckConfig(filePath string, fillExpectedOutput bool, forcedUpdate bool) ([
 
 	if fillExpectedOutput {
 		config.GlobalAskedToFillExpectedOutPut = "true"
+	}
+
+	after, _ := json.Marshal(config)
+	if string(before) == string(after) {
+		return requestResult, nil
 	}
 
 	err = SaveConfigToJson(config, dirPath, fileName)
@@ -268,7 +276,8 @@ func CheckFolderConfig(folderPath string, fillExpectedOutput bool, forcedUpdate 
 
 	//Log.Debug("--------CheckFolder------")
 
-	folderFiles, err := ListJsonFile(&folderPath)
+	// "group/", "root/" ou "" : uniquement les fichiers du groupe, sans créer de dossier
+	files, err := ListGroupConfigFiles(folderPath)
 	if err != nil {
 		return nil, fmt.Errorf("error listing JSON files: %v", err)
 	}
@@ -280,29 +289,24 @@ func CheckFolderConfig(folderPath string, fillExpectedOutput bool, forcedUpdate 
 	// Semaphore pour contrôler le nombre de goroutines actives
 	semaphore := make(chan struct{}, maxConcurrentChecks)
 
-	for _, files := range folderFiles {
-		if fileList, ok := files.([]string); ok {
-			for _, fileName := range fileList {
-				filePath := filepath.Join(folderPath, fileName)
-				wg.Add(1)               // Incrémenter le compteur de goroutines
-				semaphore <- struct{}{} // Acquérir un slot dans le sémaphore
+	for _, filePath := range files {
+		wg.Add(1)               // Incrémenter le compteur de goroutines
+		semaphore <- struct{}{} // Acquérir un slot dans le sémaphore
 
-				go func(filePath string, fileName string) {
-					defer wg.Done()                // Décrémenter le compteur de goroutines
-					defer func() { <-semaphore }() // Libérer un slot dans le sémaphore
+		go func(filePath string) {
+			defer wg.Done()                // Décrémenter le compteur de goroutines
+			defer func() { <-semaphore }() // Libérer un slot dans le sémaphore
 
-					results, err := CheckConfig(filePath, fillExpectedOutput, forcedUpdate)
-					if err != nil {
-						Log.Error(fmt.Sprintf("Error checking config for file %s: %v", fileName, err))
-						return
-					}
-
-					mu.Lock()
-					configTestResults = append(configTestResults, results...)
-					mu.Unlock()
-				}(filePath, fileName)
+			results, err := CheckConfig(filePath, fillExpectedOutput, forcedUpdate)
+			if err != nil {
+				Log.Error(fmt.Sprintf("Error checking config for file %s: %v", filePath, err))
+				return
 			}
-		}
+
+			mu.Lock()
+			configTestResults = append(configTestResults, results...)
+			mu.Unlock()
+		}(filePath)
 	}
 	wg.Wait()
 	return configTestResults, nil
@@ -351,8 +355,12 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey *Api, i int, i2 
 	case "DELETE":
 		status, result, requestErr = apiApiKey.DELETE(endpoint.Path)
 	default:
-		Log.Infos(fmt.Sprintf("Unknown method for endpoint %d, test %d : %s", i, i2, inputData.Method))
-		return returnResult, fmt.Errorf("Unknown method for endpoint %d, test %d : %s", i, i2, inputData.Method)
+		// Le test n'a pas été exécuté : il ne doit surtout pas être compté OK
+		msg := fmt.Sprintf("Unknown HTTP method %q (supported: GET, POST, PUT, PATCH, DELETE)", inputData.Method)
+		Log.Error(fmt.Sprintf("%s for endpoint %d, test %d", msg, i, i2))
+		returnResult.Error = ErrorUnknownMethod
+		returnResult.ActualOutputString = msg
+		return returnResult, fmt.Errorf("%s", msg)
 	}
 
 	returnResult.ActualHttpState = status

@@ -87,28 +87,20 @@ func (a *App) CheckGroupConfig(pathFilename string, fillExpectedOutput bool, for
 }
 
 func (a *App) DetectIfOneOreMoreConfFileHaveEmptyExpectedOutputInAConfDir(folderPath string) (bool, error) {
-
-	configFiles, err := ListJsonFile(&folderPath)
+	files, err := ListGroupConfigFiles(folderPath)
 	if err != nil {
 		Log.Error("impossible to acces to the folder")
 		return false, err
 	}
 
-	for _, files := range configFiles {
-		for _, fileName := range files.([]string) {
-
-			var config Config
-
-			filePath := filepath.Join(folderPath, fileName)
-			err := ReadJsonFile(filePath, &config)
-			if err != nil {
-				Log.Error(fmt.Sprintf("Error reading JSON file %s: %v", filePath, err))
-				continue
-			}
-
-			if config.GlobalAskedToFillExpectedOutPut == "false" {
-				return true, nil
-			}
+	for _, filePath := range files {
+		var config Config
+		if err := ReadJsonFile(filePath, &config); err != nil {
+			Log.Error(fmt.Sprintf("Error reading JSON file %s: %v", filePath, err))
+			continue
+		}
+		if config.GlobalAskedToFillExpectedOutPut == "false" {
+			return true, nil
 		}
 	}
 	return false, nil

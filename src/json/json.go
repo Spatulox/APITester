@@ -26,13 +26,10 @@ import (
 //     de l'ouverture du fichier ou du décodage des données. Sinon, retourne nil.
 func ReadJsonFile[T any](filePath string, structure *T) error {
 
-	appDataPath, err := os.UserConfigDir()
+	pathFile, err := ConfigPath(filePath)
 	if err != nil {
-		return fmt.Errorf("error obtaining AppData/conf folder: %v", err)
+		return err
 	}
-
-	pathDir := filepath.Join(appDataPath, "ApiTester")
-	pathFile := filepath.Join(pathDir, filePath)
 
 	file, err := os.Open(pathFile)
 	if err != nil {
@@ -90,12 +87,18 @@ func ListJsonFile(folderPath *string) (map[string]interface{}, error) {
 	folderFiles := make(map[string]interface{})
 
 	pathDir := filepath.Join(appDataPath, "ApiTester")
-	if folderPath != nil {
-		pathDir = filepath.Join(pathDir, *folderPath)
-	}
-
 	if err := os.MkdirAll(pathDir, os.ModePerm); err != nil {
 		return nil, fmt.Errorf("error creating directory %s: %v", pathDir, err)
+	}
+	if folderPath != nil {
+		// Ne jamais créer de dossier ici : un groupe inexistant (ou "root/") ne doit pas apparaître
+		pathDir, err = ConfigPath(*folderPath)
+		if err != nil {
+			return nil, err
+		}
+		if info, err := os.Stat(pathDir); err != nil || !info.IsDir() {
+			return nil, fmt.Errorf("the folder %s does not exist", *folderPath)
+		}
 	}
 
 	err = filepath.Walk(pathDir, func(path string, info os.FileInfo, err error) error {
@@ -147,17 +150,17 @@ func ListJsonFile(folderPath *string) (map[string]interface{}, error) {
 //   - Une erreur si un problème survient lors de l'accès au répertoire, de la création du fichier,
 //     ou de l'encodage des données en JSON. Sinon, retourne nil après un enregistrement réussi.
 func SaveConfigToJson(config Config, path string, filename string) error {
-	appDataPath, err := os.UserConfigDir()
-	if err != nil {
-		return fmt.Errorf("error obtaining AppData folder: %v", err)
-	}
-
 	if filename == "" {
 		return fmt.Errorf("error: filename is empty")
 	}
 
-	pathDir := filepath.Join(appDataPath, "ApiTester")
-	pathDir = filepath.Join(pathDir, path)
+	pathDir, err := ConfigPath(path)
+	if err != nil {
+		return err
+	}
+	if err := ValidateName(filename); err != nil {
+		return fmt.Errorf("file: %v", err)
+	}
 
 	if err := os.MkdirAll(pathDir, os.ModePerm); err != nil {
 		return fmt.Errorf("error creating directory %s: %v", pathDir, err)
@@ -317,4 +320,60 @@ func ListConfigTree() ([]ConfigGroup, error) {
 	}
 	groups = append(groups, ConfigGroup{Name: RootGroup, Files: rootFiles})
 	return groups, nil
+}
+
+// ConfigPath résout un chemin relatif au dossier des configs ("file.json", "group/file.json",
+// "group/", "root/file.json", "") et refuse tout chemin qui en sortirait (../, chemin absolu).
+// Le préfixe "root" désigne la racine (convention du frontend).
+func ConfigPath(rel string) (string, error) {
+	root, err := ConfigRoot()
+	if err != nil {
+		return "", err
+	}
+	rel = strings.ReplaceAll(rel, `\`, "/")
+	if rel == RootGroup || strings.HasPrefix(rel, RootGroup+"/") {
+		rel = strings.TrimPrefix(strings.TrimPrefix(rel, RootGroup), "/")
+	}
+	if filepath.IsAbs(rel) || strings.HasPrefix(rel, "/") {
+		return "", fmt.Errorf("invalid path %q: must be relative to the config directory", rel)
+	}
+	full := filepath.Clean(filepath.Join(root, filepath.FromSlash(rel)))
+	r, err := filepath.Rel(root, full)
+	if err != nil || r == ".." || strings.HasPrefix(r, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("invalid path %q: outside of the config directory", rel)
+	}
+	return full, nil
+}
+
+// NormalizeGroup convertit "root", "root/", "", "group/" en nom de groupe ("" pour la racine).
+func NormalizeGroup(group string) string {
+	group = strings.Trim(strings.ReplaceAll(group, `\`, "/"), "/")
+	if IsRootGroup(group) {
+		return ""
+	}
+	return group
+}
+
+// ListGroupConfigFiles liste les fichiers .json d'un groupe (sans descendre dans les sous-dossiers ;
+// pour la racine, seuls les fichiers hors groupe). Renvoie des chemins relatifs ("file.json" ou
+// "group/file.json"). Erreur si le groupe n'existe pas (aucun dossier n'est créé).
+func ListGroupConfigFiles(group string) ([]string, error) {
+	group = NormalizeGroup(group)
+	dir, err := ResolveConfigPath(group, "")
+	if err != nil {
+		return nil, err
+	}
+	if info, err := os.Stat(dir); err != nil || !info.IsDir() {
+		return nil, fmt.Errorf("the group %s does not exist", group)
+	}
+	files, err := listJsonIn(dir)
+	if err != nil {
+		return nil, err
+	}
+	for i, f := range files {
+		if group != "" {
+			files[i] = group + "/" + f
+		}
+	}
+	return files, nil
 }

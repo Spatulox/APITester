@@ -16,6 +16,7 @@ const ResultError = {
     13: 'ErrorConnectionRefused',
     14: 'ErrorExpectedOrActualOuputNotMatch',
     15: 'ErrorAuthFailed',
+    16: 'ErrorUnknownMethod',
     400: 'ErrorBadRequest',
     401: 'ErrorUnauthorized',
     402: 'ErrorPayementRequired',
