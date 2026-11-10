@@ -18,6 +18,7 @@ const (
 	ErrorHTTP
 	ErrorConnectionRefused
 	ErrorExpectedOrActualOuputNotMatch
+	ErrorAuthFailed                    // 15 : authentification impossible (login / token / profil inconnu)
 	ErrorBadRequest                    = 400
 	ErrorUnauthorized                  = 401
 	ErrorPayementRequired              = 402

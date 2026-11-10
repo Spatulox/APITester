@@ -1,5 +1,6 @@
 import { SaveConfig } from "../../../wailsjs/go/main/App";
 import { state, setDirty } from "../explorer/state";
+import { getAuthProfiles, getDefaultProfile } from "./auth-profiles";
 
 // Sauvegarde la config ouverte dans l'éditeur, toujours sur son fichier d'origine.
 export async function saveCurrentConfig() {
@@ -15,22 +16,10 @@ export function htmlToJson() {
     let config = {
         basicUrl: document.querySelector('.config-header p strong + span').textContent,
         globalAskedToFillExpectedOutPut: document.querySelector('.config-header .globalAskedToFillExpectedOutPut').textContent || "false",
-        authentication: {
-            type: document.getElementById('authType').textContent,
-            apikey: {
-                keyname: document.querySelector('#apikey p:nth-child(1) strong + span').textContent,
-                apikeyvalue: document.querySelector('#apikey p:nth-child(2) strong + span').textContent,
-            },
-            oauth2: {
-                clientId: document.querySelector('#oauth2 p:nth-child(1) strong + span').textContent,
-                clientSecret: document.querySelector('#oauth2 p:nth-child(2) strong + span').textContent,
-                tokenUrl: document.querySelector('#oauth2 p:nth-child(3) strong + span').textContent
-            },
-            basicAuth: {
-                username: document.querySelector('#basicAuth p:nth-child(1) strong + span').textContent,
-                password: document.querySelector('#basicAuth p:nth-child(2) strong + span').textContent
-            }
-        },
+        // Les profils remplacent l'ancien champ "authentication" (toujours lu par le backend
+        // pour les fichiers qui n'ont pas encore de profils)
+        authProfiles: getAuthProfiles(),
+        defaultAuthProfile: getDefaultProfile(),
         endpoints: []
     };
 
@@ -50,6 +39,8 @@ export function htmlToJson() {
                 expectedOutput: parseJsonSafely(testElement.querySelector('.output-section pre')),
                 expectedHttpState: testElement.querySelector('.http-state-section span')?.textContent.trim() || ''
             };
+            const profile = testElement.querySelector('select.test-auth-profile')?.value;
+            if (profile) test.authProfile = profile;
 
             endpoint.tests.push(test);
         });

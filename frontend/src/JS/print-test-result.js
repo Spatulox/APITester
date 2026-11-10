@@ -36,7 +36,7 @@ export function printResult(event, result) {
     };
 
     result.forEach(item => {
-        const { Path, Error, Warning, OriginalData, ActualIsArray } = item;
+        const { Path, Error, Warning, OriginalData, ActualIsArray, AuthProfile, ActualOutputString } = item;
 
         // Créer un conteneur pour le résultat
         const resultDiv = document.createElement("div");
@@ -45,7 +45,21 @@ export function printResult(event, result) {
         // Ajouter la méthode au résultat
         const methodHeader = document.createElement("h4");
         methodHeader.textContent = `Method: ${OriginalData.method}`;
+        if (AuthProfile) {
+            const badge = document.createElement("span");
+            badge.className = "profile-badge";
+            badge.textContent = `🔑 ${AuthProfile}`;
+            methodHeader.appendChild(badge);
+        }
         resultDiv.appendChild(methodHeader);
+
+        // Échec d'authentification : afficher la raison (login refusé, token introuvable…)
+        if (getErrorName(Error) === "ErrorAuthFailed" && ActualOutputString) {
+            const reason = document.createElement("pre");
+            reason.className = "auth-error-reason";
+            reason.textContent = ActualOutputString;
+            resultDiv.appendChild(reason);
+        }
 
         // Gérer les erreurs et avertissements
         if (Error > 0) {

@@ -70,7 +70,7 @@ document.getElementById("addEndpointBtn").addEventListener("click", () => {
 const output = document.getElementById("output");
 output.addEventListener("input", () => setDirty(true));
 output.addEventListener("click", (e) => {
-    if (e.target.closest(".tab-item, #add-method, .delete-button")) setDirty(true);
+    if (e.target.closest("#add-method, .endpoint .delete-button")) setDirty(true);
 });
 
 // ------------------------------------------------------------ //

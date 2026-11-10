@@ -863,3 +863,154 @@ footer {
 #groupList li.suggested {
     border-left: 3px solid #7289da;
 }
+
+/* ---------------- Profils d'authentification ---------------- */
+
+.auth-hint {
+    color: #555 !important;
+    font-size: 13px;
+    font-style: italic;
+}
+
+.tab-item.tab-add {
+    font-weight: bold;
+    color: white;
+}
+
+.auth-profile-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.auth-field {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    align-items: center;
+    gap: 10px;
+}
+
+.auth-label {
+    color: #0078d4 !important;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.auth-input-wrap {
+    display: flex;
+    gap: 6px;
+}
+
+.auth-input {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 14px;
+    background-color: #ffffff;
+    color: black;
+}
+
+.auth-input:focus {
+    outline: none;
+    border-color: #7289da;
+}
+
+.auth-input.invalid {
+    border-color: #f04747;
+    background-color: #fff0f0;
+}
+
+.auth-body {
+    min-height: 90px;
+    font-family: monospace;
+    resize: vertical;
+}
+
+.auth-eye {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f0f0f0;
+    cursor: pointer;
+}
+
+.auth-type-fields h4 {
+    margin: 12px 0 4px;
+}
+
+.auth-type-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.auth-headers h4 {
+    margin: 12px 0 6px;
+}
+
+.auth-header-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.auth-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.danger-button {
+    background-color: #f04747;
+}
+
+.danger-button:hover {
+    background-color: #c03535;
+}
+
+.discord-button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.auth-test-result {
+    white-space: pre-wrap;
+    margin: 0;
+}
+
+.auth-test-result.ok {
+    border-left: 4px solid #28a745;
+}
+
+.auth-test-result.ko {
+    border-left: 4px solid #f04747;
+}
+
+.auth-profile-section select {
+    padding: 5px 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-family: inherit;
+}
+
+.profile-badge {
+    margin-left: auto;
+    margin-right: 8px;
+    font-size: 12px;
+    font-weight: normal;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background-color: #7289da;
+    color: #ffffff !important;
+}
+
+.result-item .profile-badge {
+    margin-left: 10px;
+}
+
+.auth-error-reason {
+    border-left: 4px solid #f04747;
+    white-space: pre-wrap;
+}

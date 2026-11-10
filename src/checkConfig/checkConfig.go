@@ -6,6 +6,7 @@ import (
 	. "ApiTester/src/request"
 	. "ApiTester/src/struct"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"reflect"
@@ -16,25 +17,62 @@ import (
 
 const maxConcurrentChecks = 2
 
+// buildProfileApis crée un client API par profil. Un profil mal configuré est mémorisé
+// dans le second map : ses tests seront marqués ErrorAuthFailed.
+func buildProfileApis(config *Config) (map[string]*Api, map[string]error) {
+	apis := map[string]*Api{}
+	errs := map[string]error{}
+	for _, profile := range config.Profiles() {
+		if _, dup := apis[profile.Name]; dup || errs[profile.Name] != nil {
+			errs[profile.Name] = fmt.Errorf("duplicated auth profile name %q", profile.Name)
+			delete(apis, profile.Name)
+			continue
+		}
+		api := NewApi(config.BasicURL)
+		auth, err := NewAuthenticator(profile, config.BasicURL, api.Client())
+		if err != nil {
+			errs[profile.Name] = err
+			continue
+		}
+		api.SetAuthenticator(auth)
+		apis[profile.Name] = api
+	}
+	return apis, errs
+}
+
+// BuildProfileApi renvoie le client API d'un profil (utilisé pour tester une connexion).
+func BuildProfileApi(config *Config, profileName string) (*Api, error) {
+	apis, errs := buildProfileApis(config)
+	if err := errs[profileName]; err != nil {
+		return nil, err
+	}
+	api, ok := apis[profileName]
+	if !ok {
+		return nil, fmt.Errorf("unknown auth profile %q", profileName)
+	}
+	return api, nil
+}
+
+func authFailedResult(endpoint Endpoint, test Test, err error, profileName string) RequestResult {
+	if err == nil {
+		err = fmt.Errorf("unknown auth profile %q", profileName)
+	}
+	Log.Error(fmt.Sprintf("%s %s : %v", test.Method, endpoint.Path, err))
+	return RequestResult{
+		Path:               endpoint.Path,
+		Error:              ErrorAuthFailed,
+		Warning:            []ResultWarning{},
+		OriginalData:       test,
+		ActualOutputString: (&AuthError{Err: err}).Error(),
+	}
+}
+
 // ----------------------------------------------------------- //
 
 func ExecuteConfig(config *Config, fillExpectedOutput bool, forcedUpdate bool) ([]RequestResult, error) {
-	apiApiKey := NewApi(config.BasicURL)
-
-	switch config.Authentication.Type {
-	case "apikey":
-		apiApiKey.AddApiKey(config.Authentication.APIKey.KeyName, config.Authentication.APIKey.ApiKey)
-	case "oauth2":
-		apiApiKey.AddOAuth2(
-			config.Authentication.OAuth2.ClientID,
-			config.Authentication.OAuth2.ClientSecret,
-			config.Authentication.OAuth2.TokenURL,
-		)
-	case "basicAuth":
-		apiApiKey.AddBasicAuth(config.Authentication.BasicAuth.Username, config.Authentication.BasicAuth.Password)
-	case "noauth":
-	default:
-	}
+	// Un client API par profil d'authentification, partagé par tous les tests du profil
+	// (le token d'un login / OAuth2 n'est donc récupéré qu'une fois).
+	apis, apiErrs := buildProfileApis(config)
 
 	// Gonna store all the result of each endpoint
 	var configTestResult []RequestResult
@@ -56,10 +94,19 @@ func ExecuteConfig(config *Config, fillExpectedOutput bool, forcedUpdate bool) (
 				defer wg.Done()
 				defer func() { <-semaphore }()
 
-				result, _ := checkEndpoint(*ep, input, *apiApiKey, i, testIndex)
+				profileName := config.ResolveProfileName(input)
+				var result RequestResult
+				if api, ok := apis[profileName]; ok {
+					result, _ = checkEndpoint(*ep, input, api, i, testIndex)
+				} else {
+					result = authFailedResult(*ep, input, apiErrs[profileName], profileName)
+				}
+				if len(config.AuthProfiles) > 0 {
+					result.AuthProfile = profileName
+				}
 
-				// Validation des conditions
-				if (fillExpectedOutput && ep.IsAlreadyAskedToFillExpectedOutPut == "false") || forcedUpdate {
+				// Validation des conditions (jamais de remplissage si l'authentification a échoué)
+				if result.Error != ErrorAuthFailed && ((fillExpectedOutput && ep.IsAlreadyAskedToFillExpectedOutPut == "false") || forcedUpdate) {
 					isEmpty := false
 
 					if ep.Tests[testIndex].ExpectedOutput == nil {
@@ -277,7 +324,7 @@ func CheckFolderConfig(folderPath string, fillExpectedOutput bool, forcedUpdate 
 // Returns:
 // - @A RequestResult containing the outcome of the endpoint check, including any errors or warnings.
 // - @An error if there is an issue during the request or processing of results.
-func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 int) (RequestResult, error) {
+func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey *Api, i int, i2 int) (RequestResult, error) {
 	var status int
 	var result string
 	var requestErr error
@@ -309,6 +356,17 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey Api, i int, i2 i
 	}
 
 	returnResult.ActualHttpState = status
+
+	// Échec d'authentification (login / token) : ce n'est pas une réponse de l'API testée
+	var authErr *AuthError
+	if errors.As(requestErr, &authErr) {
+		Log.Error(fmt.Sprintf("%s %s : %v", inputData.Method, endpoint.Path, authErr))
+		returnResult.Error = ErrorAuthFailed
+		returnResult.ActualHttpState = 0
+		returnResult.ActualOutputString = authErr.Error()
+		return returnResult, authErr
+	}
+
 	if requestErr != nil && (status == ErrorTimeout || status == 0) {
 		Log.Error(fmt.Sprintf("Impossible to retrieve the %s! %v", endpoint.Path, requestErr))
 		returnResult.Error = ErrorTimeout

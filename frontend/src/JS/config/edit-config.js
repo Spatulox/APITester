@@ -3,9 +3,10 @@ import {printResult} from "../print-test-result";
 import loadingImage from "../../assets/images/circle-loading.gif"
 import { alert, confirm } from "../popup";
 import { runConfig } from "./check-config";
-import { saveCurrentConfig } from "./save-config";
+import { saveCurrentConfig, htmlToJson } from "./save-config";
 import { state, setDirty, groupLabel, isRoot, pathOf } from "../explorer/state";
 import { showWorkspaceTab } from "../workspace";
+import { renderAuthProfiles, createProfileSelect, createProfileBadge, updateTestBadge } from "./auth-profiles";
 
 function makeEditableOld(value, type = 'text') {
     return `<span class="editable" data-type="${type}"><span class="display-value">${value}</span><input type="text" class="edit-input" style="display:none;" value="${value}" onblur="updateEditableContent(this)"></span>`;
@@ -143,99 +144,8 @@ export function jsonToHtml(jsonData) {
 
     container.appendChild(header);
 
-    // Section d'authentification
-    const authSection = document.createElement("div");
-    authSection.className = "auth-section";
-
-    const authTitle = document.createElement("h3");
-    authTitle.textContent = "Authentication";
-    authSection.appendChild(authTitle);
-
-    const authType = document.createElement("p");
-    authType.innerHTML = `<strong>Type:</strong> <span id="authType">${config.authentication.type}</span>`;
-    authSection.appendChild(authType);
-
-    // Système d'onglets pour l'authentification
-    const authTabs = document.createElement("div");
-    authTabs.className = "auth-tabs";
-
-    const tabList = document.createElement("ul");
-    tabList.className = "tab-list";
-
-    ["apikey", "oauth2", "basicAuth", "noauth"].forEach((tab) => {
-        const tabItem = document.createElement("li");
-        tabItem.className = `tab-item ${config.authentication.type === tab ? "active" : ""}`;
-        tabItem.dataset.tab = tab;
-        tabItem.textContent = tab.charAt(0).toUpperCase() + tab.slice(1); // Capitalize first letter
-        tabList.appendChild(tabItem);
-    });
-
-    authTabs.appendChild(tabList);
-
-    // Contenu des onglets
-    const tabContent = document.createElement("div");
-    tabContent.className = "tab-content";
-
-    // API Key
-    const apiKeyPane = document.createElement("div");
-    apiKeyPane.className = `tab-pane ${config.authentication.type === "apikey" ? "active" : ""}`;
-    apiKeyPane.id = "apikey";
-
-    const keyNameParagraph = document.createElement("p");
-    keyNameParagraph.innerHTML = `<strong>Key Name: </strong>`;
-    keyNameParagraph.appendChild(makeEditable(config.authentication.apikey.keyname || 'Not provided'));
-    apiKeyPane.appendChild(keyNameParagraph);
-
-    const apiKeyParagraph = document.createElement("p");
-    apiKeyParagraph.innerHTML = `<strong>API Key: </strong>`;
-    apiKeyParagraph.appendChild(makeEditable(config.authentication.apikey.apikeyvalue || 'Not provided'));
-    apiKeyPane.appendChild(apiKeyParagraph);
-
-    tabContent.appendChild(apiKeyPane);
-    
-    // OAuth2
-    const oauth2Pane = document.createElement("div");
-    oauth2Pane.className = `tab-pane ${config.authentication.type === "oauth2" ? "active" : ""}`;
-    oauth2Pane.id = "oauth2";
-
-    const clientIdParagraph = document.createElement("p");
-    clientIdParagraph.innerHTML = `<strong>Client ID: </strong>`;
-    clientIdParagraph.appendChild(makeEditable(config.authentication.oauth2.clientId || 'Not provided'));
-    oauth2Pane.appendChild(clientIdParagraph);
-
-    const clientSecretParagraph = document.createElement("p");
-    clientSecretParagraph.innerHTML = `<strong>Client Secret: </strong>`;
-    clientSecretParagraph.appendChild(makeEditable(config.authentication.oauth2.clientSecret ? '********' : 'Not provided'));
-    oauth2Pane.appendChild(clientSecretParagraph);
-
-    const tokenUrlParagraph = document.createElement("p");
-    tokenUrlParagraph.innerHTML = `<strong>Token URL: </strong>`;
-    tokenUrlParagraph.appendChild(makeEditable(config.authentication.oauth2.tokenUrl || 'Not provided'));
-    oauth2Pane.appendChild(tokenUrlParagraph);
-
-    tabContent.appendChild(oauth2Pane);
-    
-    // Basic Auth
-    const basicAuthPane = document.createElement("div");
-    basicAuthPane.className = `tab-pane ${config.authentication.type === "basicAuth" ? "active" : ""}`;
-    basicAuthPane.id = "basicAuth";
-
-    const usernameParagraph = document.createElement("p");
-    usernameParagraph.innerHTML = `<strong>Username: </strong>`;
-    usernameParagraph.appendChild(makeEditable(config.authentication.basicAuth.username || 'Not provided'));
-    basicAuthPane.appendChild(usernameParagraph);
-
-    const passwordParagraph = document.createElement("p");
-    passwordParagraph.innerHTML = `<strong>Password: </strong>`;
-    passwordParagraph.appendChild(makeEditable(config.authentication.basicAuth.password ? '********' : 'Not provided'));
-    basicAuthPane.appendChild(passwordParagraph);
-
-    tabContent.appendChild(basicAuthPane);
-    
-
-    authTabs.appendChild(tabContent);
-    authSection.appendChild(authTabs);
-    container.appendChild(authSection);
+    // Profils d'authentification (édités en mémoire, cf. auth-profiles.js)
+    container.appendChild(renderAuthProfiles(config));
 
     // Endpoints
     const endpointsDiv = createEndpointSection("▶", "▶")
@@ -329,6 +239,7 @@ export function jsonToHtml(jsonData) {
             // Contenu de la méthode
             const methodContentDiv = document.createElement("div");
             methodContentDiv.className = "method-content";
+            addProfileControls(methodHeader, methodContentDiv, test.authProfile || "");
     
             // Section Input
             const inputSectionDiv = document.createElement("div");
@@ -383,6 +294,22 @@ export function jsonToHtml(jsonData) {
 }
 
 
+
+// Section "Auth profile" d'un test + badge dans son en-tête
+function addProfileControls(methodHeader, methodContentDiv, value = "") {
+    const badge = createProfileBadge();
+    methodHeader.insertBefore(badge, methodHeader.querySelector('.delete-button'));
+
+    const section = document.createElement("div");
+    section.className = "auth-profile-section";
+    const title = document.createElement("h5");
+    title.textContent = "Auth profile:";
+    section.appendChild(title);
+    const select = createProfileSelect(value);
+    section.appendChild(select);
+    methodContentDiv.appendChild(section);
+    updateTestBadge(select);
+}
 
 function openMethod(event, content){
     if (!event.target.closest('.editable')) {
@@ -446,27 +373,6 @@ export function clickButton(){
     } else {
         console.error("L'élément 'endpoint' n'a pas été trouvé.");
     }
-}
-
-// Mandatory to keep it, because it's to heavy to change (line of x.innerHTML = "[some HTML]")
-function setupAuthTabs() {
-    const tabItems = document.querySelectorAll('.tab-item');
-    const tabPanes = document.querySelectorAll('.tab-pane');
-
-    tabItems.forEach(item => {
-        item.addEventListener('click', () => {
-            // Retirer la classe active de tous les onglets et panneaux
-            tabItems.forEach(tab => tab.classList.remove('active'));
-            tabPanes.forEach(pane => pane.classList.remove('active'));
-
-            // Ajouter la classe active à l'onglet cliqué et au panneau correspondant
-            item.classList.add('active');
-            const tabId = item.getAttribute('data-tab');
-            const type = document.getElementById("authType")
-            type.innerText = tabId
-            try{document.getElementById(tabId).classList.add('active')}catch(e){};
-        });
-    });
 }
 
 function adjustInputSize(input) {
@@ -650,6 +556,7 @@ function createTestMethodElement(method) {
     // Crée le conteneur pour le contenu de la méthode
     const methodContentDiv = document.createElement('div');
     methodContentDiv.classList.add('method-content');
+    addProfileControls(methodHeader, methodContentDiv);
 
     // Section Input
     const inputSectionDiv = document.createElement('div');
@@ -724,7 +631,6 @@ export async function openConfigInEditor(group, file) {
         enableEditableField();
         editableFieldsReady = true
     }
-    setupAuthTabs();
 
     state.current = { group, file }
     setDirty(false)
@@ -770,86 +676,17 @@ export async function reloadCurrentIfAffected({ group, file = null }) {
 }
 
 export async function playEndpoint(button) {
-
     const endpointElement = button.closest('.endpoint');
-    const configHeader = document.querySelector('.config-header');
-
-    // Récupérer le basic URL
-    let basicUrl
-    const basicUrlElement = configHeader.querySelector('p strong');
-    if (basicUrlElement && basicUrlElement.textContent.includes('Basic URL:')) {
-        basicUrl = basicUrlElement.nextElementSibling.querySelector('.display-value').textContent;
-    }
-
-    // Récupérer le type d'authentification
-    const authType = document.getElementById('authType').textContent;
-
-    // Préparer la structure de configuration
-    let config = {
-        basicUrl: basicUrl,
-        authentication: {
-            type: authType
-        },
-        endpoints: []
-    };
-
-    // Récupérer les informations d'authentification
-    switch(authType) {
-        case 'apikey':
-            config.authentication.apikey = {
-                keyname: document.querySelector('#apikey .display-value').textContent,
-                apikeyvalue: document.querySelectorAll('#apikey .display-value')[1].textContent
-            };
-            break;
-        case 'oauth2':
-            config.authentication.oauth2 = {
-                clientId: document.querySelector('#oauth2 .display-value').textContent,
-                clientSecret: document.querySelectorAll('#oauth2 .display-value')[1].textContent,
-                tokenUrl: document.querySelectorAll('#oauth2 .display-value')[2].textContent
-            };
-            break;
-        case 'basicAuth':
-            config.authentication.basicAuth = {
-                username: document.querySelector('#basicAuth .display-value').textContent,
-                password: document.querySelectorAll('#basicAuth .display-value')[1].textContent
-            };
-            break;
-    }
-
-    // Récupérer le chemin de l'endpoint
-    const endpointPath = endpointElement.querySelector('.endpoint-header .display-value').textContent;
-
-    // Préparer l'objet endpoint
-    let endpoint = {
-        path: endpointPath,
-        tests: [],
-    };
-
-    // Récupérer toutes les méthodes de test pour cet endpoint
-    const testMethods = endpointElement.querySelectorAll('.test-method');
-
-    testMethods.forEach(method => {
-        const methodName = method.querySelector('.method-header .display-value').textContent;
-        const input = JSON.parse(method.querySelector('.input-section pre .display-value').textContent);
-        const expectedOutput = JSON.parse(method.querySelector('.output-section pre .display-value').textContent);
-
-        const expectedHttpState = method.querySelector('.http-state-section .display-value').textContent;
-
-        endpoint.tests.push({
-            method: methodName,
-            input: input,
-            expectedOutput: expectedOutput,
-            expectedHttpState: expectedHttpState
-        });
-    });
-
-    config.endpoints.push(endpoint);
+    const index = [...document.querySelectorAll('#output .endpoint')].indexOf(endpointElement);
+    const config = htmlToJson();
+    config.endpoints = index >= 0 ? [config.endpoints[index]] : [];
 
     try{
         const res = await CheckEndpoint(config)
         printResult("welp", res)
     } catch (e) {
         console.log(e)
+        alert("Error: " + e)
     }
 }
 

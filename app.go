@@ -357,3 +357,13 @@ func (a *App) PrintJsonFile(path string) (Config, error) {
 	}
 	return conf, nil
 }
+
+// TestAuthProfile exécute uniquement l'authentification d'un profil (login, récupération du token...)
+// et renvoie un aperçu masqué de ce qui sera ajouté aux requêtes. Utilisé par "Test connection".
+func (a *App) TestAuthProfile(config Config, profileName string) (string, error) {
+	api, err := BuildProfileApi(&config, profileName)
+	if err != nil {
+		return "", err
+	}
+	return api.Authenticate()
+}
