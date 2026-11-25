@@ -12,6 +12,11 @@ APITester is a desktop app (Go + [Wails v2](https://wails.io), vanilla JS/Vite f
 - `wails build`: production build, output in `build/bin/`.
 - `go build ./...` / `go vet ./...`: backend-only compile check. `main.go` embeds `frontend/dist` (`//go:embed all:frontend/dist`), so the frontend has to be built (`cd frontend && npm run build`) before a plain `go build` of the main package works.
 - There are no tests (no `*_test.go` files) and no lint config.
+- `packagingonlinux build [-f deb,tarball,zip,nsis] [-o dist]`: Linux/Windows packages, described in `packaging.toml` ([PackagingOnLinux](https://github.com/Spatulox/PackagingOnLinux)). Its build commands run `wails build` (Linux with `-tags webkit2_41`, Windows cross-compiled).
+
+## Releases
+
+Pushing a tag `vX.Y.Z_beta` / `_rc` / `_release` (or `vX.Y.Z`) runs `.github/workflows/release.yml` ([release-kit](https://github.com/Spatulox/release-kit)): `build.yml` sets the `packaging.toml` version from the tag and builds .deb (per Ubuntu release), .tar.gz, .rpm (Fedora), amd64 + arm64, and the Windows installer + zip; then the GitHub release is created with the matching `## vX.Y.Z...` section of `CHANGELOG.md`. Add that section before tagging.
 
 `frontend/wailsjs/` (the generated JS bindings for Go methods) is gitignored. Wails regenerates it on `wails dev` / `wails build`, or you can run `wails generate module`. Regenerate it after you add or change any exported method on `App`.
 

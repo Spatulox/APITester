@@ -1,7 +1,11 @@
-# APITester packaging with CompileOnLinux. From this repo root:
-#   python3 -m compileonlinux build -c packaging.toml      (CompileOnLinux on PYTHONPATH / installed)
-#   compileonlinux build -c packaging.toml [-f deb,rpm]
-# The [build] command runs `wails build` first, so wails, go and npm must be installed.
+# APITester packaging with PackagingOnLinux (https://github.com/Spatulox/PackagingOnLinux).
+# Paths are relative to this file. From the repo root:
+#   packagingonlinux check
+#   packagingonlinux build [-f deb,rpm,tarball,zip,nsis] [-o dist]
+# The build commands run `wails build`, so wails, go and npm must be installed
+# (plus libgtk-3-dev and libwebkit2gtk-4.1-dev for Linux, nsis for the installer).
+#
+# The version below is replaced by the release tag in the CI (.github/workflows/build.yml).
 
 [app]
 id = "io.github.spatulox.APITester"
@@ -17,18 +21,26 @@ maintainer = "Spatulox"
 homepage = "https://github.com/Spatulox/APITester"
 categories = ["Development"]
 
-[files]
+[linux]
+# webkit2_41: link WebKitGTK 4.1 (4.0 is no longer shipped by current Ubuntu/Fedora).
+command = "wails build -tags webkit2_41"
 binary = "build/bin/ApiTester"
-icon = "build/appicon.png"
+# 256x256 copy of build/appicon.png (500x500 is not a hicolor icon size).
+icon = "build/linux/apitester.png"
+# WM_CLASS of the window: the binary name (GTK uses argv[0]), not the app id.
+# Without it, GNOME shows a generic icon in the dock.
+wm_class = "ApiTester"
 
-[build]
-# webkit2_41: link WebKitGTK 4.1 (4.0 is no longer shipped by current Fedora/Ubuntu).
-command = "wails build -clean -tags webkit2_41"
+[windows]
+# Wails cross-compiles the Windows exe from Linux (WebView2, no cgo).
+command = "wails build -platform windows/amd64"
+binary = "build/bin/ApiTester.exe"
+icon = "build/windows/icon.ico"
 
 [deps]
-# Wails binary: libs detected automatically (dpkg-shlibdeps / rpm AutoReq).
+# Wails binary: GTK / WebKitGTK libs detected automatically (dpkg-shlibdeps / rpm AutoReq).
 auto = true
 
 [output]
-formats = ["deb", "rpm", "tarball"]
-dir = "build/bin/packages"
+formats = ["deb", "rpm", "tarball", "zip", "nsis"]
+dir = "dist"

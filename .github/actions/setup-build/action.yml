@@ -1,0 +1,42 @@
+name: Outils de build
+description: >
+  Go (version de go.mod), Node, le CLI Wails de la version de go.mod et
+  PackagingOnLinux (cloné dans $RUNNER_TEMP, chemin exporté dans
+  $PACKAGINGONLINUX : PYTHONPATH="$PACKAGINGONLINUX" python3 -m packagingonlinux).
+  Les dépendances système (GTK, WebKitGTK, nsis...) restent à la charge du job.
+
+inputs:
+  node-version:
+    default: '20'
+  packagingonlinux-version:
+    default: v0.3.1
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@v7
+      with:
+        go-version-file: go.mod
+
+    - uses: actions/setup-node@v7
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Wails
+      shell: bash
+      run: |
+        # Même version que github.com/wailsapp/wails/v2 dans go.mod.
+        WAILS_VERSION=$(grep -v '^\s*//' go.mod | sed -n 's#.*github.com/wailsapp/wails/v2 \(v[0-9][0-9.]*\).*#\1#p')
+        test -n "$WAILS_VERSION"
+        go install "github.com/wailsapp/wails/v2/cmd/wails@${WAILS_VERSION}"
+        wails version
+
+    - name: PackagingOnLinux
+      shell: bash
+      env:
+        VERSION: ${{ inputs.packagingonlinux-version }}
+      run: |
+        dest="$RUNNER_TEMP/packagingonlinux"
+        git clone --depth 1 --branch "$VERSION" \
+          https://github.com/Spatulox/PackagingOnLinux.git "$dest"
+        echo "PACKAGINGONLINUX=$dest" >> "$GITHUB_ENV"

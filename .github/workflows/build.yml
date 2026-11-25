@@ -1,0 +1,158 @@
+name: Build
+
+# CI de build propre à APITester, appelée par release.yml une fois le tag décodé
+# par release-kit. Tous les paquets sont construits par PackagingOnLinux d'après
+# packaging.toml (dont la version est remplacée par celle du tag) :
+#   - .deb amd64 et arm64, un par version d'Ubuntu (input "ubuntu"),
+#     + .tar.gz amd64 et arm64 construits sur la plus ancienne,
+#   - .rpm amd64 et aarch64, construits sur Fedora (input "fedora"),
+#   - Windows : installeur NSIS + zip portable amd64, cross-compilés depuis Linux.
+# Les livrables sont uploadés dans des artifacts "release-*", que release-kit
+# joint à la release GitHub.
+on:
+  workflow_call:
+    inputs:
+      version:      # 1.2.0
+        type: string
+        required: true
+      debversion:   # 1.2.0~beta
+        type: string
+        required: true
+      ubuntu:
+        # Une nouvelle Ubuntu = une entrée de plus ici (ex. "28.04"), rien d'autre.
+        # La première (la plus ancienne) produit aussi le .tar.gz.
+        description: Versions d'Ubuntu pour lesquelles produire un .deb (liste JSON)
+        type: string
+        default: '["24.04", "26.04"]'
+      fedora:
+        # Plus ancienne Fedora maintenue : le .rpm demande la glibc de cette version.
+        description: Version de Fedora sur laquelle construire le .rpm
+        type: string
+        default: '44'
+
+jobs:
+  linux-deb:
+    # Le build tourne dans le conteneur ubuntu:<version> : les Depends détectés
+    # (dpkg-shlibdeps) sont ceux de cette Ubuntu. Le runner ne sert qu'à faire
+    # tourner Docker sur la bonne architecture.
+    name: deb (ubuntu ${{ matrix.ubuntu }}, ${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu: ${{ fromJSON(inputs.ubuntu) }}
+        arch: [amd64, arm64]
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    container: ubuntu:${{ matrix.ubuntu }}
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      # 1.2.0~beta+ubuntu26.04 > 1.2.0~beta+ubuntu24.04 : apt met le paquet à
+      # jour proprement après une montée de version de l'OS.
+      DEBVERSION: ${{ inputs.debversion }}+ubuntu${{ matrix.ubuntu }}
+      VERSION: ${{ inputs.debversion }}
+      TARBALL: ${{ matrix.ubuntu == fromJSON(inputs.ubuntu)[0] }}
+    steps:
+      # Le conteneur est nu : outils requis par checkout/setup-* et les steps.
+      - name: Outils de base
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends git ca-certificates curl xz-utils python3 \
+            build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev
+
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup-build
+
+      - name: Paquet .deb
+        run: |
+          sed -i "s/^version = .*/version = \"$DEBVERSION\"/" packaging.toml
+          PYTHONPATH="$PACKAGINGONLINUX" python3 -m packagingonlinux build -f deb -o dist
+          dpkg-deb --info dist/*.deb
+
+      - name: Archive .tar.gz
+        # Sur la plus ancienne Ubuntu seulement (glibc la plus ancienne), et sans
+        # le suffixe +ubuntuXX.XX.
+        if: env.TARBALL == 'true'
+        run: |
+          sed -i "s/^version = .*/version = \"$VERSION\"/" packaging.toml
+          PYTHONPATH="$PACKAGINGONLINUX" python3 -m packagingonlinux build -f tarball -o dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-linux-ubuntu${{ matrix.ubuntu }}-${{ matrix.arch }}
+          path: dist/*
+          if-no-files-found: error
+
+  linux-rpm:
+    name: rpm (fedora ${{ inputs.fedora }}, ${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    container: fedora:${{ inputs.fedora }}
+    env:
+      VERSION: ${{ inputs.debversion }}
+    steps:
+      - name: Outils de base
+        run: |
+          dnf install -y git tar gzip xz findutils sed which python3 \
+            gcc pkgconf-pkg-config gtk3-devel webkit2gtk4.1-devel rpm-build
+
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup-build
+
+      - name: Paquet .rpm
+        # Requires détectés depuis le binaire (rpm AutoReq).
+        run: |
+          sed -i "s/^version = .*/version = \"$VERSION\"/" packaging.toml
+          PYTHONPATH="$PACKAGINGONLINUX" python3 -m packagingonlinux build -f rpm -o dist
+          rpm -qpi --requires dist/*.rpm
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-linux-fedora-${{ matrix.arch }}
+          path: dist/*.rpm
+          if-no-files-found: error
+
+  windows:
+    # Wails cross-compile l'exe Windows depuis Linux (WebView2, sans cgo), et
+    # PackagingOnLinux construit l'installeur avec makensis.
+    runs-on: ubuntu-24.04
+    env:
+      VERSION: ${{ inputs.version }}
+      DEBVERSION: ${{ inputs.debversion }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: NSIS
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends nsis
+
+      - uses: ./.github/actions/setup-build
+
+      - name: Version dans wails.json
+        # Version du fichier de l'exe (propriétés > Détails) : chiffres seulement.
+        run: |
+          jq --arg v "$VERSION" '.info.productVersion = $v' wails.json > wails.tmp.json
+          mv wails.tmp.json wails.json
+
+      - name: Installeur et zip portable
+        run: |
+          sed -i "s/^version = .*/version = \"$DEBVERSION\"/" packaging.toml
+          PYTHONPATH="$PACKAGINGONLINUX" python3 -m packagingonlinux build -f zip,nsis -o dist
+          ls -l dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-windows
+          path: dist/*
+          if-no-files-found: error
