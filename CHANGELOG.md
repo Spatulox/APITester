@@ -3,7 +3,7 @@
 Pushing a tag `vX.Y.Z_beta`, `vX.Y.Z_rc` or `vX.Y.Z` (see `.github/workflows/release.yml`)
 publishes a GitHub release whose notes are the matching `## vX.Y.Z...` section below.
 
-## v1.2.0_beta
+## [v1.2.0_beta] - 2026-11-25
 
 ### New
 - Config explorer: configs are grouped in folders, with rename in place, a context menu
@@ -23,3 +23,14 @@ publishes a GitHub release whose notes are the matching `## vX.Y.Z...` section b
 - Running the "Sans groupe" (root) group works.
 - Removing a warning now works, and the endpoint "already asked" flag is saved.
 - The CSS now loads in the desktop window under `wails dev`.
+
+### Other
+- Wails updated to v2.10.2.
+
+### Which file to download
+- Ubuntu / Debian: `apitester_<version>+ubuntu<release>_<arch>.deb` for your Ubuntu
+  release (`sudo apt install ./apitester_*.deb` also installs WebKitGTK).
+- Fedora / RHEL / openSUSE: the `.rpm` for your architecture.
+- Other Linux: the `.tar.gz` (needs WebKitGTK 4.1 installed).
+- Windows: `APITester-<version>-windows-x64-setup.exe` (installer) or the portable
+  `.zip`. The WebView2 runtime is offered for download on first launch if it is missing.

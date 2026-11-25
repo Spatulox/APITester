@@ -10,7 +10,7 @@
 [app]
 id = "io.github.spatulox.APITester"
 name = "APITester"
-version = "1.0.0"
+version = "1.2.0~beta"
 summary = "Test web API endpoints per role and spot data leaks"
 description = """
 Run predefined JSON test configs against a web API to check that each role
