@@ -2,7 +2,8 @@ name: Release
 
 # Pousser un tag vX.Y.Z_alpha, vX.Y.Z_beta, vX.Y.Z_rc ou vX.Y.Z_release (ou vX.Y.Z) :
 #   1. release-kit décode le tag,
-#   2. build.yml construit les paquets avec PackagingOnLinux (packaging.toml) :
+#   2. build.yml construit les paquets avec le workflow réutilisable de PackagingOnLinux
+#      (packaging.toml, dans l'image .github/build.Dockerfile) :
 #      .deb par version d'Ubuntu, .rpm, .tar.gz (amd64 + arm64), installeur
 #      Windows et zip portable,
 #   3. release-kit crée la release GitHub avec la section du CHANGELOG.md.
@@ -10,6 +11,8 @@ name: Release
 on:
   push:
     tags: ['v*']
+  # « Run workflow » (onglet Actions) : build à blanc, tout est construit, rien n'est publié.
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -17,6 +20,9 @@ permissions:
 jobs:
   tag:
     uses: Spatulox/release-kit/.github/workflows/tag.yml@v1
+    with:
+      # Échoue tout de suite, avant le build, sans section du tag dans CHANGELOG.md.
+      require-changelog: true
 
   build:
     needs: tag
@@ -26,6 +32,7 @@ jobs:
 
   publish:
     needs: [tag, build]
+    if: needs.tag.outputs.dry-run != 'true'
     uses: Spatulox/release-kit/.github/workflows/publish.yml@v1
     with:
       tag: ${{ needs.tag.outputs.tag }}
