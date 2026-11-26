@@ -22,7 +22,6 @@ jobs:
     needs: tag
     uses: ./.github/workflows/build.yml
     with:
-      version: ${{ needs.tag.outputs.version }}
       debversion: ${{ needs.tag.outputs.debversion }}
 
   publish:
