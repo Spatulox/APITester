@@ -3,6 +3,30 @@
 Pushing a tag `vX.Y.Z_beta`, `vX.Y.Z_rc` or `vX.Y.Z` (see `.github/workflows/release.yml`)
 publishes a GitHub release whose notes are the matching `## vX.Y.Z...` section below.
 
+## [v1.2.1_beta] - 2026-11-26
+
+### Fixes
+- The HTTP status is now always checked, even when the response has no body. Before,
+  a test with no `expectedOutput` passed whatever the status (e.g. `204` received where
+  `403` was expected).
+- `_@empty` / `_@nothing` work: a response with no body matches them (and `{}`), and a
+  response with a body is an error (`ErrorUnexpectedResponse`). The editor no longer
+  turns the marker into `{}` when saving.
+- Automatic filling of the expected output stores an object response as an object, not
+  as a one-item array that failed on the next run. Configs already filled this way still
+  fail: remove the square brackets, or run the "update the expected outputs" action again.
+- Filling a test whose response has no body writes `_@empty`.
+- The results show the raw body of a non-JSON response with an unexpected HTTP status
+  (e.g. an HTML error page).
+
+### Which file to download
+- Ubuntu / Debian: `apitester_<version>+ubuntu<release>_<arch>.deb` for your Ubuntu
+  release (`sudo apt install ./apitester_*.deb` also installs WebKitGTK).
+- Fedora / RHEL / openSUSE: the `.rpm` for your architecture.
+- Other Linux: the `.tar.gz` (needs WebKitGTK 4.1 installed).
+- Windows: `APITester-<version>-windows-x64-setup.exe` (installer) or the portable
+  `.zip`. The WebView2 runtime is offered for download on first launch if it is missing.
+
 ## [v1.2.0_beta] - 2026-11-25
 
 ### New

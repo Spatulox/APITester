@@ -110,7 +110,10 @@ export function printResult(event, result) {
             ActualOutput = ActualOutput[0];
         }
 
-        if (Error === getErrorCode("ErrorInvalidAPIJSON")) {
+        // Corps brut : JSON invalide, ou réponse non JSON avec un code HTTP inattendu
+        const showRawOutput = Error === getErrorCode("ErrorInvalidAPIJSON")
+            || (ActualOutput == null && !!item.ActualOutputString);
+        if (showRawOutput) {
             ActualOutput = item.ActualOutputString;
         }
 
@@ -144,7 +147,7 @@ export function printResult(event, result) {
             `<strong>Actual Output:</strong>`;
         resultDiv.appendChild(actualOutputParagraph);
 
-        if (Error === getErrorCode("ErrorInvalidAPIJSON")) {
+        if (showRawOutput) {
             const actualOutputPreRaw = document.createElement("pre");
             actualOutputPreRaw.className = "json-output";
             actualOutputPreRaw.textContent =

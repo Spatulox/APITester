@@ -73,6 +73,11 @@ function parseJsonSafely(element) {
         return {};
     }
 
+    // "_@empty" / "_@nothing" (réponse sans corps) n'est pas du JSON : le garder en chaîne
+    if (/_@(empty|nothing)/i.test(jsonString) && !jsonString.startsWith('"')) {
+        return jsonString;
+    }
+
     try {
         return JSON.parse(jsonString);
     } catch (e) {

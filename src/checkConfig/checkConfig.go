@@ -136,13 +136,16 @@ func ExecuteConfig(config *Config, fillExpectedOutput bool, forcedUpdate bool) (
 
 						mu.Lock()
 						if result.ActualOutput != nil {
-							fmt.Sprintf("%v", result.ActualOutput...)
-							ep.Tests[testIndex].ExpectedOutput = result.ActualOutput
-							result.OriginalData.ExpectedOutput = result.ActualOutput
+							filled := filledExpectedOutput(result)
+							ep.Tests[testIndex].ExpectedOutput = filled
+							result.OriginalData.ExpectedOutput = filled
 						} else if result.ActualOutputString != "" {
 							ep.Tests[testIndex].ExpectedOutput = result.ActualOutputString
 							result.OriginalData.ExpectedOutput = result.ActualOutputString
-							fmt.Sprintf("%v", result.ActualOutputString)
+						} else if result.Error != ErrorTimeout {
+							// Réponse reçue sans corps (pas un échec réseau)
+							ep.Tests[testIndex].ExpectedOutput = "_@empty"
+							result.OriginalData.ExpectedOutput = "_@empty"
 						}
 
 						if forcedUpdate {
@@ -186,6 +189,8 @@ func ExecuteConfig(config *Config, fillExpectedOutput bool, forcedUpdate bool) (
 							case ErrorMissingKeyValue:
 								result.Error = ErrorNoError
 							case ErrorWrongHttpStatusRange:
+								result.Error = ErrorNoError
+							case ErrorNoContent, ErrorUnexpectedResponse:
 								result.Error = ErrorNoError
 							}
 						}
@@ -384,25 +389,20 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey *Api, i int, i2 
 
 	returnResult.ActualOutputString = result
 
-	if result == "" {
-		if inputData.ExpectedOutput == nil || reflect.DeepEqual(inputData.ExpectedOutput, struct{}{}) {
-			return returnResult, nil
+	// Parser le corps avant de comparer le code HTTP : même en cas de code inattendu,
+	// la réponse JSON doit être disponible (affichage, mise à jour forcée de l'expectedOutput)
+	parseErr := ErrorNoError
+	if result != "" {
+		var ActualRes []interface{}
+		var isArray bool
+		ActualRes, parseErr, isArray = parseActualResult(result)
+		if parseErr == ErrorNoError {
+			returnResult.ActualIsArray = isArray
+			returnResult.ActualOutput = ActualRes
 		}
-		Log.Infos("Error no content")
-		returnResult.Error = ErrorNoContent
-		return returnResult, fmt.Errorf("Error no content")
 	}
 
-	ActualRes, err, isArray := parseActualResult(result)
-	if err != ErrorNoError {
-		returnResult.Error = err
-		return returnResult, fmt.Errorf("Error when parsing actual result : %v", err)
-	}
-
-	returnResult.ActualIsArray = isArray
-	returnResult.ActualOutput = ActualRes
-
-	// Compare http code result
+	// Compare http code result (toujours, y compris pour une réponse sans corps)
 	if inputData.ExpectedHttpState == "" {
 		returnResult.Warning = append(returnResult.Warning, WarningUnknownHttpStatusExpected)
 		Log.Error(fmt.Sprintf("No expected http state for this endpoint : %s", endpoint.Path))
@@ -422,6 +422,28 @@ func checkEndpoint(endpoint Endpoint, inputData Test, apiApiKey *Api, i int, i2 
 			}
 		}
 		return returnResult, fmt.Errorf("Not the same HTTP Status for this request : %s", endpoint.Path)
+	}
+
+	// Réponse sans corps : OK si rien n'est attendu (vide, {} ou "_@empty"), sinon ErrorNoContent
+	if result == "" {
+		if expectsNoBody(inputData.ExpectedOutput) {
+			return returnResult, nil
+		}
+		Log.Infos("Error no content")
+		returnResult.Error = ErrorNoContent
+		return returnResult, fmt.Errorf("Error no content")
+	}
+
+	if parseErr != ErrorNoError {
+		returnResult.Error = parseErr
+		return returnResult, fmt.Errorf("Error when parsing actual result : %v", parseErr)
+	}
+
+	// "_@empty" attendu mais l'API a renvoyé un corps
+	if isEmptyBodyMarker(inputData.ExpectedOutput) {
+		Log.Error(fmt.Sprintf("An empty body was expected for this request : %s", endpoint.Path))
+		returnResult.Error = ErrorUnexpectedResponse
+		return returnResult, fmt.Errorf("An empty body was expected for this request : %s", endpoint.Path)
 	}
 
 	if inputData.ExpectedOutput == nil {
@@ -707,6 +729,40 @@ func parseActualResult(result string) ([]interface{}, ResultError, bool) {
 
 
  */
+
+// isEmptyBodyMarker indique si l'expectedOutput est le marqueur "réponse sans corps"
+// ("_@empty" ou "_@nothing", insensible à la casse).
+func isEmptyBodyMarker(expected interface{}) bool {
+	s, ok := expected.(string)
+	if !ok {
+		return false
+	}
+	s = strings.ToLower(s)
+	return strings.Contains(s, "_@empty") || strings.Contains(s, "_@nothing")
+}
+
+// expectsNoBody indique si une réponse sans corps satisfait l'expectedOutput :
+// rien d'attendu (absent, {}, "") ou le marqueur "_@empty".
+func expectsNoBody(expected interface{}) bool {
+	switch e := expected.(type) {
+	case nil:
+		return true
+	case map[string]interface{}:
+		return len(e) == 0
+	case string:
+		return strings.TrimSpace(e) == "" || isEmptyBodyMarker(e)
+	}
+	return false
+}
+
+// filledExpectedOutput renvoie la valeur à écrire dans expectedOutput à partir de la réponse réelle.
+// Un objet unique est stocké tel quel (parseActualResult l'enveloppe dans un tableau d'un élément).
+func filledExpectedOutput(result RequestResult) interface{} {
+	if !result.ActualIsArray && len(result.ActualOutput) == 1 {
+		return result.ActualOutput[0]
+	}
+	return result.ActualOutput
+}
 
 func containsWarning(warningsArray []ResultWarning, warningCode ResultWarning) bool {
 	for _, warning := range warningsArray {

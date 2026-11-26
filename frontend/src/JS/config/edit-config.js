@@ -348,7 +348,11 @@ function enableEditableField() {
             const displayValue = editableSpan.querySelector('.display-value');
             const editInput = event.target;
 
-            if (editableSpan.dataset.type === 'json') {
+            if (editableSpan.dataset.type === 'json' && /_@(empty|nothing)/i.test(editInput.value)) {
+                // Marqueur "réponse sans corps" : pas du JSON, gardé tel quel (voir parseJsonSafely)
+                displayValue.textContent = editInput.value.trim();
+                editableSpan.classList.remove('invalid');
+            } else if (editableSpan.dataset.type === 'json') {
                 try {
                     const parsed = JSON.parse(editInput.value);
                     displayValue.textContent = JSON.stringify(parsed, null, 2);
