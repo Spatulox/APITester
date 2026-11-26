@@ -2,10 +2,11 @@
 # Paths are relative to this file. From the repo root:
 #   packagingonlinux check
 #   packagingonlinux build [-f deb,rpm,tarball,zip,nsis] [-o dist]
-# The build commands run `wails build`, so wails, go and npm must be installed
-# (plus libgtk-3-dev and libwebkit2gtk-4.1-dev for Linux, nsis for the installer).
+# The build commands run `wails build` (scripts/wailsbuild.sh), so wails, go and npm must be
+# installed (plus libgtk-3-dev and libwebkit2gtk-4.1-dev for Linux, nsis for the installer).
 #
-# The version below is replaced by the release tag in the CI (.github/workflows/build.yml).
+# In the release (.github/workflows/build.yml), PackagingOnLinux's package.yml runs this file in
+# the build image .github/build.Dockerfile, with the version of the tag instead of the one below.
 
 [app]
 id = "io.github.spatulox.APITester"
@@ -23,7 +24,7 @@ categories = ["Development"]
 
 [linux]
 # webkit2_41: link WebKitGTK 4.1 (4.0 is no longer shipped by current Ubuntu/Fedora).
-command = "wails build -tags webkit2_41"
+command = "bash scripts/wailsbuild.sh -tags webkit2_41"
 binary = "build/bin/ApiTester"
 # 256x256 copy of build/appicon.png (500x500 is not a hicolor icon size).
 icon = "build/linux/apitester.png"
@@ -33,7 +34,7 @@ wm_class = "ApiTester"
 
 [windows]
 # Wails cross-compiles the Windows exe from Linux (WebView2, no cgo).
-command = "wails build -platform windows/amd64"
+command = "bash scripts/wailsbuild.sh -platform windows/amd64"
 binary = "build/bin/ApiTester.exe"
 icon = "build/windows/icon.ico"
 
